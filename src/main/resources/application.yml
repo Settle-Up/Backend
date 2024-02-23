@@ -1,20 +1,50 @@
-jpa:
-  hibernate:
-    ddl-auto: update
+server:
+  address: 192.168.0.229
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/SettleUp?characterEncoding=utf8&serverTimezone=UTC
+    username: root
+    password: 1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
         show_sql: true
         format_sql: true
+  config:
+    import: classpath:application-secret.yml
+#  web:
+#    cors:
+#      allow-credentials: true
+#      allowed-origins:
+#        - "*" # 모든 오리진 허용 (보안을 위해 실제 배포 시에는 구체적인 URL로 변경하세요)
+#      allowed-methods:
+#        - "*" # 모든 HTTP 메서드 허용
+#      allowed-headers:
+#        - "*" # 모든 헤더 허용
+#      max-age: 3600 # 프리플라이트 요청의 결과를 캐시하는 시간 (초 단위)
 
 logging:
   level:
+    root: DEBUG
+    settleup.backend.domain.user.service.impl.LoggingRequestInterceptor: DEBUG
     org.hibernate.SQL: debug
     p6spy: debug
-    org:
-      springframework:
-        security: DEBUG
+    org.springframework.web: DEBUG
 
-spring:
-  config:
-    import: classpath:application-secret.yml
+oauth:
+  kakao:
+    client_id: b36ad85106bd4c56b4ac0ba52c9387c2
+    redirect_uri: http://localhost:3000/oauth/redirected/kakao
+    client_authentication_method: POST
+    grant_type: authorization_code
+    client_secret: rGlhNPHFme7NyCvUyWadU9ujisFmoJYO
+    scope: account_email,name,phone_number
+    client_name: Kakao
+    kakao_auth_uri: https://kauth.kakao.com/oauth/authorize
+    kakao_token_uri: https://kauth.kakao.com/oauth/token
