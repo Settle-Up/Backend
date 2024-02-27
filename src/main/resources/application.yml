@@ -1,0 +1,20 @@
+jpa:
+  hibernate:
+    ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        show_sql: true
+        format_sql: true
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    p6spy: debug
+    org:
+      springframework:
+        security: DEBUG
+
+spring:
+  config:
+    import: classpath:application-secret.yml
