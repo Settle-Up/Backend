@@ -13,18 +13,18 @@ public class SecurityConfiguration {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // @formatter:off
+
         http
-                .csrf(csrf -> csrf.ignoringRequestMatchers("/auth/**") // 특정 경로에 대해 CSRF 보호 비활성화
+                .csrf(csrf -> csrf.ignoringRequestMatchers("/auth/**")
 
                 )
                 .authorizeHttpRequests((authorize) -> authorize
-                        .anyRequest().permitAll() // 모든 요청에 대해 인증 없이 접근 허용
+                        .anyRequest().permitAll()
                 )
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 필요시 세션 생성
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 );
-        // @formatter:on
+
         return http.build();
     }
 }
