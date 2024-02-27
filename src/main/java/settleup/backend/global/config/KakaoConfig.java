@@ -2,7 +2,6 @@ package settleup.backend.global.config;
 
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -25,4 +24,7 @@ public class KakaoConfig {
 
     @Value("${oauth.kakao.kakao_token_uri}")
     private String tokenUri;
+
+    @Value("${oauth.kakao.user_info_accept}")
+    private  String userInfoUri;
 }
