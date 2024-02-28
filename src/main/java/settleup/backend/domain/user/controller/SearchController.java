@@ -10,7 +10,9 @@ import settleup.backend.domain.user.service.LoginService;
 import settleup.backend.domain.user.service.SearchService;
 import settleup.backend.global.api.ResponseDto;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -31,7 +33,10 @@ public class SearchController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseDto);
         }
         List<UserInfoDto> userInfoDto = searchService.getUserList(partOfEmail);
-        ResponseDto<List<UserInfoDto>> responseDto = new ResponseDto<>(true, "retrieved successfully", userInfoDto, null);
+        Map<String, Object> data = new HashMap<>();
+        data.put("SearchList", userInfoDto);
+        ResponseDto<Map<String, Object>> responseDto;
+        responseDto = new ResponseDto<>(true, "retrieved successfully", data, null);
         return ResponseEntity.status(HttpStatus.OK).body(responseDto);
     }
 }
