@@ -1,4 +1,4 @@
-## The implications of this feature on our service / 이 기능이 우리 서비스에 주는 영향
+## The implications of this feature on our service / 기능이 우리 서비스에 주는 영향
 
 
 ## Development Growth Points Felt While Working on This Branch / 현 브랜치를 개발하면서 느꼈던 개발 성장포인트
