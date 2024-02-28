@@ -1,4 +1,4 @@
-package settleup.backend.domain.user.common;
+package settleup.backend.global.common;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -6,8 +6,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
-import settleup.backend.domain.user.exception.CustomException;
-import settleup.backend.domain.user.exception.ErrorCode;
+import settleup.backend.global.exception.CustomException;
+import settleup.backend.global.exception.ErrorCode;
 
 @Component
 @AllArgsConstructor

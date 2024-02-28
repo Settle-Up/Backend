@@ -1,4 +1,4 @@
-package settleup.backend.domain.user.exception;
+package settleup.backend.global.exception;
 
 public enum ErrorCode {
     USER_NOT_FOUND(100, "User not found"),
@@ -16,8 +16,11 @@ public enum ErrorCode {
     EXTERNAL_API_ERROR_TOKEN(113,"Failed to get social external api access token"),
     EXTERNAL_API_ERROR(114,"Failed to retrieve user info from Kakao"),
     EXTERNAL_API_EMPTY_RESPONSE(115,"social external api, user info response is empty"),
-    REGISTRATION_FAILED(116, "User registration failed"),
-    TOKEN_CREATION_FAILED(117, "Failed to create login token");
+    REGISTRATION_FAILED(116, "User registration failed, Errors occurred during uuid generation"),
+    TOKEN_CREATION_FAILED(117, "Failed to create login token"),
+    INVALID_INPUT(118, "Invalid input provided"),
+    GROUP_CREATION_FAILED(119,"Errors occurred during uuid generation, url generation, or db saving");
+
 
     private final int code;
     private final String description;

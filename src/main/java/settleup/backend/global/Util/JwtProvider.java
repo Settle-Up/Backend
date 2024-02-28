@@ -4,8 +4,8 @@ import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
-import settleup.backend.domain.user.exception.CustomException;
-import settleup.backend.domain.user.exception.ErrorCode;
+import settleup.backend.global.exception.CustomException;
+import settleup.backend.global.exception.ErrorCode;
 
 import java.time.Duration;
 import java.util.Base64;

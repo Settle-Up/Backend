@@ -13,6 +13,7 @@ public class UserInfoDto {
     private String userUUID;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String userName;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String userEmail;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String userPhone;

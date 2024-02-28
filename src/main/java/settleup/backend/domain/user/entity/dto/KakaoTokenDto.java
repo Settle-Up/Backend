@@ -1,4 +1,4 @@
-package settleup.backend.global.api;
+package settleup.backend.domain.user.entity.dto;
 
 import lombok.Data;
 

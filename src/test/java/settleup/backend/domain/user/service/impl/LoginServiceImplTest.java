@@ -10,7 +10,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
-import settleup.backend.domain.user.exception.CustomException;
+import settleup.backend.global.exception.CustomException;
 import settleup.backend.domain.user.repository.UserRepository;
 import settleup.backend.global.Util.JwtProvider;
 
