@@ -56,6 +56,7 @@ public class UserController {
         ResponseDto<Map<String, Object>> responseDto = new ResponseDto<>(true, "Token is valid, Login success", userInfo, null);
         return ResponseEntity.status(HttpStatus.OK).body(responseDto);
     }
+
 }
 
 
