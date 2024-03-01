@@ -39,12 +39,12 @@ public class ClusterServiceImpl implements ClusterService {
 
     /**
      * 그룹생성
+     *
      * @param requestDto CreateGroupRequestDto String groupName ,String groupMemeberCount , groupUserList
      * @return CreateGroupResponseDto -> group's uuid,name,memberCount, url, userList
+     * @throws CustomException a.-> uuid generation, url generation, or db saving
+     *                         b.-> client 에서 받은 userList 에서 유저 리스트 못찾음 ,or db saving
      * @method A. createAndSaveGroup ,B. addUserToGroup ,C. buildCreateGroupResponseDto
-     * @throws CustomException
-     * a.-> uuid generation, url generation, or db saving
-     * b.-> client 에서 받은 userList 에서 유저 리스트 못찾음 ,or db saving
      */
     @Override
     public CreateGroupResponseDto createGroup(CreateGroupRequestDto requestDto) throws CustomException {

@@ -1,4 +1,5 @@
 package settleup.backend.global.exception;
+
 import org.springframework.http.HttpStatus;
 
 public class ErrorHttpStatusMapping {

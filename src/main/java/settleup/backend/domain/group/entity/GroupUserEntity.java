@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import settleup.backend.domain.user.entity.UserEntity;
+
 import java.io.Serializable;
 
 

@@ -24,7 +24,7 @@ public class SearchController {
     @GetMapping("")
     public ResponseEntity<ResponseDto> findUserEmail(
             @RequestHeader(value = "Authorization") String token, @RequestParam("search") String partOfEmail) {
-            loginService.validTokenOrNot(token);
+        loginService.validTokenOrNot(token);
         List<UserInfoDto> userInfoDto = searchService.getUserList(partOfEmail);
         ResponseDto<List<UserInfoDto>> responseDto = new ResponseDto<>(true, "retrieved successfully", userInfoDto, null);
         return ResponseEntity.status(HttpStatus.OK).body(responseDto);

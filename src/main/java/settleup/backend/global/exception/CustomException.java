@@ -1,7 +1,6 @@
 package settleup.backend.global.exception;
 
 
-
 public class CustomException extends RuntimeException {
     private final ErrorCode errorCode;
 
@@ -9,6 +8,7 @@ public class CustomException extends RuntimeException {
         super(errorCode.getDescription());
         this.errorCode = errorCode;
     }
+
     public ErrorCode getErrorCode() {
         return errorCode;
     }

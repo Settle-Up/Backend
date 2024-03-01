@@ -32,28 +32,29 @@ public class UserController {
      */
     @GetMapping("/kakao/callback")
     public ResponseEntity<ResponseDto> getTokenFromSocial(@RequestParam("code") String validCode) {
-            KakaoTokenDto tokenInfo = kakaoService.getKakaoAccessToken(validCode);
-            UserInfoDto userInfo = kakaoService.getUserInfo(tokenInfo.getAccess_token());
-            TokenDto settleUpLogin = kakaoService.registerUser(userInfo);
-            ResponseDto responseDto = new ResponseDto(true, "successfully login", settleUpLogin);
-            return ResponseEntity.status(HttpStatus.OK).body(responseDto);
+        KakaoTokenDto tokenInfo = kakaoService.getKakaoAccessToken(validCode);
+        UserInfoDto userInfo = kakaoService.getUserInfo(tokenInfo.getAccess_token());
+        TokenDto settleUpLogin = kakaoService.registerUser(userInfo);
+        ResponseDto responseDto = new ResponseDto(true, "successfully login", settleUpLogin);
+        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
 
     }
 
     /**
      * 우리 서비스의 토큰이 있는 경우
+     *
      * @param token
      * @return userUUID ,userName
      * @error 유효하지 않은 토큰
      */
     @GetMapping("/checkToken")
     public ResponseEntity<ResponseDto> checkToken(@RequestHeader(value = "Authorization") String token) {
-            UserInfoDto userInfoDto = loginService.validTokenOrNot(token);
-            Map<String, Object> userInfo = new HashMap<>();
-            userInfo.put("userUUID", userInfoDto.getUserUUID());
-            userInfo.put("userName", userInfoDto.getUserName());
-            ResponseDto<Map<String, Object>> responseDto = new ResponseDto<>(true, "Token is valid, Login success", userInfo, null);
-            return ResponseEntity.status(HttpStatus.OK).body(responseDto);
+        UserInfoDto userInfoDto = loginService.validTokenOrNot(token);
+        Map<String, Object> userInfo = new HashMap<>();
+        userInfo.put("userUUID", userInfoDto.getUserUUID());
+        userInfo.put("userName", userInfoDto.getUserName());
+        ResponseDto<Map<String, Object>> responseDto = new ResponseDto<>(true, "Token is valid, Login success", userInfo, null);
+        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
     }
 }
 

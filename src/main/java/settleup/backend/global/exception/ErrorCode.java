@@ -8,18 +8,18 @@ public enum ErrorCode {
     PASSWORD_FORMAT_INVALID(105, "Password format is invalid"),
     USER_ID_DUPLICATE(106, "UserId already exists"),
     USER_ID_FORMAT_INVALID(107, "UserId format is invalid"),
-    PARSE_ERROR(108,"response body parse error"),
-    TOKEN_EXPIRED(109,"token expired"),
-    TOKEN_MALFORMED(110,"token format is invalid"),
-    TOKEN_INVALID(111,"token is invalid"),
-    TOKEN_WRONG_SUBJECT(112,"not our site token"),
-    EXTERNAL_API_ERROR_TOKEN(113,"Failed to get social external api access token"),
-    EXTERNAL_API_ERROR(114,"Failed to retrieve user info from Kakao"),
-    EXTERNAL_API_EMPTY_RESPONSE(115,"social external api, user info response is empty"),
+    PARSE_ERROR(108, "response body parse error"),
+    TOKEN_EXPIRED(109, "token expired"),
+    TOKEN_MALFORMED(110, "token format is invalid"),
+    TOKEN_INVALID(111, "token is invalid"),
+    TOKEN_WRONG_SUBJECT(112, "not our site token"),
+    EXTERNAL_API_ERROR_TOKEN(113, "Failed to get social external api access token"),
+    EXTERNAL_API_ERROR(114, "Failed to retrieve user info from Kakao"),
+    EXTERNAL_API_EMPTY_RESPONSE(115, "social external api, user info response is empty"),
     REGISTRATION_FAILED(116, "User registration failed, Errors occurred during uuid generation"),
     TOKEN_CREATION_FAILED(117, "Failed to create login token"),
     INVALID_INPUT(118, "Invalid input provided"),
-    GROUP_CREATION_FAILED(119,"Errors occurred during uuid generation, url generation, or db saving");
+    GROUP_CREATION_FAILED(119, "Errors occurred during uuid generation, url generation, or db saving");
 
 
     private final int code;
