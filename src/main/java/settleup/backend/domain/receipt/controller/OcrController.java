@@ -8,11 +8,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import settleup.backend.domain.receipt.entity.dto.FormDataDto;
+import settleup.backend.domain.receipt.entity.dto.ReceiptRequestDto;
+import settleup.backend.domain.receipt.receiptCommons.ControllerHelper;
 import settleup.backend.domain.receipt.serive.OcrService;
 
 import java.io.IOException;
 
 import org.springframework.web.context.request.async.DeferredResult;
+import settleup.backend.global.api.ResponseDto;
 
 
 @RestController
@@ -22,6 +25,7 @@ public class OcrController {
 
     private final OcrService ocrService;
     private static final Logger logger = LoggerFactory.getLogger(OcrController.class);
+
 
 
     @PostMapping("azure/callback")
@@ -55,10 +59,20 @@ public class OcrController {
 
         return deferredResult;
     }
+    // for simply test
+//    @PostMapping("/create")
+//    public ResponseEntity<?> createReceipt(@RequestBody JsonNode jsonNode) {
+//        return ResponseEntity.ok().body(jsonNode);
+//    }
+
     @PostMapping("/create")
-    public ResponseEntity<?> createReceipt(@RequestBody JsonNode jsonNode) {
-        //
-        return ResponseEntity.ok().body(jsonNode);
+    public ResponseEntity<?> createReceipt(@RequestBody ReceiptRequestDto requestDto) {
+        String missingFields = ControllerHelper.checkRequiredWithFilter(requestDto);
+        if (!missingFields.isEmpty()) {
+            ResponseDto errorResponse = new ResponseDto(false, "Missing or invalid fields: " + missingFields, null);
+            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+        }
+        return ResponseEntity.ok().body(requestDto);
     }
 }
 
