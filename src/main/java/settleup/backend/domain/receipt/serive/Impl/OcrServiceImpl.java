@@ -1,9 +1,12 @@
 package settleup.backend.domain.receipt.serive.Impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
@@ -21,6 +24,9 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 
 @Service
@@ -31,7 +37,7 @@ public class OcrServiceImpl implements OcrService {
     private static final Logger logger = LoggerFactory.getLogger(OcrServiceImpl.class);
     private final ApiCallHelper apiCallHelper;
     private final AzureConfig azureConfig;
-    private final AppConfig appConfig;
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     @Override
     public String processFormData(FormDataDto dataDto) throws IOException {
@@ -46,133 +52,92 @@ public class OcrServiceImpl implements OcrService {
         }
     }
 
-
-
-//    @Override
-//    public HttpStatusCode postToAzureApi(String base64) {
-//        try {
-//            HttpHeaders headers = apiCallHelper.createHeaders();
-//            headers.setContentType(MediaType.APPLICATION_JSON); // 예시로 JSON을 사용하는 경우
-//            headers.set("Ocp-Apim-Subscription-Key", azureConfig.getApiKey());
-//
-//            Map<String, String> requestBody = new HashMap<>();
-//            requestBody.put("base64Source", base64);
-//
-//            HttpEntity<?> requestEntity = new HttpEntity<>(requestBody, headers);
-//            logger.debug("Sending request to Azure API: {}", azureConfig.getOcrUri());
-//            logger.debug("Request body: {}", requestBody);
-//
-//           ResponseEntity< Map<String, Object>> responseEntity =(ResponseEntity)apiCallHelper.callExternalApi(azureConfig.getOcrUri(), HttpMethod.POST, requestEntity, Map.class);
-//
-////            if (jsonResponse == null || jsonResponse.isEmpty()) {
-////                throw new CustomException(ErrorCode.EXTERNAL_API_EMPTY_RESPONSE);
-////            }
-//
-//            if (responseEntity.getStatusCode() != HttpStatus.OK) {
-//                throw new CustomException(ErrorCode.EXTERNAL_API_ERROR);
-//            }
-//
-//            return responseEntity.getStatusCode();
-//        } catch (Exception e) {
-//            logger.error("Error during API call to Azure: ", e);
-//            throw new RuntimeException(e);
-//        }
-//    }
-//
     @Override
-    public String postToAzureApi(String base64) {
-        try {
-            HttpHeaders headers = apiCallHelper.createHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("Ocp-Apim-Subscription-Key", azureConfig.getApiKey());
+    public CompletableFuture<String> postToAzureApi(String base64) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                HttpHeaders headers = apiCallHelper.createHeaders();
+                headers.setContentType(MediaType.APPLICATION_JSON);
+                headers.set("Ocp-Apim-Subscription-Key", azureConfig.getApiKey());
 
-            Map<String, String> requestBody = new HashMap<>();
-            requestBody.put("base64Source", base64);
+                Map<String, String> requestBody = new HashMap<>();
+                requestBody.put("base64Source", base64);
+                HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
+                logger.debug("Sending request to Azure API: {}", azureConfig.getPostUrl());
+                logger.debug("Request body: {}", requestBody);
 
-            HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
-            logger.debug("Sending request to Azure API: {}", azureConfig.getPostUrl());
-            logger.debug("Request body: {}", requestBody);
+                ResponseEntity<Map> responseEntity = apiCallHelper.postExternalApi(
+                        azureConfig.getPostUrl(),
+                        HttpMethod.POST,
+                        requestEntity,
+                        Map.class);
 
-            ResponseEntity<Map> responseEntity = apiCallHelper.postExternalApi(azureConfig.getPostUrl(), HttpMethod.POST, requestEntity, Map.class);
+                HttpStatus status = (HttpStatus) responseEntity.getStatusCode();
 
-            HttpStatus status = (HttpStatus) responseEntity.getStatusCode();
-
-            if (status == HttpStatus.ACCEPTED) {
-                logger.debug("Request accepted with status 202, but no content.");
-                String OperationLocation = responseEntity.getHeaders().getFirst("Operation-Location");
-                return OperationLocation;
-            } else {
-                logger.error("API call failed or returned unexpected status: {}", status);
+                if (status == HttpStatus.ACCEPTED) {
+                    logger.debug("Request accepted with status 202, but no content.");
+                    return responseEntity.getHeaders().getFirst("Operation-Location");
+                } else {
+                    logger.error("API call failed or returned unexpected status: {}", status);
+                    throw new CustomException(ErrorCode.EXTERNAL_API_ERROR);
+                }
+            } catch (HttpClientErrorException e) {
+                logger.error("Client error during API call to Azure: ", e);
                 throw new CustomException(ErrorCode.EXTERNAL_API_ERROR);
+            } catch (Exception e) {
+                logger.error("Error during API call to Azure: ", e);
+                throw new RuntimeException("Error during API call to Azure", e);
             }
-        } catch (HttpClientErrorException e) {
-            logger.error("Client error during API call to Azure: ", e);
-            throw new CustomException(ErrorCode.EXTERNAL_API_ERROR);
-        } catch (Exception e) {
-            logger.error("Error during API call to Azure: ", e);
-            throw new RuntimeException("Error during API call to Azure", e);
-        }
+        });
     }
 
-    @Override
-    public ResponseEntity<?> getToAzureApi(String operationLocation) {
-        if (operationLocation == null) {
-            throw new IllegalArgumentException("The operationLocation is null.");
-        }
 
-        HttpHeaders headers = apiCallHelper.createHeaders();
-        headers.set("Ocp-Apim-Subscription-Key", azureConfig.getApiKey());
 
-        HttpEntity<?> requestEntity = new HttpEntity<>(headers);
-        ResponseEntity<String> response = appConfig.restTemplate().exchange(
-                operationLocation,
-                HttpMethod.GET,
-                requestEntity,
-                String.class);
+    @Async
+    public CompletableFuture<JsonNode> getToAzureApi(String operationLocation) {
+        CompletableFuture<JsonNode> resultFuture = new CompletableFuture<>();
 
-        return response;
+        checkStatus(operationLocation, resultFuture);
+
+        return resultFuture;
     }
-//@Override
-//public CompletableFuture<String> postToAzureApi(String base64) {
-//    HttpHeaders headers = apiCallHelper.createHeaders();
-//    headers.setContentType(MediaType.APPLICATION_JSON);
-//    headers.set("Ocp-Apim-Subscription-Key", azureConfig.getApiKey());
-//
-//    Map<String, String> requestBody = new HashMap<>();
-//    requestBody.put("base64Source", base64);
-//
-//    HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
-//
-//    return apiCallHelper.postExternalApi(azureConfig.getPostUrl(), HttpMethod.POST, requestEntity, Map.class)
-//            .thenApply(responseEntity -> {
-//                if (responseEntity.getStatusCode() == HttpStatus.ACCEPTED) {
-//                    return responseEntity.getHeaders().getFirst("Operation-Location");
-//                } else {
-//                    throw new CustomException(ErrorCode.EXTERNAL_API_ERROR);
-//                }
-//            })
-//            .thenCompose(this::getToAzureApi); // 이미 String을 반환하므로 추가 변환은 필요 없음
-//}
-//
-//
-//    @Override
-//    public CompletableFuture<String> getToAzureApi(String operationLocation) {
-//        return CompletableFuture.supplyAsync(() -> {
-//            HttpHeaders headers = apiCallHelper.createHeaders();
-//            headers.set("Ocp-Apim-Subscription-Key", azureConfig.getApiKey());
-//
-//            HttpEntity<?> requestEntity = new HttpEntity<>(headers);
-//            ResponseEntity<String> response = appConfig.restTemplate().exchange(
-//                    operationLocation,
-//                    HttpMethod.GET,
-//                    requestEntity,
-//                    String.class); // ResponseEntity<String>을 사용
-//
-//            return response.getBody(); // 바로 String 반환
-//        });
-//    }
 
+    private void checkStatus(String operationLocation, CompletableFuture<JsonNode> resultFuture) {
+        scheduler.schedule(() -> {
+            HttpHeaders headers = apiCallHelper.createHeaders();
+            headers.set("Ocp-Apim-Subscription-Key", azureConfig.getApiKey());
+            logger.debug("Initiating status check for operationLocation: {}", operationLocation);
 
+            HttpEntity<?> requestEntity = new HttpEntity<>(headers);
+
+            // 비동기 API 호출하여 JsonNode 반환
+            CompletableFuture<JsonNode> responseFuture = apiCallHelper.callExternalApiByAsync(operationLocation, HttpMethod.GET, requestEntity);
+
+            // 비동기 응답 처리
+            responseFuture.thenAccept(jsonNode -> {
+                String status = jsonNode.path("status").asText();
+                logger.debug("Received status: {} for operationLocation: {}", status, operationLocation);
+
+                if ("succeeded".equals(status)) {
+                    // status가 succeeded 일 때 전체 응답 본문을 CompletableFuture에 설정
+                    logger.info("Operation succeeded for operationLocation: {}", operationLocation);
+                    resultFuture.complete(jsonNode);
+                } else if ("running".equals(status)) {
+                    // 상태가 running이면 다시 상태 확인
+                    logger.debug("Operation still running, scheduling another check for operationLocation: {}", operationLocation);
+                    checkStatus(operationLocation, resultFuture);
+                } else {
+                    // 실패나 예상치 못한 상태 처리
+                    logger.error("Failed or unexpected status: {} for operationLocation: {}", status, operationLocation);
+                    resultFuture.completeExceptionally(new RuntimeException("Failed or unexpected status: " + status));
+                }
+            }).exceptionally(ex -> {
+                logger.error("Exception occurred while processing the response for operationLocation: {}", operationLocation, ex);
+                resultFuture.completeExceptionally(ex);
+                return null;
+            });
+        }, 5, TimeUnit.SECONDS); // 상태를 다시 확인하기 전에 대기할 시간. 필요에 따라 조정 가능
+    }
 
     private String convertToBase64(MultipartFile file) throws IOException {
         try {
