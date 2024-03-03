@@ -1,5 +1,6 @@
 package settleup.backend.domain.receipt.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +55,10 @@ public class OcrController {
 
         return deferredResult;
     }
+    @PostMapping("/create")
+    public ResponseEntity<?> createReceipt(@RequestBody JsonNode jsonNode) {
+        //
+        return ResponseEntity.ok().body(jsonNode);
+    }
 }
-
 
