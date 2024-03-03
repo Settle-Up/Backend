@@ -1,4 +1,5 @@
 package settleup.backend.domain.receipt.controller;
+
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,6 +10,7 @@ import settleup.backend.domain.receipt.entity.dto.FormDataDto;
 import settleup.backend.domain.receipt.serive.OcrService;
 
 import java.io.IOException;
+
 import org.springframework.web.context.request.async.DeferredResult;
 
 
@@ -39,7 +41,7 @@ public class OcrController {
                     .exceptionally(ex -> {
                         logger.error("Exception occurred during async processing", ex);
                         deferredResult.setErrorResult(
-                                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("비동기 처리 중 오류 발생")
+                                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("error during async")
                         );
                         return null;
                     });

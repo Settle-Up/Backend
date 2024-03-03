@@ -19,7 +19,12 @@ public enum ErrorCode {
     REGISTRATION_FAILED(116, "User registration failed, Errors occurred during uuid generation"),
     TOKEN_CREATION_FAILED(117, "Failed to create login token"),
     INVALID_INPUT(118, "Invalid input provided"),
-    GROUP_CREATION_FAILED(119, "Errors occurred during uuid generation, url generation, or db saving");
+    GROUP_CREATION_FAILED(119, "Errors occurred during uuid generation, url generation, or db saving"),
+    ENCODING_ERROR(120, "Failed to convert file to base64,"),
+    FILE_PROCESSING_ERROR(121, "Failed to read file content"),
+    OPERATION_OCR_RESPONSE_STATUS_ERROR(122, "Operation failed with status during azure api response"),
+    RECEIVED_UNEXPECTED_STATUS(123, "Received unexpected status"),
+    EXTERNAL_OCR_API_ERROR(124, "Exception occurred while processing the Azure_API response");
 
 
     private final int code;

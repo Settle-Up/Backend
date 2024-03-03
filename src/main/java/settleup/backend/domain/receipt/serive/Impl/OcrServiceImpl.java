@@ -1,7 +1,6 @@
 package settleup.backend.domain.receipt.serive.Impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,15 +39,14 @@ public class OcrServiceImpl implements OcrService {
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     @Override
-    public String processFormData(FormDataDto dataDto) throws IOException {
+    public String processFormData(FormDataDto dataDto) throws CustomException {
         MultipartFile file = dataDto.getImage();
         try {
             String base64Image = convertToBase64(file);
             logger.info("Image converted to base64: {}", base64Image);
             return base64Image;
-        } catch (IOException e) {
-            logger.error("Failed to convert file to base64: {}", e.getMessage());
-            throw e;
+        } catch (CustomException e) {
+            throw new CustomException(ErrorCode.ENCODING_ERROR);
         }
     }
 
@@ -83,7 +81,7 @@ public class OcrServiceImpl implements OcrService {
                 }
             } catch (HttpClientErrorException e) {
                 logger.error("Client error during API call to Azure: ", e);
-                throw new CustomException(ErrorCode.EXTERNAL_API_ERROR);
+                throw e;
             } catch (Exception e) {
                 logger.error("Error during API call to Azure: ", e);
                 throw new RuntimeException("Error during API call to Azure", e);
@@ -92,9 +90,8 @@ public class OcrServiceImpl implements OcrService {
     }
 
 
-
     @Async
-    public CompletableFuture<JsonNode> getToAzureApi(String operationLocation) {
+    public CompletableFuture<JsonNode> getToAzureApi(String operationLocation) throws CustomException {
         CompletableFuture<JsonNode> resultFuture = new CompletableFuture<>();
 
         checkStatus(operationLocation, resultFuture);
@@ -102,50 +99,53 @@ public class OcrServiceImpl implements OcrService {
         return resultFuture;
     }
 
-    private void checkStatus(String operationLocation, CompletableFuture<JsonNode> resultFuture) {
+
+    private void checkStatus(String operationLocation, CompletableFuture<JsonNode> resultFuture) throws CustomException {
         scheduler.schedule(() -> {
-            HttpHeaders headers = apiCallHelper.createHeaders();
-            headers.set("Ocp-Apim-Subscription-Key", azureConfig.getApiKey());
-            logger.debug("Initiating status check for operationLocation: {}", operationLocation);
+            try {
+                HttpHeaders headers = apiCallHelper.createHeaders();
+                headers.set("Ocp-Apim-Subscription-Key", azureConfig.getApiKey());
+                logger.debug("Initiating status check for operationLocation: {}", operationLocation);
 
-            HttpEntity<?> requestEntity = new HttpEntity<>(headers);
+                HttpEntity<?> requestEntity = new HttpEntity<>(headers);
 
-            // 비동기 API 호출하여 JsonNode 반환
-            CompletableFuture<JsonNode> responseFuture = apiCallHelper.callExternalApiByAsync(operationLocation, HttpMethod.GET, requestEntity);
+                CompletableFuture<JsonNode> responseFuture = apiCallHelper.callExternalApiByAsync(operationLocation, HttpMethod.GET, requestEntity);
 
-            // 비동기 응답 처리
-            responseFuture.thenAccept(jsonNode -> {
-                String status = jsonNode.path("status").asText();
-                logger.debug("Received status: {} for operationLocation: {}", status, operationLocation);
+                responseFuture.thenAccept(jsonNode -> {
+                    String status = jsonNode.path("status").asText();
+                    logger.debug("Received status: {} for operationLocation: {}", status, operationLocation);
 
-                if ("succeeded".equals(status)) {
-                    // status가 succeeded 일 때 전체 응답 본문을 CompletableFuture에 설정
-                    logger.info("Operation succeeded for operationLocation: {}", operationLocation);
-                    resultFuture.complete(jsonNode);
-                } else if ("running".equals(status)) {
-                    // 상태가 running이면 다시 상태 확인
-                    logger.debug("Operation still running, scheduling another check for operationLocation: {}", operationLocation);
-                    checkStatus(operationLocation, resultFuture);
-                } else {
-                    // 실패나 예상치 못한 상태 처리
-                    logger.error("Failed or unexpected status: {} for operationLocation: {}", status, operationLocation);
-                    resultFuture.completeExceptionally(new RuntimeException("Failed or unexpected status: " + status));
-                }
-            }).exceptionally(ex -> {
-                logger.error("Exception occurred while processing the response for operationLocation: {}", operationLocation, ex);
-                resultFuture.completeExceptionally(ex);
-                return null;
-            });
-        }, 5, TimeUnit.SECONDS); // 상태를 다시 확인하기 전에 대기할 시간. 필요에 따라 조정 가능
+                    switch (status) {
+                        case "succeeded":
+                            resultFuture.complete(jsonNode);
+                            break;
+                        case "running":
+                            checkStatus(operationLocation, resultFuture);
+                            break;
+                        default:
+                            resultFuture.completeExceptionally(new CustomException(ErrorCode.RECEIVED_UNEXPECTED_STATUS));
+                            break;
+                    }
+                }).exceptionally(ex -> {
+                    logger.error("Exception occurred while processing the response for operationLocation: {}", operationLocation, ex);
+                    resultFuture.completeExceptionally(new CustomException(ErrorCode.EXTERNAL_OCR_API_ERROR));
+                    return null;
+                });
+            } catch (Exception ex) {
+                logger.error("An error occurred during the status check", ex);
+                resultFuture.completeExceptionally(new CustomException(ErrorCode.OPERATION_OCR_RESPONSE_STATUS_ERROR));
+            }
+        }, 5, TimeUnit.SECONDS);
     }
 
-    private String convertToBase64(MultipartFile file) throws IOException {
+    private String convertToBase64(MultipartFile file) throws CustomException {
         try {
             byte[] fileContent = file.getBytes();
             return Base64.getEncoder().encodeToString(fileContent);
+        } catch (CustomException e) {
+            throw new CustomException(ErrorCode.FILE_PROCESSING_ERROR);
         } catch (IOException e) {
-            logger.error("Failed to read file content: {}", e.getMessage());
-            throw e;
+            throw new RuntimeException(e);
         }
     }
 }
