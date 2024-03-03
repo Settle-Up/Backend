@@ -25,6 +25,14 @@ public class ApiCallHelper {
         }
     }
 
+
+    public <T> ResponseEntity<T> postExternalApi(String uri, HttpMethod method, HttpEntity<?> requestEntity, Class<T> responseType) throws CustomException {
+        ResponseEntity<T> response = restTemplate.exchange(uri, method, requestEntity, responseType);
+
+        return response;
+    }
+
+
     public HttpHeaders createHeaders() {
         HttpHeaders headers = new HttpHeaders();
         return headers;
