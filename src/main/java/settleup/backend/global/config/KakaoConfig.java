@@ -26,5 +26,5 @@ public class KakaoConfig {
     private String tokenUri;
 
     @Value("${oauth.kakao.user_info_accept}")
-    private  String userInfoUri;
+    private String userInfoUri;
 }
