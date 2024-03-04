@@ -1,4 +1,4 @@
-package settleup.backend.domain.user.service.impl;
+package settleup.backend.domain.user.service.Impl;
 
 import lombok.AllArgsConstructor;
 import org.springframework.http.*;

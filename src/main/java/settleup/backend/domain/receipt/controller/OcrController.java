@@ -1,6 +1,5 @@
 package settleup.backend.domain.receipt.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import settleup.backend.domain.receipt.entity.dto.FormDataDto;
 import settleup.backend.domain.receipt.entity.dto.ReceiptRequestDto;
 import settleup.backend.domain.receipt.receiptCommons.ControllerHelper;
-import settleup.backend.domain.receipt.serive.OcrService;
+import settleup.backend.domain.receipt.service.OcrService;
 
 import java.io.IOException;
 
@@ -66,11 +65,11 @@ public class OcrController {
 //    }
 
     @PostMapping("/create")
-    public ResponseEntity<?> createReceipt(@RequestBody ReceiptRequestDto requestDto) {
+    public ResponseEntity<?> createReceipt(@RequestBody ReceiptRequestDto requestDto) throws  Exception{
         String missingFields = ControllerHelper.checkRequiredWithFilter(requestDto);
         if (!missingFields.isEmpty()) {
             ResponseDto errorResponse = new ResponseDto(false, "Missing or invalid fields: " + missingFields, null);
-            return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+            throw new Exception();
         }
         return ResponseEntity.ok().body(requestDto);
     }

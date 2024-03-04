@@ -1,4 +1,4 @@
-package settleup.backend.domain.user.service.impl;
+package settleup.backend.domain.user.service.Impl;
 
 import io.jsonwebtoken.Claims;
 import lombok.AllArgsConstructor;

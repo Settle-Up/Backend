@@ -1,4 +1,4 @@
-package settleup.backend.domain.group.service.impl;
+package settleup.backend.domain.group.service.Impl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,14 +1,10 @@
-package settleup.backend.domain.receipt.serive;
+package settleup.backend.domain.receipt.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
 import settleup.backend.domain.receipt.entity.dto.FormDataDto;
-import settleup.backend.domain.receipt.entity.dto.OcrResponseDto;
 import settleup.backend.global.exception.CustomException;
 
 import java.io.IOException;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 
