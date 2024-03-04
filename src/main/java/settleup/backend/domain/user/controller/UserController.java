@@ -26,7 +26,6 @@ public class UserController {
 
     /**
      * 우리 서비스의 토큰이 없는 경우
-     *
      * @param validCode
      * @return
      */
@@ -42,7 +41,6 @@ public class UserController {
 
     /**
      * 우리 서비스의 토큰이 있는 경우
-     *
      * @param token
      * @return userUUID ,userName
      * @error 유효하지 않은 토큰
