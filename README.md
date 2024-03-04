@@ -2,6 +2,23 @@
 
 ## service-server (backend)
 
+주요 api 들은 시퀀스다이어그램 또는 플로워차트와
+엔티티관계 다이어그램(ERD)를 md 파일로 올려두었습니다 
+내용이 많아 readme에 한번에 올리기에는 가독성이 떨어질것을 우려해 따로 파일화 했습니다
+code를 보시기전에 보시면 도움이 되실 것 같습니다
+
+아래는 자세한 설명을 포함하고 있는 feature명 와 기능, 파일명입니다 
+| No. | Feature Name                | 기능                             | 파일명                           |
+|-----|-----------------------------|----------------------------------|----------------------------------|
+| 1   | KakaoLogin                  | 카카오 로그인                     | SequenceDiagram - KaKaoLogin.md  |
+| 2   | OcrBridge                   | 영수증 이미지 분석                | SequenceDiagram - OcrBridge.md   |
+| 3   | create-transaction-receipt  | 영수증을 각 개인의 비용으로 변환 | flowchart-expense.md             |
+| 4   | ERD                         | 데이터베이스 구조 설계           | ERD.md           |
+
+
+
+
+
 Below is the entity-relationship diagram (ERD) for the Settle_Up Project, illustrating the relationships between users, groups, receipts, transactions, and other entities within the system.
 
 아래는 Settle_Up 프로젝트의 엔티티 관계 다이어그램(ERD)입니다. 사용자, 그룹, 영수증, 거래 등 시스템 내의 다양한 엔티티 간의 관계를 보여줍니다.
