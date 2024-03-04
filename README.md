@@ -23,4 +23,4 @@ Below is a detailed list of features, their functionalities, and the correspondi
 | KakaoLogin                 | Kakao Login                                  | SequenceDiagram - KaKaoLogin.md   |
 | OcrBridge                  | Analysis of Receipt Images                   | SequenceDiagram - OcrBridge.md    |
 | create-transaction-receipt | Conversion of Receipts into Individual Costs | flowchart-expense.md              |
-| ERD                        | Database Structure Design                    | (Please insert the file name)     |
+| ERD                        | Database Structure Design                    | ERD.md    |
