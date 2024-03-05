@@ -1,6 +1,6 @@
 # SettleUp Project - **service-server (backend)**
 
-주요기능에 대한 **시퀀스 다이어그램** 또는 **플로우차트**를 비롯한 주요 다이어그램과 **엔티티 관계 다이어그램(ERD)** 을 **개별 마크다운(md) 파일** 로 업로드하였습니다.
+주요기능에 대한 **시퀀스 다이어그램** 또는 **플로우차트** 를 비롯한 주요 다이어그램과 **엔티티 관계 다이어그램(ERD)** 을 </br>***Diagram file*** 로 업로드하였습니다.<br>
 내용이 방대한 점을 고려하여, 혼란을 줄이고 가독성을 높이기 위해 파일들을 readme 파일에 모두 포함시키지 않고 분리하기로 결정했습니다. </br></br>
 **코드를 살펴보기시기 전에 이 다이어그램들을 검토하시면 시스템 구조에 대한 더 명확한 이해를 제공해 드릴 수 있습니다**.
 
@@ -14,7 +14,7 @@
 
 
 
-We have uploaded the main API diagrams, including sequence diagrams or flowcharts, as well as Entity Relationship Diagrams (ERD), as individual markdown (md) files. Given the extensive nature of the content, we decided to reduce clutter and enhance readability by not including all files in the readme but separating them instead. Reviewing these diagrams before diving into the code will offer a clearer understanding of the system's structure.
+We have uploaded the main API diagrams, including sequence diagrams or flowcharts, as well as Entity Relationship Diagrams (ERD), as individual ***diagram files***. Given the extensive nature of the content, we decided to reduce clutter and enhance readability by not including all files in the readme but separating them instead. Reviewing these diagrams before diving into the code will offer a clearer understanding of the system's structure.
 
 Below is a detailed list of features, their functionalities, and the corresponding file names:
 
