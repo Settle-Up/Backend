@@ -5,8 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
-import settleup.backend.domain.user.entity.dto.TokenDto;
-import settleup.backend.global.exception.CustomException;
+import settleup.backend.domain.user.entity.dto.SettleUpTokenDto;
 import settleup.backend.domain.user.service.KakaoService;
 import settleup.backend.domain.user.service.LoginService;
 import settleup.backend.domain.user.entity.dto.KakaoTokenDto;
@@ -34,7 +33,7 @@ public class UserController {
     public ResponseEntity<ResponseDto> getTokenFromSocial(@RequestParam("code") String validCode) {
         KakaoTokenDto tokenInfo = kakaoService.getKakaoAccessToken(validCode);
         UserInfoDto userInfo = kakaoService.getUserInfo(tokenInfo.getAccess_token());
-        TokenDto settleUpLogin = kakaoService.registerUser(userInfo);
+        SettleUpTokenDto settleUpLogin = kakaoService.registerUser(userInfo);
         ResponseDto responseDto = new ResponseDto(true, "successfully login", settleUpLogin);
         return ResponseEntity.status(HttpStatus.OK).body(responseDto);
 

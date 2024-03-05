@@ -4,6 +4,7 @@ Below is the entity-relationship diagram (ERD) for the Settle_Up Project, illust
 
 아래는 Settle_Up 프로젝트의 엔티티 관계 다이어그램(ERD)입니다. 사용자, 그룹, 영수증, 거래 등 시스템 내의 다양한 엔티티 간의 관계를 보여줍니다.
 
+
 ```mermaid
 %%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#ff0000', 'edgeLabelBackground':'#ffffff' }}}%%
 

@@ -6,7 +6,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class TokenDto {
+public class SettleUpTokenDto {
     private String accessToken;
     private String subject;
     private String issuedTime;

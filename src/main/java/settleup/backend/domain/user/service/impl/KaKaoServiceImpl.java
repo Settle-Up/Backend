@@ -9,7 +9,7 @@ import org.springframework.util.MultiValueMap;
 import settleup.backend.global.common.ApiCallHelper;
 import settleup.backend.global.common.UUID_Helper;
 import settleup.backend.domain.user.entity.UserEntity;
-import settleup.backend.domain.user.entity.dto.TokenDto;
+import settleup.backend.domain.user.entity.dto.SettleUpTokenDto;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
@@ -109,7 +109,7 @@ public class KaKaoServiceImpl implements KakaoService {
      */
 
     @Override
-    public TokenDto registerUser(UserInfoDto userInfoDto) throws CustomException {
+    public SettleUpTokenDto registerUser(UserInfoDto userInfoDto) throws CustomException {
         try {
             Optional<UserEntity> existingUser = userRepo.findByUserEmail(userInfoDto.getUserEmail());
             if (existingUser.isPresent()) {
@@ -136,16 +136,16 @@ public class KaKaoServiceImpl implements KakaoService {
 
     }
 
-    private TokenDto createLoginInfo(UserInfoDto userInfoDto) {
+    private SettleUpTokenDto createLoginInfo(UserInfoDto userInfoDto) {
         try {
-            TokenDto tokenDto = new TokenDto();
-            tokenDto.setAccessToken(tokenProvider.createToken(userInfoDto));
-            tokenDto.setSubject("ForSettleUpLogin");
-            tokenDto.setExpiresIn("1 day");
-            tokenDto.setIssuedTime(new Date().toString());
-            tokenDto.setUserName(userInfoDto.getUserName());
-            tokenDto.setUserUUID(userInfoDto.getUserUUID());
-            return tokenDto;
+            SettleUpTokenDto settleUpTokenDto = new SettleUpTokenDto();
+            settleUpTokenDto.setAccessToken(tokenProvider.createToken(userInfoDto));
+            settleUpTokenDto.setSubject("ForSettleUpLogin");
+            settleUpTokenDto.setExpiresIn("1 day");
+            settleUpTokenDto.setIssuedTime(new Date().toString());
+            settleUpTokenDto.setUserName(userInfoDto.getUserName());
+            settleUpTokenDto.setUserUUID(userInfoDto.getUserUUID());
+            return settleUpTokenDto;
         } catch (Exception e) {
             throw new CustomException(ErrorCode.TOKEN_CREATION_FAILED);
         }
