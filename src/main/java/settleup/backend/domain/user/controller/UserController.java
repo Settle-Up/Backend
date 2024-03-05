@@ -50,7 +50,7 @@ public class UserController {
     public ResponseEntity<ResponseDto> checkToken(@RequestHeader(value = "Authorization") String token) {
         UserInfoDto userInfoDto = loginService.validTokenOrNot(token);
         Map<String, Object> userInfo = new HashMap<>();
-        userInfo.put("userUUID", userInfoDto.getUserUUID());
+        userInfo.put("userUUID", userInfoDto.getUserId());
         userInfo.put("userName", userInfoDto.getUserName());
         ResponseDto<Map<String, Object>> responseDto = new ResponseDto<>(true, "Token is valid, Login success", userInfo, null);
         return ResponseEntity.status(HttpStatus.OK).body(responseDto);

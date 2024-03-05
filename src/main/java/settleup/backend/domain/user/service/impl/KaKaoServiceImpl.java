@@ -37,8 +37,8 @@ public class KaKaoServiceImpl implements KakaoService {
 
     /**
      * 인증번호로 카카오에 토큰요청
-     * @param code
-     * @return 유저 정보 userInfo {userName, userPhone , userEmail}
+     * @param code (validCode)
+     * @return
      * @throws CustomException
      */
 
@@ -116,12 +116,12 @@ public class KaKaoServiceImpl implements KakaoService {
                 UserInfoDto newUserInfoDto = new UserInfoDto();
                 newUserInfoDto.setUserName(existingUser.get().getUserName());
                 newUserInfoDto.setUserEmail(existingUser.get().getUserEmail());
-                newUserInfoDto.setUserUUID(existingUser.get().getUserUUID());
+                newUserInfoDto.setUserId(existingUser.get().getUserUUID());
                 return createLoginInfo(newUserInfoDto);
 
             }
             String userUUID = uuidHelper.UUIDFromEmail(userInfoDto.getUserEmail());
-            userInfoDto.setUserUUID(userUUID);
+            userInfoDto.setUserId(userUUID);
 
             UserEntity newUser = new UserEntity();
             newUser.setUserEmail(userInfoDto.getUserEmail());
@@ -144,7 +144,7 @@ public class KaKaoServiceImpl implements KakaoService {
             settleUpTokenDto.setExpiresIn("1 day");
             settleUpTokenDto.setIssuedTime(new Date().toString());
             settleUpTokenDto.setUserName(userInfoDto.getUserName());
-            settleUpTokenDto.setUserUUID(userInfoDto.getUserUUID());
+            settleUpTokenDto.setUserId(userInfoDto.getUserId());
             return settleUpTokenDto;
         } catch (Exception e) {
             throw new CustomException(ErrorCode.TOKEN_CREATION_FAILED);
