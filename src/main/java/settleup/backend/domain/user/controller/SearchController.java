@@ -17,19 +17,19 @@ import java.util.Map;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/home")
+@RequestMapping("")
 public class SearchController {
 
     private SearchService searchService;
     private LoginService loginService;
 
-    @GetMapping("")
+    @GetMapping("/")
     public ResponseEntity<ResponseDto> findUserEmail(
             @RequestHeader(value = "Authorization") String token, @RequestParam("search") String partOfEmail) {
         loginService.validTokenOrNot(token);
         List<UserInfoDto> userInfoDto = searchService.getUserList(partOfEmail);
         Map<String, Object> data = new HashMap<>();
-        data.put("SearchList", userInfoDto);
+        data.put("searchList", userInfoDto);
         ResponseDto<Map<String, Object>> responseDto;
         responseDto = new ResponseDto<>(true, "retrieved successfully", data, null);
         return ResponseEntity.status(HttpStatus.OK).body(responseDto);
