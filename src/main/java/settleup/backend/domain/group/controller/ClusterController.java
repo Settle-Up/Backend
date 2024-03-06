@@ -17,7 +17,7 @@ import java.util.List;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/home")
+@RequestMapping("")
 public class ClusterController {
 
     private LoginService loginService;
