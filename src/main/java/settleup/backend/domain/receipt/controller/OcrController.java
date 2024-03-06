@@ -1,6 +1,5 @@
 package settleup.backend.domain.receipt.controller;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,23 +63,19 @@ public class OcrController {
         return deferredResult;
     }
 
-    // for simply test
+
     @PostMapping("/create")
-    public ResponseEntity<?> createReceipt(
-            @RequestHeader(value = "Authorization") String token, @RequestBody JsonNode jsonNode) throws CustomException {
+    public ResponseDto createReceipt(
+            @RequestHeader(value = "Authorization") String token,@RequestBody ReceiptRequestDto requestDto) throws CustomException{
         loginService.validTokenOrNot(token);
-        return ResponseEntity.ok().body(jsonNode);
+        String missingFields = ControllerHelper.checkRequiredWithFilter(requestDto);
+        if (!missingFields.isEmpty()) {
+            ResponseDto errorResponse = new ResponseDto(false, "Missing or invalid fields: " + missingFields, null);
+            return errorResponse;
+        }
+        ResponseDto successResponse =
+                new ResponseDto<>(true,"수빈님 요청은 현재 1.토큰인증성공 2.필드값 누락이 없는 상태입니다 (유저 , 그룹 검증은 미확인) 백엔드에서 잘 받았습니다. 백 로직이 현재 유저 검증, 그룹검증, 비용로직이 진행 중이므로  성공시 정확한 body값은 추후에 드리겠습니다",null);
+        return successResponse;
     }
 }
-
-//    @PostMapping("/create")
-//    public ResponseEntity<?> createReceipt(@RequestBody ReceiptRequestDto requestDto) throws  Exception{
-//        String missingFields = ControllerHelper.checkRequiredWithFilter(requestDto);
-//        if (!missingFields.isEmpty()) {
-//            ResponseDto errorResponse = new ResponseDto(false, "Missing or invalid fields: " + missingFields, null);
-//            throw new Exception();
-//        }
-//        return ResponseEntity.ok().body(requestDto);
-//    }
-//}
 
