@@ -12,23 +12,28 @@ import settleup.backend.domain.receipt.receiptCommons.ControllerHelper;
 import settleup.backend.domain.receipt.service.OcrService;
 
 import java.io.IOException;
-
 import org.springframework.web.context.request.async.DeferredResult;
 import settleup.backend.global.api.ResponseDto;
+import settleup.backend.domain.user.service.LoginService;
+import settleup.backend.global.exception.CustomException;
+
 
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/receipt")
+@RequestMapping("/expense")
 public class OcrController {
 
     private final OcrService ocrService;
+    private final LoginService loginService;
     private static final Logger logger = LoggerFactory.getLogger(OcrController.class);
 
 
 
     @PostMapping("azure/callback")
-    public DeferredResult<ResponseEntity<?>> externalData(@ModelAttribute FormDataDto dataDto) {
+    public DeferredResult<ResponseEntity<?>> externalData(
+            @RequestHeader(value = "Authorization") String token,@ModelAttribute FormDataDto dataDto) throws CustomException {
+        loginService.validTokenOrNot(token);
         DeferredResult<ResponseEntity<?>> deferredResult = new DeferredResult<>();
         logger.debug("Processing externalData request");
 
