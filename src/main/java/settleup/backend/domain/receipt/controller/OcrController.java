@@ -1,5 +1,6 @@
 package settleup.backend.domain.receipt.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,10 +30,9 @@ public class OcrController {
     private static final Logger logger = LoggerFactory.getLogger(OcrController.class);
 
 
-
     @PostMapping("azure/callback")
     public DeferredResult<ResponseEntity<?>> externalData(
-            @RequestHeader(value = "Authorization") String token,@ModelAttribute FormDataDto dataDto) throws CustomException {
+            @RequestHeader(value = "Authorization") String token, @ModelAttribute FormDataDto dataDto) throws CustomException {
         loginService.validTokenOrNot(token);
         DeferredResult<ResponseEntity<?>> deferredResult = new DeferredResult<>();
         logger.debug("Processing externalData request");
@@ -63,20 +63,24 @@ public class OcrController {
 
         return deferredResult;
     }
-    // for simply test
-//    @PostMapping("/create")
-//    public ResponseEntity<?> createReceipt(@RequestBody JsonNode jsonNode) {
-//        return ResponseEntity.ok().body(jsonNode);
-//    }
 
+    // for simply test
     @PostMapping("/create")
-    public ResponseEntity<?> createReceipt(@RequestBody ReceiptRequestDto requestDto) throws  Exception{
-        String missingFields = ControllerHelper.checkRequiredWithFilter(requestDto);
-        if (!missingFields.isEmpty()) {
-            ResponseDto errorResponse = new ResponseDto(false, "Missing or invalid fields: " + missingFields, null);
-            throw new Exception();
-        }
-        return ResponseEntity.ok().body(requestDto);
+    public ResponseEntity<?> createReceipt(
+            @RequestHeader(value = "Authorization") String token, @RequestBody JsonNode jsonNode) throws CustomException {
+        loginService.validTokenOrNot(token);
+        return ResponseEntity.ok().body(jsonNode);
     }
 }
+
+//    @PostMapping("/create")
+//    public ResponseEntity<?> createReceipt(@RequestBody ReceiptRequestDto requestDto) throws  Exception{
+//        String missingFields = ControllerHelper.checkRequiredWithFilter(requestDto);
+//        if (!missingFields.isEmpty()) {
+//            ResponseDto errorResponse = new ResponseDto(false, "Missing or invalid fields: " + missingFields, null);
+//            throw new Exception();
+//        }
+//        return ResponseEntity.ok().body(requestDto);
+//    }
+//}
 
