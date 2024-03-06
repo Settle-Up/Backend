@@ -5,11 +5,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import settleup.backend.domain.user.common.ApiCallHelper;
-import settleup.backend.domain.user.common.UUID_Helper;
-import settleup.backend.domain.user.entity.dto.TokenDto;
+import settleup.backend.global.common.UUID_Helper;
+import settleup.backend.domain.user.entity.dto.SettleUpTokenDto;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.repository.UserRepository;
 import settleup.backend.global.Util.JwtProvider;
@@ -48,12 +45,12 @@ class KaKaoServiceImplTest {
         when(userRepo.findByUserEmail(anyString())).thenReturn(Optional.empty());
 
 
-        TokenDto mockTokenDto = new TokenDto();
-        mockTokenDto.setAccessToken("mockAccessToken");
+        SettleUpTokenDto mockSettleUpTokenDto = new SettleUpTokenDto();
+        mockSettleUpTokenDto.setAccessToken("mockAccessToken");
         when(tokenProvider.createToken(any(UserInfoDto.class))).thenReturn("mockAccessToken");
 
 
-        TokenDto result = kaKaoService.registerUser(userInfoDto);
+        SettleUpTokenDto result = kaKaoService.registerUser(userInfoDto);
 
 
         assertNotNull(result);

@@ -1,5 +1,4 @@
-package settleup.backend.domain.user.exception;
-
+package settleup.backend.global.exception;
 
 
 public class CustomException extends RuntimeException {
@@ -10,6 +9,9 @@ public class CustomException extends RuntimeException {
         this.errorCode = errorCode;
     }
 
+    public ErrorCode getErrorCode() {
+        return errorCode;
+    }
 
     public String getSimpleErrorCode() {
         return String.valueOf(errorCode.getCode());

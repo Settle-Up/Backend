@@ -1,11 +1,13 @@
 package settleup.backend.global.Util;
 
 import io.jsonwebtoken.*;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
-import settleup.backend.domain.user.exception.CustomException;
-import settleup.backend.domain.user.exception.ErrorCode;
+import settleup.backend.global.config.CryptographyConfig;
+import settleup.backend.global.exception.CustomException;
+import settleup.backend.global.exception.ErrorCode;
 
 import java.time.Duration;
 import java.util.Base64;
@@ -14,9 +16,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Component
+@AllArgsConstructor
 public class JwtProvider {
-    @Value("${jwt.secret_key}")
-    private String secretKey;
+
+ private final CryptographyConfig cryptographyConfig;
 
     public String createToken(UserInfoDto userInfoDto) {
         Date now = new Date();
@@ -33,18 +36,20 @@ public class JwtProvider {
                 .compact();
     }
 
-    private Map<String, Object> createClaims(UserInfoDto userInfoDto) {
+    private Map<String, Object> createClaims(UserInfoDto userInfoDto)throws CustomException {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("userUUID", userInfoDto.getUserUUID().toString());
-        claims.put("userName", userInfoDto.getUserName());
+        String encryptedUserIdAsUUID = ServerCryptUtil.encrypt(userInfoDto.getUserId().toString(),cryptographyConfig.getEncryptionSecretKey());
+        String encryptedUserName = ServerCryptUtil.encrypt(userInfoDto.getUserName().toString(),cryptographyConfig.getEncryptionSecretKey());
+        claims.put("server-specified-key-01", encryptedUserIdAsUUID);
+        claims.put("server-specified-key-02", encryptedUserName);
         return claims;
     }
 
     private String encodeSecretKey() {
-        return Base64.getEncoder().encodeToString(secretKey.getBytes());
+        return Base64.getEncoder().encodeToString(cryptographyConfig.getJwtSecretKey().getBytes());
     }
 
-    public Claims parseJwtToken(String token) throws CustomException {
+    public Claims parseJwtTokenGenerationInfo(String token) throws CustomException {
         try {
             return Jwts.parser()
                     .setSigningKey(encodeSecretKey())

@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
-import settleup.backend.domain.user.exception.CustomException;
+import settleup.backend.global.exception.CustomException;
 import settleup.backend.domain.user.service.LoginService;
 import settleup.backend.domain.user.service.SearchService;
 import settleup.backend.global.api.ResponseDto;
@@ -26,12 +26,7 @@ public class SearchController {
     @GetMapping("/")
     public ResponseEntity<ResponseDto> findUserEmail(
             @RequestHeader(value = "Authorization") String token, @RequestParam("search") String partOfEmail) {
-        try {
-            loginService.validTokenOrNot(token);
-        } catch (CustomException e) {
-            ResponseDto<Void> responseDto = new ResponseDto<>(false, e.getErrorCodeName(), null, e.getSimpleErrorCode());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseDto);
-        }
+        loginService.validTokenOrNot(token);
         List<UserInfoDto> userInfoDto = searchService.getUserList(partOfEmail);
         Map<String, Object> data = new HashMap<>();
         data.put("searchList", userInfoDto);

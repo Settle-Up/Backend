@@ -1,4 +1,4 @@
-package settleup.backend.domain.user.common;
+package settleup.backend.global.common;
 
 import org.springframework.stereotype.Component;
 
@@ -9,5 +9,8 @@ import java.util.UUID;
 public class UUID_Helper {
     public String UUIDFromEmail(String email) {
         return String.valueOf(UUID.nameUUIDFromBytes(email.getBytes(StandardCharsets.UTF_8)));
+    }
+    public String UUIDForGroup() {
+        return String.valueOf(UUID.randomUUID());
     }
 }
