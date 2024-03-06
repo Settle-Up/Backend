@@ -27,7 +27,7 @@ public class SearchServiceImpl implements SearchService {
     private UserInfoDto toUserInfo(UserEntity userEntity) {
         UserInfoDto userInfo = new UserInfoDto();
         userInfo.setUserEmail(userEntity.getUserEmail());
-        userInfo.setUserUUID(userEntity.getUserUUID());
+        userInfo.setUserId(userEntity.getUserUUID());
         return userInfo;
     }
 }
