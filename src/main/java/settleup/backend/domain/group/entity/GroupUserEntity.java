@@ -25,7 +25,7 @@ public class GroupUserEntity implements Serializable {
     @JoinColumn(name = "group_id", nullable = false)
     private GroupEntity group;
 
-    @Column(name = "alarm_registration", nullable = false)
-    private boolean alarmRegistration;
+    @Column(name = "is_monthly_report_update_on", nullable = false)
+    private boolean isMonthlyReportUpdateOn ;
 }
 
