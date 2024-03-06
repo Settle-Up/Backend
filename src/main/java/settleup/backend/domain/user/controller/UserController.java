@@ -23,12 +23,6 @@ public class UserController {
     private final KakaoService kakaoService;
     private final LoginService loginService;
 
-    /**
-     * 우리 서비스의 토큰이 없는 경우
-     *
-     * @param validCode
-     * @return
-     */
     @GetMapping("/kakao/callback")
     public ResponseEntity<ResponseDto> getTokenFromSocial(@RequestParam("code") String validCode) {
         KakaoTokenDto tokenInfo = kakaoService.getKakaoAccessToken(validCode);
@@ -39,23 +33,15 @@ public class UserController {
 
     }
 
-    /**
-     * 우리 서비스의 토큰이 있는 경우
-     *
-     * @param token
-     * @return userUUID ,userName
-     * @error 유효하지 않은 토큰
-     */
     @GetMapping("/checkToken")
     public ResponseEntity<ResponseDto> checkToken(@RequestHeader(value = "Authorization") String token) {
         UserInfoDto userInfoDto = loginService.validTokenOrNot(token);
         Map<String, Object> userInfo = new HashMap<>();
-        userInfo.put("userUUID", userInfoDto.getUserUUID());
+        userInfo.put("userId", userInfoDto.getUserId());
         userInfo.put("userName", userInfoDto.getUserName());
         ResponseDto<Map<String, Object>> responseDto = new ResponseDto<>(true, "Token is valid, Login success", userInfo, null);
         return ResponseEntity.status(HttpStatus.OK).body(responseDto);
     }
-
 }
 
 
