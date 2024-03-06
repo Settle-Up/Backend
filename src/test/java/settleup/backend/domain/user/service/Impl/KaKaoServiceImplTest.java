@@ -1,4 +1,4 @@
-package settleup.backend.domain.user.service.impl;
+package settleup.backend.domain.user.service.Impl;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

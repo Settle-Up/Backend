@@ -23,6 +23,7 @@ public class UserController {
     private final KakaoService kakaoService;
     private final LoginService loginService;
 
+
     @GetMapping("/kakao/callback")
     public ResponseEntity<ResponseDto> getTokenFromSocial(@RequestParam("code") String validCode) {
         KakaoTokenDto tokenInfo = kakaoService.getKakaoAccessToken(validCode);

@@ -1,4 +1,4 @@
-package settleup.backend.domain.user.service.impl;
+package settleup.backend.domain.user.service.Impl;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 

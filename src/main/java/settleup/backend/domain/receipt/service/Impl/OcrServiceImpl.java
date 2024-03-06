@@ -1,4 +1,4 @@
-package settleup.backend.domain.receipt.serive.Impl;
+package settleup.backend.domain.receipt.service.Impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
@@ -11,9 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.multipart.MultipartFile;
 import settleup.backend.domain.receipt.entity.dto.FormDataDto;
-import settleup.backend.domain.receipt.serive.OcrService;
+import settleup.backend.domain.receipt.service.OcrService;
 import settleup.backend.global.common.ApiCallHelper;
-import settleup.backend.global.config.AppConfig;
 import settleup.backend.global.config.AzureConfig;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;

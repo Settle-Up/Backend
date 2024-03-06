@@ -36,7 +36,6 @@ public class ClusterController {
         CreateGroupResponseDto responseDto = clusterService.createGroup(requestDto);
         ResponseDto<CreateGroupResponseDto> responseDtoForClient = new ResponseDto<>(true, "Group create successfully", responseDto);
         return ResponseEntity.ok(responseDtoForClient);
-
     }
 }
 
