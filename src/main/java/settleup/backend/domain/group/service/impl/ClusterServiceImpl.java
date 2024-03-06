@@ -38,9 +38,13 @@ public class ClusterServiceImpl implements ClusterService {
     private UrlProvider urlProvider;
 
     /**
-     * 그룹생성
+     * createGroup 그룹생성
      *
-     * @param requestDto CreateGroupRequestDto String groupName ,String groupMemeberCount , groupUserList
+     * @param requestDto CreateGroupRequestDto groupName ,groupMemeberCount, groupUserList
+     * @requiredProcess 1. create group(createuuid) 2. save 3. add user in group
+     * @privateMethod createAndSaveGroup(requestDto) /process:/ create uuid then save groupEntity
+     * @privateMethod addUsersToGroup(List userIds,groupInfo) /process:/ list of userId and adds each specific group (create groupUserInfo)
+     * @privateMethod buildCreateGroupResponseDto
      * @return CreateGroupResponseDto -> group's uuid,name,memberCount, url, userList
      * @throws CustomException a.-> uuid generation, url generation, or db saving
      *                         b.-> client 에서 받은 userList 에서 유저 리스트 못찾음 ,or db saving
@@ -68,20 +72,20 @@ public class ClusterServiceImpl implements ClusterService {
         }
     }
 
-    private void addUsersToGroup(List<String> userUUIDs, GroupEntity groupInfo) throws CustomException {
-        for (String userUUID : userUUIDs) {
+    private void addUsersToGroup(List<String> userIds, GroupEntity groupInfo) throws CustomException {
+        for (String userUUID : userIds) {
             try {
                 UserEntity user = userRepository.findByUserUUID(userUUID)
                         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
                 GroupUserEntity groupUser = new GroupUserEntity();
                 groupUser.setUser(user);
                 groupUser.setGroup(groupInfo);
-                groupUser.setAlarmRegistration(false);
+                groupUser.setMonthlyReportUpdateOn(false);
                 groupUserRepository.save(groupUser);
             } catch (CustomException e) {
-                throw e;
-            } catch (Exception e) {
                 throw new CustomException(ErrorCode.DATABASE_ERROR);
+            } catch (Exception e) {
+                throw e;
             }
         }
     }
@@ -98,10 +102,9 @@ public class ClusterServiceImpl implements ClusterService {
         CreateGroupResponseDto responseDto = new CreateGroupResponseDto();
         responseDto.setGroupName(groupInfo.getGroupName());
         responseDto.setGroupUrl(groupInfo.getGroupUrl());
-        responseDto.setGroupUUID(groupInfo.getGroupUUID());
+        responseDto.setGroupId(groupInfo.getGroupUUID());
         responseDto.setGroupMemberCount(String.valueOf(memberCount));
         responseDto.setUserList(userDtos);
         return responseDto;
     }
-
 }
