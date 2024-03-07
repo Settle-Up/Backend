@@ -19,7 +19,7 @@ import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,13 +37,13 @@ public class ClusterServiceImpl implements ClusterService {
      * createGroup 그룹생성
      *
      * @param requestDto CreateGroupRequestDto groupName ,groupMemeberCount, groupUserList
-     * @requiredProcess 1. create group(createuuid) 2. save 3. add user in group
-     * @privateMethod createAndSaveGroup(requestDto) /process:/ create uuid then save groupEntity
-     * @privateMethod addUsersToGroup(List userIds,groupInfo) /process:/ list of userId and adds each specific group (create groupUserInfo)
-     * @privateMethod buildCreateGroupResponseDto
      * @return CreateGroupResponseDto -> group's uuid,name,memberCount, url, userList
      * @throws CustomException a.-> uuid generation, url generation, or db saving
      *                         b.-> client 에서 받은 userList 에서 유저 리스트 못찾음 ,or db saving
+     * @requiredProcess 1. create group(createuuid) 2. save 3. add user in group
+     * @privateMethod createAndSaveGroup(requestDto) /process:/ create uuid then save groupEntity
+     * @privateMethod addUsersToGroup(List userIds, groupInfo) /process:/ list of userId and adds each specific group (create groupUserInfo)
+     * @privateMethod buildCreateGroupResponseDto
      * @method A. createAndSaveGroup ,B. addUserToGroup ,C. buildCreateGroupResponseDto
      */
     @Override
@@ -52,6 +52,7 @@ public class ClusterServiceImpl implements ClusterService {
         addUsersToGroup(requestDto.getGroupUserList(), groupInfo);
         return buildCreateGroupResponseDto(groupInfo, requestDto.getGroupUserList().size());
     }
+
 
     private GroupEntity createAndSaveGroup(CreateGroupRequestDto requestDto) throws CustomException {
         try {
@@ -79,9 +80,9 @@ public class ClusterServiceImpl implements ClusterService {
                 groupUser.setMonthlyReportUpdateOn(false);
                 groupUserRepository.save(groupUser);
             } catch (CustomException e) {
-                throw new CustomException(ErrorCode.DATABASE_ERROR);
-            } catch (Exception e) {
                 throw e;
+            } catch (Exception e) {
+                throw new CustomException(ErrorCode.DATABASE_ERROR);
             }
         }
     }
@@ -102,5 +103,26 @@ public class ClusterServiceImpl implements ClusterService {
         responseDto.setGroupMemberCount(String.valueOf(memberCount));
         responseDto.setUserList(userDtos);
         return responseDto;
+    }
+
+
+    @Override
+    public List<UserInfoDto> getGroupUserInfo(String groupUUID) throws CustomException {
+        try {
+            Optional<GroupEntity> existingGroup = Optional.ofNullable(groupRepository.findByGroupUUID(groupUUID)
+                    .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND)));
+            Long groupPrimaryId = existingGroup.get().getId();
+            List<GroupUserEntity> userList = groupUserRepository.findByGroup_Id(groupPrimaryId);
+            List<UserInfoDto> userInfoDtoList = new ArrayList<>();
+            for (GroupUserEntity userEntity : userList) {
+                UserInfoDto userInfoDto = new UserInfoDto();
+                userInfoDto.setUserId(userEntity.getUser().getUserUUID());
+                userInfoDto.setUserName(userEntity.getUser().getUserName());
+                userInfoDtoList.add(userInfoDto);
+            }
+            return userInfoDtoList;
+        } catch (CustomException e) {
+            throw e;
+        }
     }
 }
