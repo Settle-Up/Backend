@@ -50,9 +50,9 @@ public class SearchServiceImplTest {
         assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals("seo@example.com", result.get(0).getUserEmail());
-        assertEquals("uuid1", result.get(0).getUserUUID());
+        assertEquals("uuid1", result.get(0).getUserId());
         assertEquals("seo2@example.com", result.get(1).getUserEmail());
-        assertEquals("uuid2", result.get(1).getUserUUID());
+        assertEquals("uuid2", result.get(1).getUserId());
 
         // Verify interaction
         verify(userRepository, times(1)).findByUserEmailContaining(partOfEmail);

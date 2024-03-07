@@ -85,6 +85,7 @@ public class KaKaoServiceImpl implements KakaoService {
 
             HttpEntity<?> requestEntity = new HttpEntity<>(headers);
             Map<String, Object> jsonResponse = apiCallHelper.callExternalApi(kakaoConfig.getUserInfoUri(), HttpMethod.GET, requestEntity, Map.class);
+            System.out.println("hereisKaKaoResponse:"+jsonResponse);
 
             if (jsonResponse == null || jsonResponse.isEmpty()) {
                 throw new CustomException(ErrorCode.EXTERNAL_API_EMPTY_RESPONSE);

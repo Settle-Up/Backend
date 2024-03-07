@@ -31,7 +31,6 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     implementation 'com.github.gavlyukovskiy:p6spy-spring-boot-starter:1.9.0'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
@@ -40,8 +39,7 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt:0.9.1'
     implementation 'javax.xml.bind:jaxb-api:2.3.1'
     implementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '9.0.44'
-
-
+    implementation 'com.microsoft.sqlserver:mssql-jdbc:9.2.1.jre8'
 }
 
 tasks.named('test') {
