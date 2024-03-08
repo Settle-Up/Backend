@@ -14,6 +14,7 @@ import settleup.backend.domain.receipt.service.OcrService;
 import java.io.IOException;
 
 import org.springframework.web.context.request.async.DeferredResult;
+import settleup.backend.domain.receipt.service.ReceiptService;
 import settleup.backend.global.api.ResponseDto;
 import settleup.backend.domain.user.service.LoginService;
 import settleup.backend.global.exception.CustomException;
@@ -26,6 +27,7 @@ public class OcrController {
 
     private final OcrService ocrService;
     private final LoginService loginService;
+    private final ReceiptService receiptService;
     private static final Logger logger = LoggerFactory.getLogger(OcrController.class);
 
 
@@ -65,7 +67,7 @@ public class OcrController {
 
 
     @PostMapping("/create")
-    public ResponseDto createReceipt(
+    public ResponseDto createExpenseByReceipt(
             @RequestHeader(value = "Authorization") String token, @RequestBody ReceiptRequestDto requestDto) throws CustomException {
         loginService.validTokenOrNot(token);
         String missingFields = ControllerHelper.checkRequiredWithFilter(requestDto);
@@ -73,6 +75,8 @@ public class OcrController {
             ResponseDto errorResponse = new ResponseDto(false, "Missing or invalid fields: " + missingFields, null);
             return errorResponse;
         }
+        Long receiptId = receiptService.saveReceiptCommonData(requestDto);
+
         ResponseDto successResponse =
                 new ResponseDto<>(true, "수빈님 요청은 현재 1.토큰인증성공 2.필드값 누락이 없는 상태입니다 (유저 , 그룹 검증은 미확인) 백엔드에서 잘 받았습니다. 백 로직이 현재 유저 검증, 그룹검증, 비용로직이 진행 중이므로  성공시 정확한 body값은 추후에 드리겠습니다", null);
         return successResponse;

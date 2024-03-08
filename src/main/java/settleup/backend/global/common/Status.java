@@ -1,2 +1,5 @@
-package settleup.backend.domain.transaction.entity;public enum Status {
+package settleup.backend.global.common;
+
+public enum Status {
+    CLEAR, REJECT, PENDING;
 }

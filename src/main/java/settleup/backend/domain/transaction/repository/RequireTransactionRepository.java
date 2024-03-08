@@ -1,2 +1,4 @@
-package settleup.backend.domain.transaction.repository;public interface RequireTransactionRepository {
+package settleup.backend.domain.transaction.repository;
+
+public interface RequireTransactionRepository {
 }
