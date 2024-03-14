@@ -1,5 +1,6 @@
 package settleup.backend.domain.receipt.entity.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -39,6 +40,9 @@ public class ReceiptDto {
     @NoArgsConstructor
     public static class JointPurchaserDto {
         private String userId;
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        private String userName;
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         private String purchasedQuantity;
     }
 }

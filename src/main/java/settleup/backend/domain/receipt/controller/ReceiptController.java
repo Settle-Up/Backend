@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import settleup.backend.domain.receipt.entity.dto.ReceiptDto;
 import settleup.backend.domain.receipt.receiptCommons.ControllerHelper;
+import settleup.backend.domain.receipt.service.ReceiptService;
 import settleup.backend.domain.transaction.service.TransactionCoordinatorService;
 import settleup.backend.domain.user.service.LoginService;
 import settleup.backend.global.api.ResponseDto;
@@ -18,6 +19,7 @@ public class ReceiptController {
 
 
     private final LoginService loginService;
+    private final ReceiptService receiptService;
     private final TransactionCoordinatorService transactionCoordinatorService;
 
 
@@ -36,10 +38,14 @@ public class ReceiptController {
         ResponseDto responseDto =transactionCoordinatorService.createExpenseByReceipt(requestDto);
         return ResponseEntity.ok(responseDto);
     }
+
+    @GetMapping("/group/detail")
     public ResponseEntity<ResponseDto> retrievedReceipt(
             @RequestHeader(value = "Authorization") String token,@RequestParam("receipt") String receiptUUID){
         loginService.validTokenOrNot(token);
-        return  null;
+        ReceiptDto data = receiptService.getReceiptInfo(receiptUUID);
+        ResponseDto responseDto =new ResponseDto<>(true,"receipt detail retrieved successfully",data);
+        return  ResponseEntity.ok(responseDto);
 
     }
 
