@@ -1,7 +1,6 @@
 package settleup.backend.domain.group.controller;
 
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import settleup.backend.domain.group.entity.dto.CreateGroupRequestDto;
@@ -11,9 +10,7 @@ import settleup.backend.domain.user.service.LoginService;
 import settleup.backend.global.api.ResponseDto;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
-import settleup.backend.global.exception.ErrorHttpStatusMapping;
 
-import java.util.List;
 
 @RestController
 @AllArgsConstructor

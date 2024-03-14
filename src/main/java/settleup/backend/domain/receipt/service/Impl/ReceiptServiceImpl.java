@@ -5,7 +5,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
+import settleup.backend.domain.group.entity.GroupUserEntity;
 import settleup.backend.domain.group.repository.GroupRepository;
+import settleup.backend.domain.group.repository.GroupUserRepository;
 import settleup.backend.domain.receipt.entity.ReceiptEntity;
 import settleup.backend.domain.receipt.entity.ReceiptItemEntity;
 import settleup.backend.domain.receipt.entity.ReceiptItemUserEntity;
@@ -37,16 +39,16 @@ public class ReceiptServiceImpl implements ReceiptService {
     private final ReceiptItemUserRepository receiptItemUserRepo;
     private final UserRepository userRepo;
     private final GroupRepository groupRepo;
+    private final GroupUserRepository groupUserRepo;
     private final UUID_Helper uuidHelper;
 
     @Override
     public RequireTransactionDto createReceipt(ReceiptRequestDto requestDto) throws CustomException {
-         GroupEntity groupEntity = new GroupEntity();
-         Optional<GroupEntity> existingGroup = Optional.ofNullable(groupRepo.findByGroupUUID(requestDto.getGroupId())
-                .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND)));
-         groupEntity.setId(existingGroup.get().getId());
+         isCheckValidUser(requestDto);
 
-        // 영수증 uuid 생성
+        GroupEntity groupEntity = groupRepo.findByGroupUUID(requestDto.getGroupId())
+                .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
+
         String receiptUUID = uuidHelper.UUIDForReceipt();
 
         ReceiptEntity receiptEntity = new ReceiptEntity();
@@ -59,7 +61,6 @@ public class ReceiptServiceImpl implements ReceiptService {
         receiptEntity.setActualPaidPrice(Double.valueOf(requestDto.getActualPaidPrice()));
         receiptEntity.setAllocationType(requestDto.getAllocationType());
 
-        //payerUserUUID로 들어옴 payerUser의 pk 값을 저장해야함
         String payerUserUUID = requestDto.getPayerUserId();
         UserEntity payerUser = userRepo.findByUserUUID(payerUserUUID)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
@@ -68,7 +69,6 @@ public class ReceiptServiceImpl implements ReceiptService {
         receiptEntity.setCreatedAt(LocalDateTime.now());
         receiptRepo.save(receiptEntity);
 
-
         requestDto.getReceiptItemList().forEach(itemDto -> {
             ReceiptItemEntity itemEntity = new ReceiptItemEntity();
             itemEntity.setReceiptItemName(itemDto.getReceiptItemName());
@@ -76,16 +76,15 @@ public class ReceiptServiceImpl implements ReceiptService {
             itemEntity.setItemPrice(Double.valueOf(itemDto.getUnitPrice()));
             itemEntity.setEngagerCount(Integer.parseInt(itemDto.getJointPurchaserCount()));
 
-            itemEntity.setReceipt(receiptEntity); // 부모 엔티티와의 연결 설정
+            itemEntity.setReceipt(receiptEntity);
 
             ReceiptItemEntity savedItemEntity = receiptItemRepo.save(itemEntity);
 
-            // 영수증 항목 사용자 처리
             itemDto.getJointPurchaserList().forEach(jointPurchaserDto -> {
                 ReceiptItemUserEntity itemUserEntity = new ReceiptItemUserEntity();
                 itemUserEntity.setReceiptItem(savedItemEntity);
 
-                String itemQuantityStr = jointPurchaserDto.getItemQuantity();
+                String itemQuantityStr = jointPurchaserDto.getPurchasedQuantity();
                 Double itemQuantity = null;
                 if (itemQuantityStr != null) {
                     try {
@@ -94,7 +93,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                         throw e;
                     }
                 }
-                itemUserEntity.setItemQuantity(itemQuantity); // 이 데이터는 null 값 허용
+                itemUserEntity.setPurchasedQuantity(itemQuantity);
                 UserEntity owedUser = userRepo.findByUserUUID(jointPurchaserDto.getUserId())
                         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
                 itemUserEntity.setUser(owedUser);
@@ -105,9 +104,20 @@ public class ReceiptServiceImpl implements ReceiptService {
         });
         RequireTransactionDto transactionDto =new RequireTransactionDto();
         transactionDto.setReceipt(receiptEntity);
-        transactionDto.setGroup(groupEntity);
+        transactionDto.setGroup(groupEntity); //
         transactionDto.setAllocationType(requestDto.getAllocationType());
         transactionDto.setPayerUser(receiptEntity.getPayerUser());
         return transactionDto;
+    }
+
+    private boolean isCheckValidUser(ReceiptRequestDto requestDto) {
+        groupRepo.findByGroupUUID(requestDto.getGroupId())
+                .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
+
+        UserEntity user = userRepo.findByUserUUID(requestDto.getPayerUserId())
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        List<GroupUserEntity> memberships = groupUserRepo.findByUserId(user.getId());
+        return !memberships.isEmpty();
     }
 }
