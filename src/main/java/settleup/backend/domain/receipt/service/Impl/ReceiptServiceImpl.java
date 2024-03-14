@@ -140,9 +140,9 @@ public class ReceiptServiceImpl implements ReceiptService {
         receiptDto.setPayerUserId(existingReceipt.getPayerUser().getUserUUID().toString());
         receiptDto.setPayerUserName(existingReceipt.getPayerUser().getUserName());
         receiptDto.setAllocationType(existingReceipt.getAllocationType());
-        receiptDto.setTotalPrice(existingReceipt.getTotalPrice().toString());
-        receiptDto.setDiscountApplied(existingReceipt.getDiscountApplied().toString());
-        receiptDto.setActualPaidPrice(existingReceipt.getActualPaidPrice().toString());
+        receiptDto.setTotalPrice(String.format("%.0f",existingReceipt.getTotalPrice()));
+        receiptDto.setDiscountApplied(String.format("%.0f",existingReceipt.getDiscountApplied()));
+        receiptDto.setActualPaidPrice(String.format("%.0f",existingReceipt.getActualPaidPrice()));
 
         List<ReceiptItemEntity> receiptItems = receiptRepo.findItemsByReceiptUUID(receiptUUID);
 
@@ -150,17 +150,17 @@ public class ReceiptServiceImpl implements ReceiptService {
                 .map(item -> {
                     ReceiptDto.ReceiptItemDto itemDto = new ReceiptDto.ReceiptItemDto();
                     itemDto.setReceiptItemName(item.getReceiptItemName());
-                    itemDto.setTotalItemQuantity(item.getItemQuantity().toString());
-                    itemDto.setUnitPrice(item.getItemPrice().toString());
+                    itemDto.setTotalItemQuantity(String.format("%.0f",item.getItemQuantity()));
+                    itemDto.setUnitPrice(String.format("%.0f",item.getItemPrice()));
                     itemDto.setJointPurchaserCount(item.getEngagerCount().toString());
-                    itemDto.setJointPurchaserCount(item.getEngagerCount().toString());
+
 
                     List<ReceiptDto.JointPurchaserDto> jointPurchaserList = receiptItemUserRepo.findByReceiptItemId(item.getId())
                             .stream()
                             .map(purchaser -> new ReceiptDto.JointPurchaserDto(
                                     purchaser.getUser().getUserUUID().toString(),
                                     purchaser.getUser().getUserName(),
-                                    purchaser.getPurchasedQuantity() == null ? null : purchaser.getPurchasedQuantity().toString()
+                                    String.format("%.0f", purchaser.getPurchasedQuantity() == null ? null : purchaser.getPurchasedQuantity())
                             ))
                             .collect(Collectors.toList());
 
