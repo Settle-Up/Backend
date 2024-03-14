@@ -11,6 +11,7 @@ import java.util.List;
 public class ReceiptRequestDto {
     private String receiptName;
     private String address;
+    private String receiptDate;
     private String groupId;
     private String groupName;
     private String payerUserId;
@@ -37,6 +38,6 @@ public class ReceiptRequestDto {
     @NoArgsConstructor
     public static class JointPurchaserDto {
         private String userId;
-        private String itemQuantity; //nullable
+        private String purchasedQuantity;
     }
 }
