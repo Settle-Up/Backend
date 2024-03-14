@@ -1,6 +1,5 @@
 package settleup.backend.domain.receipt.service.Impl;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,7 +10,7 @@ import settleup.backend.domain.group.repository.GroupUserRepository;
 import settleup.backend.domain.receipt.entity.ReceiptEntity;
 import settleup.backend.domain.receipt.entity.ReceiptItemEntity;
 import settleup.backend.domain.receipt.entity.ReceiptItemUserEntity;
-import settleup.backend.domain.receipt.entity.dto.ReceiptRequestDto;
+import settleup.backend.domain.receipt.entity.dto.ReceiptDto;
 import settleup.backend.domain.receipt.entity.dto.RequireTransactionDto;
 import settleup.backend.domain.receipt.repository.ReceiptItemRepository;
 import settleup.backend.domain.receipt.repository.ReceiptItemUserRepository;
@@ -24,10 +23,8 @@ import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -43,7 +40,7 @@ public class ReceiptServiceImpl implements ReceiptService {
     private final UUID_Helper uuidHelper;
 
     @Override
-    public RequireTransactionDto createReceipt(ReceiptRequestDto requestDto) throws CustomException {
+    public RequireTransactionDto createReceipt(ReceiptDto requestDto) throws CustomException {
          isCheckValidUser(requestDto);
 
         GroupEntity groupEntity = groupRepo.findByGroupUUID(requestDto.getGroupId())
@@ -110,7 +107,8 @@ public class ReceiptServiceImpl implements ReceiptService {
         return transactionDto;
     }
 
-    private boolean isCheckValidUser(ReceiptRequestDto requestDto) {
+
+    private boolean isCheckValidUser(ReceiptDto requestDto) {
         groupRepo.findByGroupUUID(requestDto.getGroupId())
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
 
@@ -119,5 +117,55 @@ public class ReceiptServiceImpl implements ReceiptService {
 
         List<GroupUserEntity> memberships = groupUserRepo.findByUserId(user.getId());
         return !memberships.isEmpty();
+    }
+
+    @Override
+    public ReceiptDto getReceiptInfo(String receiptUUID) throws CustomException {
+        ReceiptEntity existingReceipt = receiptRepo.findByReceiptUUID(receiptUUID)
+                .orElseThrow(() -> new CustomException(ErrorCode.RECEIPT_NOT_FOUND));
+
+        ReceiptItemUserEntity existingGroup =
+
+        ReceiptDto receiptDto = new ReceiptDto();
+        receiptDto.setReceiptId(existingReceipt.getReceiptUUID());
+        receiptDto.setReceiptName(existingReceipt.getReceiptName());
+        receiptDto.setAddress(existingReceipt.getAddress());
+        receiptDto.setReceiptDate(existingReceipt.getReceiptDate().toString()); // LocalDate 또는 LocalDateTime을 가정
+        receiptDto.setGroupId(existingReceipt.get().getId().toString()); // GroupEntity를 가정
+        receiptDto.setGroupName(existingReceipt.getGroup().getGroupName()); // GroupEntity를 가정
+        receiptDto.setPayerUserId(existingReceipt.getPayerUser().getId().toString()); // UserEntity를 가정
+        receiptDto.setPayerUserName(existingReceipt.getPayerUser().getUserName()); // UserEntity를 가정
+        receiptDto.setAllocationType(existingReceipt.getAllocationType());
+        receiptDto.setTotalPrice(existingReceipt.getTotalPrice().toString());
+        receiptDto.setDiscountApplied(existingReceipt.getDiscountApplied().toString());
+        receiptDto.setActualPaidPrice(existingReceipt.getActualPaidPrice().toString());
+
+        // receiptItemList 채우기 (예시 코드)
+        List<ReceiptItemDto> receiptItemList = existingReceipt.getReceiptItems() // ReceiptEntity의 receiptItems 컬렉션을 가정
+                .stream()
+                .map(item -> {
+                    ReceiptItemDto itemDto = new ReceiptItemDto();
+                    itemDto.setReceiptItemName(item.getReceiptItemName());
+                    itemDto.setTotalItemQuantity(item.getItemQuantity().toString());
+                    itemDto.setUnitPrice(item.getItemPrice().toString());
+                    itemDto.setJointPurchaserCount(item.getEngagerCount().toString());
+
+                    // jointPurchaserList 채우기 (예시 코드)
+                    List<JointPurchaserDto> jointPurchaserList = item.getReceiptItemUsers() // ReceiptItemEntity의 receiptItemUsers 컬렉션을 가정
+                            .stream()
+                            .map(purchaser -> new JointPurchaserDto(
+                                    purchaser.getUser().getId().toString(), // UserEntity를 가정
+                                    purchaser.getPurchasedQuantity().toString()
+                            ))
+                            .collect(Collectors.toList());
+
+                    itemDto.setJointPurchaserList(jointPurchaserList);
+                    return itemDto;
+                })
+                .collect(Collectors.toList());
+
+        receiptDto.setReceiptItemList(receiptItemList);
+
+        return receiptDto;
     }
 }

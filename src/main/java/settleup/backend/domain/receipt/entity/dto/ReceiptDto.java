@@ -8,7 +8,8 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReceiptRequestDto {
+public class ReceiptDto {
+    private String receiptId;
     private String receiptName;
     private String address;
     private String receiptDate;

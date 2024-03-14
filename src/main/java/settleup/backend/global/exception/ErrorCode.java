@@ -29,7 +29,8 @@ public enum ErrorCode {
     ERROR_PARSE_TOKEN_IN_SERVER(126,"Error while decrypting private userInfo" ),
     ERROR_CREATION_TOKEN_IN_SERVER_B(127,"Error while private userInfo encrypting un support encoding"),
     GROUP_NOT_FOUND(128, "Group not found"),
-    TOTAL_AMOUNT_ERROR(129, "Total save amount does not match the actual paid price.");
+    TOTAL_AMOUNT_ERROR(129, "Total save amount does not match the actual paid price."),
+    RECEIPT_NOT_FOUND(130,"receipt cannot find");
 
 
 

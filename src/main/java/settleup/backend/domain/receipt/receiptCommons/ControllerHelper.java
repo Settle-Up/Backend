@@ -1,6 +1,6 @@
 package settleup.backend.domain.receipt.receiptCommons;
 
-import settleup.backend.domain.receipt.entity.dto.ReceiptRequestDto;
+import settleup.backend.domain.receipt.entity.dto.ReceiptDto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 
 public class ControllerHelper {
 
-    public static String checkRequiredWithFilter(ReceiptRequestDto dto) {
+    public static String checkRequiredWithFilter(ReceiptDto dto) {
         List<Supplier<String>> checks = new ArrayList<>();
 
         checks.add(() -> isNullOrEmpty(dto.getReceiptName()) ? "receiptName" : null);
@@ -29,7 +29,7 @@ public class ControllerHelper {
         } else {
             for (int i = 0; i < dto.getReceiptItemList().size(); i++) {
                 final int index = i;
-                ReceiptRequestDto.ReceiptItemDto item = dto.getReceiptItemList().get(index);
+                ReceiptDto.ReceiptItemDto item = dto.getReceiptItemList().get(index);
 
                 checks.add(() -> isNullOrEmpty(item.getReceiptItemName()) ? "receiptItemList[" + index + "].receiptItemName" : null);
                 checks.add(() -> isNullOrEmpty(item.getTotalItemQuantity()) ? "receiptItemList[" + index + "].totalItemQuantity" : null);
