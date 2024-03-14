@@ -13,4 +13,12 @@ public class UUID_Helper {
     public String UUIDForGroup() {
         return String.valueOf(UUID.randomUUID());
     }
+
+    public String UUIDForReceipt() {
+        return String.valueOf(UUID.randomUUID());
+    }
+
+    public String UUIDForTransaction() {
+        return String.valueOf(UUID.randomUUID());
+    }
 }

@@ -11,6 +11,7 @@ import java.util.List;
 public class ReceiptRequestDto {
     private String receiptName;
     private String address;
+    private String receiptDate; // controller 에 추가 해야함**
     private String groupId; // 유효성 대상
     private String groupName;
     private String payerUserId;  // 유효성 대상

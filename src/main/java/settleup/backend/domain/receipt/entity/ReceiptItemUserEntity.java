@@ -20,10 +20,10 @@ public class ReceiptItemUserEntity {
     @JoinColumn(name = "receipt_item_id", nullable = false)
     private ReceiptItemEntity receiptItem;
 
-    @Column(name = "receipt_item_user_name", nullable = false)
-    private String receiptItemUserName;
+//    @Column(name = "receipt_item_user_name", nullable = false)
+//    private String receiptItemUserName;
 
-    @Column(name = "item_quantity", nullable = false)
+    @Column(name = "item_quantity",nullable = true)
     private Double itemQuantity;
 
     @ManyToOne(fetch = FetchType.LAZY)

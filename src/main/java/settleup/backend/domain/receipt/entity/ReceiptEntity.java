@@ -30,7 +30,7 @@ public class ReceiptEntity {
     private String address;
 
     @Column(name = "receipt_date", nullable = false)
-    private LocalDate receiptDate;
+    private String receiptDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payer_user_id", nullable = false)
@@ -39,17 +39,14 @@ public class ReceiptEntity {
     @Column(name = "total_price", nullable = false)
     private Double totalPrice;
 
-    @Column(name = "discount_price", nullable = false)
-    private Double discountPrice;
-
     @Column(name = "discount_applied", nullable = false)
-    private Boolean discountApplied;
+    private Double discountApplied;
 
     @Column(name = "actual_paid_price", nullable = false)
     private Double actualPaidPrice;
 
     @Column(name = "allocation_type", nullable = false)
-    private Integer allocationType;
+    private String allocationType;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
