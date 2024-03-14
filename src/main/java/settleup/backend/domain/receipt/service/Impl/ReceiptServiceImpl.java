@@ -140,9 +140,9 @@ public class ReceiptServiceImpl implements ReceiptService {
         receiptDto.setPayerUserId(existingReceipt.getPayerUser().getUserUUID().toString());
         receiptDto.setPayerUserName(existingReceipt.getPayerUser().getUserName());
         receiptDto.setAllocationType(existingReceipt.getAllocationType());
-        receiptDto.setTotalPrice(String.format("%.0f",existingReceipt.getTotalPrice()));
-        receiptDto.setDiscountApplied(String.format("%.0f",existingReceipt.getDiscountApplied()));
-        receiptDto.setActualPaidPrice(String.format("%.0f",existingReceipt.getActualPaidPrice()));
+        receiptDto.setTotalPrice(String.format("%.0f", existingReceipt.getTotalPrice()));
+        receiptDto.setDiscountApplied(String.format("%.0f", existingReceipt.getDiscountApplied()));
+        receiptDto.setActualPaidPrice(String.format("%.0f", existingReceipt.getActualPaidPrice()));
 
         List<ReceiptItemEntity> receiptItems = receiptRepo.findItemsByReceiptUUID(receiptUUID);
 
@@ -150,20 +150,23 @@ public class ReceiptServiceImpl implements ReceiptService {
                 .map(item -> {
                     ReceiptDto.ReceiptItemDto itemDto = new ReceiptDto.ReceiptItemDto();
                     itemDto.setReceiptItemName(item.getReceiptItemName());
-                    itemDto.setTotalItemQuantity(String.format("%.0f",item.getItemQuantity()));
-                    itemDto.setUnitPrice(String.format("%.0f",item.getItemPrice()));
+                    itemDto.setTotalItemQuantity(String.format("%.0f", item.getItemQuantity()));
+                    itemDto.setUnitPrice(String.format("%.0f", item.getItemPrice()));
                     itemDto.setJointPurchaserCount(item.getEngagerCount().toString());
 
 
                     List<ReceiptDto.JointPurchaserDto> jointPurchaserList = receiptItemUserRepo.findByReceiptItemId(item.getId())
                             .stream()
-                            .map(purchaser -> new ReceiptDto.JointPurchaserDto(
-                                    purchaser.getUser().getUserUUID().toString(),
-                                    purchaser.getUser().getUserName(),
-                                    String.format("%.0f", purchaser.getPurchasedQuantity() == null ? null : purchaser.getPurchasedQuantity())
-                            ))
-                            .collect(Collectors.toList());
+                            .map(purchaser -> {
+                                String formattedQuantity = purchaser.getPurchasedQuantity() != null ?
+                                        String.format("%.0f", purchaser.getPurchasedQuantity()) : null;
 
+                                return new ReceiptDto.JointPurchaserDto(
+                                        purchaser.getUser().getUserUUID().toString(),
+                                        purchaser.getUser().getUserName(),
+                                        formattedQuantity);
+                            })
+                            .collect(Collectors.toList());
 
                     itemDto.setJointPurchaserList(jointPurchaserList);
                     return itemDto;
