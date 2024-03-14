@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.user.entity.UserEntity;
 
 import java.time.LocalDate;
@@ -25,6 +26,10 @@ public class ReceiptEntity {
 
     @Column(name = "receipt_name", nullable = false)
     private String receiptName;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name ="group_id",nullable = false)
+    private GroupEntity group;
 
     @Column(nullable = false)
     private String address;

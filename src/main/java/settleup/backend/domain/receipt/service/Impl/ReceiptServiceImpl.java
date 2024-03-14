@@ -55,6 +55,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         receiptEntity.setReceiptUUID(receiptUUID);
         receiptEntity.setReceiptName(requestDto.getReceiptName());
         receiptEntity.setAddress(requestDto.getAddress());
+        receiptEntity.setGroup(groupEntity);
         receiptEntity.setReceiptDate(requestDto.getReceiptDate());
         receiptEntity.setTotalPrice(Double.valueOf(requestDto.getTotalPrice()));
         receiptEntity.setDiscountApplied(Double.valueOf(requestDto.getDiscountApplied()));
