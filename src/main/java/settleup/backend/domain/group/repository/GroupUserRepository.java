@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface GroupUserRepository extends JpaRepository<GroupUserEntity,Long> {
     List<GroupUserEntity> findByGroup_Id(Long id);
-   List<GroupUserEntity> findByUserId(Long userId);
+    List<GroupUserEntity> findByUserId(Long userId);
 
 
 }
