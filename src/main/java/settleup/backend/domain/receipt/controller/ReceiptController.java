@@ -35,7 +35,7 @@ public class ReceiptController {
                 throw new RuntimeException(e);
             }
         }
-        ResponseDto responseDto =transactionCoordinatorService.createExpenseByReceipt(requestDto);
+        ResponseDto responseDto = transactionCoordinatorService.createExpenseByReceipt(requestDto);
         return ResponseEntity.ok(responseDto);
     }
 

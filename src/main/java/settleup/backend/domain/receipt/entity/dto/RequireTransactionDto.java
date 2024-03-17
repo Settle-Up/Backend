@@ -15,5 +15,4 @@ public class RequireTransactionDto {
     private GroupEntity group;
     private String allocationType;
     private UserEntity payerUser;
-
 }
