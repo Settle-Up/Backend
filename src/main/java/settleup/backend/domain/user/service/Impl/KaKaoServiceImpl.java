@@ -90,10 +90,9 @@ public class KaKaoServiceImpl implements KakaoService {
             if (jsonResponse == null || jsonResponse.isEmpty()) {
                 throw new CustomException(ErrorCode.EXTERNAL_API_EMPTY_RESPONSE);
             }
-
             Map<String, Object> kakaoAccount = (Map<String, Object>) jsonResponse.get("kakao_account");
             return findUserInfoByKakao(kakaoAccount);
-        } catch (Exception e) {
+        } catch (CustomException e) {
             throw new CustomException(ErrorCode.EXTERNAL_API_ERROR);
         }
     }

@@ -10,6 +10,7 @@ public class UUID_Helper {
     public String UUIDFromEmail(String email) {
         return String.valueOf(UUID.nameUUIDFromBytes(email.getBytes(StandardCharsets.UTF_8)));
     }
+
     public String UUIDForGroup() {
         return String.valueOf(UUID.randomUUID());
     }
@@ -19,6 +20,23 @@ public class UUID_Helper {
     }
 
     public String UUIDForTransaction() {
-        return String.valueOf(UUID.randomUUID());
+        String prefix = "RT";
+        // UUID 생성 후 "-"를 제거하고 문자열에 추가
+        String uniquePart = UUID.randomUUID().toString().replace("-", "");
+        return prefix + uniquePart;
+    }
+
+    public String UUIDForOptimizedTransaction() {
+        String prefix = "OPT";
+        // UUID 생성 후 "-"를 제거하고 문자열에 추가
+        String uniquePart = UUID.randomUUID().toString().replace("-", "");
+        return prefix + uniquePart;
+    }
+
+    public String UUIDForOptimizedTransactionsDetail() {
+        String prefix = "OPTD";
+        // UUID 생성 후 "-"를 제거하고 문자열에 추가
+        String uniquePart = UUID.randomUUID().toString().replace("-", "");
+        return prefix + uniquePart;
     }
 }

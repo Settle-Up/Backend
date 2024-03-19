@@ -30,7 +30,11 @@ public enum ErrorCode {
     ERROR_CREATION_TOKEN_IN_SERVER_B(127,"Error while private userInfo encrypting un support encoding"),
     GROUP_NOT_FOUND(128, "Group not found"),
     TOTAL_AMOUNT_ERROR(129, "Total save amount does not match the actual paid price."),
-    RECEIPT_NOT_FOUND(130,"receipt cannot find");
+    RECEIPT_NOT_FOUND(130,"receipt cannot find"),
+    GROUP_USER_NOT_FOUND(131,"user cannot find in group"),
+    PAYER_USER_NOT_FOUND(132,"payer user cannot found"),
+    OWED_USER_NOT_FOUND(133, "owed user cannot found"),
+    OPTIMIZATION_ERROR(134,"error during optimization");
 
 
 

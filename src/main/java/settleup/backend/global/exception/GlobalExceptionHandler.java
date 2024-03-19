@@ -12,7 +12,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ResponseDto> handleCustomException(CustomException e) {
         ResponseDto<Void> response = new ResponseDto<>(
                 false,
-                e.getErrorCodeName(),
+                e.getMessage() + (e.getDetailMessage() != null ? ": " + e.getDetailMessage() : ""),
                 null,
                 e.getSimpleErrorCode()
         );

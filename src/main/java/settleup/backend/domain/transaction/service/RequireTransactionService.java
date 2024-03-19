@@ -1,11 +1,10 @@
 package settleup.backend.domain.transaction.service;
 
-import settleup.backend.domain.receipt.entity.dto.RequireTransactionDto;
+import settleup.backend.domain.transaction.entity.dto.TransactionDto;
 import settleup.backend.global.exception.CustomException;
 
-import java.util.Map;
-import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 public interface RequireTransactionService {
-    String  createExpense(RequireTransactionDto transactionDto) throws CustomException;
+    CompletableFuture<TransactionDto> createExpense(TransactionDto transactionDto) throws CustomException;
 }

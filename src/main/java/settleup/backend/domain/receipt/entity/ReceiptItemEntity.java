@@ -26,10 +26,10 @@ public class ReceiptItemEntity {
     @Column(name = "item_quantity", nullable = false)
     private Double itemQuantity;
 
-    @Column(name = "item_price", nullable = false)
-    private Double itemPrice;
+    @Column(name = "unit_price", nullable = false)
+    private Double unitPrice;
 
-    @Column(name = "engager_count", nullable = false)
-    private Integer engagerCount;
+    @Column(name = "joint_purchaser_count", nullable = false)
+    private Integer jointPurchaserCount;
 }
 

@@ -6,10 +6,16 @@ import org.springframework.web.bind.annotation.*;
 import settleup.backend.domain.receipt.entity.dto.ReceiptDto;
 import settleup.backend.domain.receipt.receiptCommons.ControllerHelper;
 import settleup.backend.domain.receipt.service.ReceiptService;
-import settleup.backend.domain.transaction.service.TransactionCoordinatorService;
+import settleup.backend.domain.transaction.entity.dto.TransactionDto;
+import settleup.backend.domain.transaction.service.TransactionSagaService;
 import settleup.backend.domain.user.service.LoginService;
 import settleup.backend.global.api.ResponseDto;
 import settleup.backend.global.exception.CustomException;
+import settleup.backend.global.exception.ErrorCode;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 
 @RestController
@@ -20,32 +26,41 @@ public class ReceiptController {
 
     private final LoginService loginService;
     private final ReceiptService receiptService;
-    private final TransactionCoordinatorService transactionCoordinatorService;
+    private final TransactionSagaService transactionSagaService;
+
+
 
 
     @PostMapping("/expense/create")
     public ResponseEntity<ResponseDto> createExpenseByReceipt(
-            @RequestHeader(value = "Authorization") String token, @RequestBody ReceiptDto requestDto) throws CustomException {
+            @RequestHeader(value = "Authorization") String token, @RequestBody ReceiptDto requestDto) {
         loginService.validTokenOrNot(token);
         String missingFields = ControllerHelper.checkRequiredWithFilter(requestDto);
         if (!missingFields.isEmpty()) {
-            try {
-                throw new Exception(missingFields);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+            throw new CustomException(ErrorCode.INVALID_INPUT, "Missing fields: " + missingFields);
         }
-        ResponseDto responseDto = transactionCoordinatorService.createExpenseByReceipt(requestDto);
-        return ResponseEntity.ok(responseDto);
+
+        TransactionDto transactionDto=receiptService.createReceipt(requestDto);
+
+        transactionSagaService.performAsyncOperations(transactionDto);
+
+        Map<String, Object> receiptInfo = new HashMap<>();
+        receiptInfo.put("receiptID", transactionDto.getReceipt().getReceiptUUID());
+        receiptInfo.put("receiptName", transactionDto.getReceipt().getReceiptName());
+        receiptInfo.put("createdAt", transactionDto.getReceipt().getCreatedAt().toString());
+
+        return ResponseEntity.ok(new ResponseDto(true, "Receipt creation process started.", receiptInfo));
     }
+
+
 
     @GetMapping("/group/detail")
     public ResponseEntity<ResponseDto> retrievedReceipt(
-            @RequestHeader(value = "Authorization") String token,@RequestParam("receipt") String receiptUUID){
+            @RequestHeader(value = "Authorization") String token, @RequestParam("receipt") String receiptUUID) {
         loginService.validTokenOrNot(token);
         ReceiptDto data = receiptService.getReceiptInfo(receiptUUID);
-        ResponseDto responseDto =new ResponseDto<>(true,"receipt detail retrieved successfully",data);
-        return  ResponseEntity.ok(responseDto);
+        ResponseDto responseDto = new ResponseDto<>(true, "receipt detail retrieved successfully", data);
+        return ResponseEntity.ok(responseDto);
 
     }
 
