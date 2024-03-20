@@ -22,21 +22,28 @@ public class OptimizedTransactionEntity {
     private String optimizedTransactionUUID; // OPT 로 시작
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "groupId")
+    @JoinColumn(name = "group_Id")
     private GroupEntity group;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "senderUser")
+    @JoinColumn(name = "sender_id")
     private UserEntity senderUser;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "recipientUser")
+    @JoinColumn(name = "recipient_id")
     private UserEntity recipientUser;
 
     @Column(nullable = false)
     private double transactionAmount;
+
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private Status isCleared;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+
+    private Status isUsed;
     @Column(nullable = false)
     private LocalDateTime createdAt;
 }

@@ -6,5 +6,5 @@ import settleup.backend.global.exception.CustomException;
 import java.util.concurrent.CompletableFuture;
 
 public interface RequireTransactionService {
-    CompletableFuture<TransactionDto> createExpense(TransactionDto transactionDto) throws CustomException;
+    TransactionDto createExpense(TransactionDto transactionDto) throws CustomException;
 }

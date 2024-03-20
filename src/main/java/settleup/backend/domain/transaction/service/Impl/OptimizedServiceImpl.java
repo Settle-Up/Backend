@@ -1,6 +1,9 @@
 package settleup.backend.domain.transaction.service.Impl;
 
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
@@ -9,6 +12,7 @@ import settleup.backend.domain.group.repository.GroupUserRepository;
 import settleup.backend.domain.transaction.entity.OptimizedTransactionEntity;
 import settleup.backend.domain.transaction.entity.OptimizedTransactionDetailsEntity;
 import settleup.backend.domain.transaction.entity.RequiresTransactionEntity;
+import settleup.backend.domain.transaction.entity.dto.P2PDto;
 import settleup.backend.domain.transaction.entity.dto.TransactionDto;
 import settleup.backend.domain.transaction.entity.dto.TransactionP2PCalculationResultDto;
 import settleup.backend.domain.transaction.repository.OptimizedTransactionDetailsRepository;
@@ -40,190 +44,139 @@ public class OptimizedServiceImpl implements OptimizedService {
     private RequireTransactionRepository requireTransactionRepo;
     private UserRepository userRepo;
     private UUID_Helper uuidHelper;
+    private static final Logger logger = LoggerFactory.getLogger(OptimizedServiceImpl.class);
 
     /**
      * optimizationOfp2p
      *
      * @param targetDto (receipt , group, allocationType , payerUser)
      * @throws CustomException
-     * @progress 1. createCombinationList
-     * 2. retrievedAndOptimizationFromNode : 그룹id 를 가지고 있는 모든 requiresTransaction 중에 (is sender status, is recipient status) not clear
-     * 3. 두 노드 최적화
-     * 4. common  - calculate Net
-     * 5. compare between calculate Net and OptimizationTransaction
-     * 6. if == save
+     * @process 1. optimizationOfp2p
+     * 2. createCombinationList
+     * 3. optimizationTargetList = targetDto.group 의 모든 requireTransaction 중에 clear 상태가 아닌것 불러오기
+     * 4. if sender , recipient 가 combinationList와 일치하면 그 리스트들의 불러와서 ,
+     * combinationList [0,1]  totalAmount.build
+     * case1) sender 가 (0) 일때 amount +
+     * case2) sender 가 (1) 일때 amount -
+     * result1) if (totalAmount >0) {sender=(0),recipient(1) , totalAmount 는 그대로
+     * }else{sender=(1), recipient=(0), |totalAmount| }
      */
-    @Override
-    public CompletableFuture<Void> optimizationOfp2p(TransactionDto targetDto) throws CustomException {
-        return CompletableFuture.runAsync(()->{
-        List<List<Long>> nodeList = createCombinationList(targetDto.getGroup());// 1,23,11,13
-        System.out.println("heyNode:" + nodeList); //[[23, 1], [23, 11], [23, 13], [1, 11], [1, 13], [11, 13]]
-        retrievedAndOptimizationFromNode(nodeList, targetDto.getGroup());
-    });
+    @Override // 여기에 트랜젝션 붙이는거 맞아?
+    public void optimizationOfp2p(TransactionDto targetDto) throws CustomException {
+        optimizedTransactionRepo.updateIsUsedStatusByGroup(targetDto.getGroup(), Status.USED);
+        List<List<Long>> nodeList = createCombinationList(targetDto.getGroup());
+        System.out.println("heyNode:" + nodeList);
+        optimizationTargetList(targetDto.getGroup(), nodeList);
     }
 
-//    heyNode:[[23, 1], [23, 11], [23, 13], [1, 11], [1, 13], [11, 13]]
+    private void optimizationTargetList(GroupEntity group, List<List<Long>> nodeList) {
+        List<RequiresTransactionEntity> targetGroupList = requireTransactionRepo.findByGroupIdAndStatusNotClear(group.getId());
 
+        System.out.println("Total node pairs to process: " + nodeList.size()); // 전체 처리해야 할 쌍의 수를 출력
 
-    private void retrievedAndOptimizationFromNode(List<List<Long>> nodeList, GroupEntity group) {
-        for (List<Long> pair : nodeList) {
-            Long userId1 = pair.get(0);
-            Long userId2 = pair.get(1);
+        // nodeList에 있는 각 사용자 ID 쌍에 대해 순회합니다.
+        for (List<Long> node : nodeList) {
+            Long senderId = node.get(0);
+            Long recipientId = node.get(1);
 
-            TransactionP2PCalculationResultDto resultDto = calculateTotalAmountFromTransactions(userId1, userId2);
-            double totalAmount = resultDto.getTotalAmount();
-            List<RequiresTransactionEntity> allTransactions = resultDto.getAllTransactions();
+            // 각 ID 쌍에 대한 정보를 출력합니다.
+            System.out.println("Processing pair - Sender ID: " + senderId + ", Recipient ID: " + recipientId);
 
-            if (!allTransactions.isEmpty() || totalAmount != 0) {
-                UserEntity sender, recipient;
-                if (totalAmount >= 0) {
-                    recipient = userRepo.findById(userId1)
-                            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-                    sender = userRepo.findById(userId2)
-                            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-                } else {
-                    sender = userRepo.findById(userId1)
-                            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-                    recipient = userRepo.findById(userId2)
-                            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-                    totalAmount = -totalAmount; // Convert the amount to positive for recording
+            // targetGroupList에서 해당 senderId와 recipientId를 가진 거래를 필터링합니다.
+            List<RequiresTransactionEntity> filteredTransactions = new ArrayList<>();
+            for (RequiresTransactionEntity transaction : targetGroupList) {
+                if ((transaction.getSenderUser().getId().equals(senderId) && transaction.getRecipientUser().getId().equals(recipientId))
+                        || (transaction.getSenderUser().getId().equals(recipientId) && transaction.getRecipientUser().getId().equals(senderId))) {
+                    filteredTransactions.add(transaction);
+                }
+            }
+
+            // 거래 리스트가 필터링된 후, 해당 거래들에 대해 정보를 출력합니다.
+            System.out.println("Filtered transactions count for this pair: " + filteredTransactions.size());
+            if (!filteredTransactions.isEmpty()) {
+                double totalAmount = 0;
+                // totalAmount 계산
+                for (RequiresTransactionEntity transaction : filteredTransactions) {
+                    if (transaction.getSenderUser().getId().equals(senderId)) {
+                        totalAmount += transaction.getTransactionAmount();
+                    } else if (transaction.getSenderUser().getId().equals(recipientId)) {
+                        totalAmount -= transaction.getTransactionAmount();
+                    }
                 }
 
-                OptimizedTransactionEntity optimization = new OptimizedTransactionEntity();
-                String optimizationUUID = uuidHelper.UUIDForOptimizedTransaction();
-                optimization.setOptimizedTransactionUUID(optimizationUUID);
-                optimization.setGroup(group);
-                optimization.setSenderUser(sender);
-                optimization.setRecipientUser(recipient);
-                optimization.setTransactionAmount(totalAmount);
-                optimization.setIsCleared(Status.PENDING);
-                optimization.setCreatedAt(LocalDateTime.now());
-                optimizedTransactionRepo.save(optimization);
+                // P2PDto 객체 생성 및 설정
+                P2PDto p2PDto = new P2PDto();
+                p2PDto.setGroup(group);
+                p2PDto.setTransactionAmount(Math.abs(totalAmount));
+                p2PDto.setDuringOptimizationUsed(filteredTransactions);
 
+                // Sender와 Recipient 설정
+                if (totalAmount > 0) {
+                    p2PDto.setSenderUser(userRepo.findById(senderId).get());
+                    p2PDto.setRecipientUser(userRepo.findById(recipientId).get());
+                } else if (totalAmount < 0) {
+                    p2PDto.setSenderUser(userRepo.findById(recipientId).get());
+                    p2PDto.setRecipientUser(userRepo.findById(senderId).get());
+                }
 
-                for (RequiresTransactionEntity transaction : allTransactions) {
-                    transaction.setIsSenderStatus(Status.CLEAR);
-                    transaction.setIsRecipientStatus(Status.CLEAR);
-                    requireTransactionRepo.save(transaction);
+                // totalAmount가 0이 아닌 경우, OptimizedTransactionEntity 및 OptimizedTransactionDetailsEntity 저장
+                if (totalAmount != 0) {
+                    OptimizedTransactionEntity optimizedTransaction = new OptimizedTransactionEntity();
+                    optimizedTransaction.setOptimizedTransactionUUID(uuidHelper.UUIDForOptimizedTransaction());
+                    optimizedTransaction.setGroup(p2PDto.getGroup());
+                    optimizedTransaction.setSenderUser(p2PDto.getSenderUser());
+                    optimizedTransaction.setRecipientUser(p2PDto.getRecipientUser());
+                    optimizedTransaction.setTransactionAmount(p2PDto.getTransactionAmount());
+                    optimizedTransaction.setIsCleared(Status.PENDING);
+                    optimizedTransaction.setIsUsed(Status.NOT_USED);
+                    optimizedTransaction.setCreatedAt(LocalDateTime.now());
+                    optimizedTransactionRepo.save(optimizedTransaction);
 
-
-                    OptimizedTransactionDetailsEntity details = new OptimizedTransactionDetailsEntity();
-                    details.setOptimizedTransactionDetailUUID(uuidHelper.UUIDForOptimizedTransactionsDetail());
-                    details.setOptimizedTransactionEntity(optimization);
-                    details.setRequiresTransaction(transaction);
-                    optimizedTransactionDetailsRepo.save(details);
+                    for (RequiresTransactionEntity transaction : p2PDto.getDuringOptimizationUsed()) {
+                        OptimizedTransactionDetailsEntity details = new OptimizedTransactionDetailsEntity();
+                        details.setOptimizedTransactionDetailUUID(uuidHelper.UUIDForOptimizedTransactionsDetail());
+                        details.setOptimizedTransaction(optimizedTransaction);
+                        details.setRequiresTransaction(transaction);
+                        optimizedTransactionDetailsRepo.save(details);
+                    }
+                } else {
+                    // totalAmount가 0인 경우, 모든 거래의 상태를 CLEAR로 설정
+                    for (RequiresTransactionEntity transactionForClear : filteredTransactions) {
+                        transactionForClear.setIsSenderStatus(Status.CLEAR);
+                        transactionForClear.setIsRecipientStatus(Status.CLEAR);
+                        transactionRepo.save(transactionForClear);
                     }
                 }
             }
+
         }
-//    Sender: 23, Recipient: 1
-//    Sender: 23, Recipient: 11
-//    Sender: 23, Recipient: 13
-//    Sender: 1, Recipient: 11
-//    Sender: 1, Recipient: 13
-//    Sender: 11, Recipient: 13
-
-        private TransactionP2PCalculationResultDto calculateTotalAmountFromTransactions (Long senderUserId, Long
-        recipientUserId){
-            // Transactions from user1 to user2
-            List<RequiresTransactionEntity> transactionsFromUser1ToUser2 = transactionRepo.findBySenderUser_IdAndRecipientUser_Id(senderUserId, recipientUserId);
-
-            // Transactions from user2 to user1
-            List<RequiresTransactionEntity> transactionsFromUser2ToUser1 = transactionRepo.findByRecipientUser_IdAndSenderUser_Id(recipientUserId, senderUserId);
-
-            // Combine and calculate the net amount
-            double totalAmount = Stream.concat(transactionsFromUser1ToUser2.stream(), transactionsFromUser2ToUser1.stream())
-                    .mapToDouble(t -> t.getSenderUser().getId().equals(senderUserId) ? t.getTransactionAmount() : -t.getTransactionAmount())
-                    .sum();
-
-
-            // Combine all transactions
-            List<RequiresTransactionEntity> allTransactions = new ArrayList<>(transactionsFromUser1ToUser2);
-            allTransactions.addAll(transactionsFromUser2ToUser1);
-
-            return new TransactionP2PCalculationResultDto(totalAmount, allTransactions);
-        }
-        //    Sender: 23, Recipient: 1
-//    Sender: 23, Recipient: 11
-//    Sender: 23, Recipient: 13
-//    Sender: 1, Recipient: 11
-//    Sender: 1, Recipient: 13
-//    Sender: 11, Recipient: 13
-
-//private TransactionP2PCalculationResultDto calculateTotalAmountFromTransactions(Long senderUserId, Long recipientUserId) {
-//        Long senderUser_Id=senderUserId;
-//        Long recipientUser_Id=recipientUserId;
-//
-//    // Transactions from user1 to user2
-//    List<RequiresTransactionEntity> transactionsFromUser1ToUser2 = transactionRepo.findBySenderUser_IdAndRecipientUser_Id(senderUser_Id, recipientUser_Id);
-//    if (!transactionsFromUser1ToUser2.isEmpty()) {
-//        transactionsFromUser1ToUser2.forEach(transaction ->
-//                System.out.println("hey1 From User1 to User2 - Sender: " + transaction.getSenderUser().getUserName() +
-//                        ", Recipient: " + transaction.getRecipientUser().getUserName() +
-//                        ", Amount: " + transaction.getTransactionAmount()));
-//    } else {
-//        System.out.println("No transactions from User1 to User2.");
-//    }
-//
-//    // Transactions from user2 to user1
-//    List<RequiresTransactionEntity> transactionsFromUser2ToUser1 = transactionRepo.findByRecipientUser_IdAndSenderUser_Id(recipientUser_Id, senderUser_Id);
-//    if (!transactionsFromUser2ToUser1.isEmpty()) {
-//        transactionsFromUser2ToUser1.forEach(transaction ->
-//                System.out.println("hey2 From User2 to User1 - Sender: " + transaction.getSenderUser().getUserName() +
-//                        ", Recipient: " + transaction.getRecipientUser().getUserName() +
-//                        ", Amount: " + transaction.getTransactionAmount()));
-//    } else {
-//        System.out.println("No transactions from User2 to User1.");
-//    }
-//
-//    // Combine and calculate the net amount
-//    double totalAmount = Stream.concat(transactionsFromUser1ToUser2.stream(), transactionsFromUser2ToUser1.stream())
-//            .mapToDouble(t -> t.getSenderUser().getId().equals(senderUserId) ? t.getTransactionAmount() : -t.getTransactionAmount())
-//            .sum();
-//    System.out.println("Net Total Amount: " + totalAmount);
-//
-//    // Combine all transactions
-//    List<RequiresTransactionEntity> allTransactions = new ArrayList<>(transactionsFromUser1ToUser2);
-//    allTransactions.addAll(transactionsFromUser2ToUser1);
-//
-//    return new TransactionP2PCalculationResultDto(totalAmount, allTransactions);
-//}
-
-
-
-        private List<List<Long>> createCombinationList (GroupEntity group) throws CustomException {
-            // 그룹 id 로 그룹 사용자 리스트를 조회
-            List<GroupUserEntity> groupUserList = groupUserRepo.findByGroup_Id(group.getId());
-            if (groupUserList.isEmpty()) {
-                throw new CustomException(ErrorCode.GROUP_USER_NOT_FOUND);
-            }
-
-            // GroupUserEntity 목록에서 UserEntity 목록으로 반환
-            List<UserEntity> userList = groupUserList.stream()
-                    .map(GroupUserEntity::getUser)
-                    .collect(Collectors.toList());
-
-            // Further processing
-            List<Long> userFKList = userList.stream().map(UserEntity::getId).collect(Collectors.toList());
-
-            // Make combinationList
-            List<List<Long>> combinationList = new ArrayList<>();
-            for (int i = 0; i < userFKList.size(); i++) {
-                for (int j = i + 1; j < userFKList.size(); j++) {
-                    combinationList.add(List.of(userFKList.get(i), userFKList.get(j)));
-                }
-            }
-            return combinationList;
-        }
-
-
-//    @Override
-//    public void optimizationOfNet(OptimizationTargetDto targetDto) throws CustomException {
-//
-//    }
-//
-//    @Override
-//    public void optimizationOfGroup(OptimizationTargetDto targetDto) throws CustomException {
-//
-//    }
     }
+
+
+    private List<List<Long>> createCombinationList(GroupEntity group) throws CustomException {
+        // 그룹 id 로 그룹 사용자 리스트를 조회
+        List<GroupUserEntity> groupUserList = groupUserRepo.findByGroup_Id(group.getId());
+        if (groupUserList.isEmpty()) {
+            throw new CustomException(ErrorCode.GROUP_USER_NOT_FOUND);
+        }
+
+        // GroupUserEntity 목록에서 UserEntity 목록으로 반환
+        List<UserEntity> userList = groupUserList.stream()
+                .map(GroupUserEntity::getUser)
+                .collect(Collectors.toList());
+
+        // Further processing
+        List<Long> userFKList = userList.stream().map(UserEntity::getId).collect(Collectors.toList());
+
+        // Make combinationList
+        List<List<Long>> combinationList = new ArrayList<>();
+        for (int i = 0; i < userFKList.size(); i++) {
+            for (int j = i + 1; j < userFKList.size(); j++) {
+                combinationList.add(List.of(userFKList.get(i), userFKList.get(j)));
+            }
+        }
+        return combinationList;
+    }
+
+
+}

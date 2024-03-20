@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<UserEntity ,Long> {
-    Optional<UserEntity>findById(Long id);
+public interface UserRepository extends JpaRepository<UserEntity, Long> {
+    Optional<UserEntity> findById(Long id);
     Optional<UserEntity> findByUserEmail(String email);
     Optional<UserEntity> findByUserUUID(String UUID);
     List<UserEntity> findByUserEmailContaining(String partOfEmail);

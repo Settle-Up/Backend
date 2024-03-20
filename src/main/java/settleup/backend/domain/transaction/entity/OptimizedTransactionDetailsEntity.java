@@ -19,7 +19,7 @@ public class OptimizedTransactionDetailsEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "optimizedTransaction_id")
-    private OptimizedTransactionEntity optimizedTransactionEntity;
+    private OptimizedTransactionEntity optimizedTransaction;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requiresTransaction_id")

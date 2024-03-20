@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 
 public interface OptimizedService {
 
-    CompletableFuture<Void> optimizationOfp2p(TransactionDto targetDto) throws CustomException;
+   void optimizationOfp2p(TransactionDto targetDto) throws CustomException;
 //    void optimizationOfNet(OptimizationTargetDto targetDto) throws CustomException;
 //    void optimizationOfGroup(OptimizationTargetDto targetDto) throws CustomException;
 }

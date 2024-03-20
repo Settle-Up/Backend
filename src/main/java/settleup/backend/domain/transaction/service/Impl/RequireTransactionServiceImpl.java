@@ -11,7 +11,10 @@ import settleup.backend.domain.transaction.entity.dto.TransactionDto;
 import settleup.backend.domain.receipt.repository.ReceiptItemRepository;
 import settleup.backend.domain.receipt.repository.ReceiptItemUserRepository;
 import settleup.backend.domain.transaction.entity.RequiresTransactionEntity;
+import settleup.backend.domain.transaction.repository.OptimizedTransactionDetailsRepository;
+import settleup.backend.domain.transaction.repository.OptimizedTransactionRepository;
 import settleup.backend.domain.transaction.repository.RequireTransactionRepository;
+import settleup.backend.domain.transaction.service.OptimizedService;
 import settleup.backend.domain.transaction.service.RequireTransactionService;
 import settleup.backend.domain.user.repository.UserRepository;
 import settleup.backend.global.common.Status;
@@ -30,7 +33,8 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
     private final UUID_Helper uuidHelper;
     private final ReceiptItemRepository itemRepository;
     private final ReceiptItemUserRepository itemUserRepository;
-    private final UserRepository userRepository;
+    private final OptimizedTransactionRepository optimizedP2PRepo;
+    private final OptimizedTransactionDetailsRepository optimizedP2PDetailsRepo;
     private final RequireTransactionRepository transactionRepository;
 
     /**
@@ -90,11 +94,12 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
 //        }
 //    }
 //}
-    @Transactional
+
     @Override
-    public CompletableFuture<TransactionDto> createExpense(TransactionDto requestDto) {
+    @Transactional
+    public TransactionDto createExpense(TransactionDto requestDto) {
         processTransactionItems(requestDto);
-        return CompletableFuture.completedFuture(requestDto);
+        return requestDto;
     }
 
 
@@ -127,8 +132,10 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
 
     private void saveTransaction(ReceiptItemUserEntity itemUser, TransactionDto requestDto, double saveAmount) {
         RequiresTransactionEntity transaction = createTransactionEntity(itemUser, requestDto, saveAmount);
-        transactionRepository.save(transaction);
+      transactionRepository.save(transaction);
+
     }
+
 
     private RequiresTransactionEntity createTransactionEntity(ReceiptItemUserEntity itemUser, TransactionDto requestDto, double saveAmount) {
         RequiresTransactionEntity transaction = new RequiresTransactionEntity();
