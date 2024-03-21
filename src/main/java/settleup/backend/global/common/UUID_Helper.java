@@ -36,4 +36,16 @@ public class UUID_Helper {
         String uniquePart = UUID.randomUUID().toString();
         return prefix + uniquePart;
     }
+
+    public String UUIDForGroupOptimizedTransactions() {
+        String prefix = "GPT";
+        String uniquePart = UUID.randomUUID().toString();
+        return prefix + uniquePart;
+    }
+
+    public String UUIDForGroupOptimizedDetail() {
+        String prefix = "GPTD";
+        String uniquePart = UUID.randomUUID().toString();
+        return prefix + uniquePart;
+    }
 }

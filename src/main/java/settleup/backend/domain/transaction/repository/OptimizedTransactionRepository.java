@@ -14,4 +14,6 @@ public interface OptimizedTransactionRepository extends JpaRepository<OptimizedT
     @Modifying
     @Query("UPDATE OptimizedTransactionEntity o SET o.isUsed = :status WHERE o.group = :group")
     void updateIsUsedStatusByGroup(@Param("group") GroupEntity group, @Param("status") Status status);
+    @Query("SELECT o.group FROM OptimizedTransactionEntity o WHERE o.id = :transactionId")
+    GroupEntity findGroupByTransactionId(@Param("transactionId") Long transactionId);
 }

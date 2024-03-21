@@ -10,18 +10,18 @@ import lombok.Setter;
 public class GroupOptimizedTransactionDetailsEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     @Column(nullable = false)
     private String groupOptimizedTransactionDetailUUID;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "groupOptimizedTransaction_id")
-    private GroupOptimizedTransactionEntity groupOptimizedTransactionEntity;
+    private GroupOptimizedTransactionEntity groupOptimizedTransaction;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "optimizedTransaction_id")
-    private OptimizedTransactionEntity optimizedTransactionEntity;
+    private OptimizedTransactionEntity optimizedTransaction;
 
 }
 

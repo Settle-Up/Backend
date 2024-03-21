@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.user.entity.UserEntity;
+import settleup.backend.global.common.Status;
 
 import java.time.LocalDateTime;
 @Entity
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 public class GroupOptimizedTransactionEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     @Column(nullable = false)
     private String groupOptimizedTransactionUUID;
@@ -34,8 +35,11 @@ public class GroupOptimizedTransactionEntity {
 
     @Column(nullable = false)
     private double optimizedAmount;
+
     @Column(nullable = false)
-    private boolean isCleared;
+    @Enumerated(EnumType.STRING)
+    private Status isCleared;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 

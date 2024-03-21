@@ -44,7 +44,6 @@ public class OptimizedServiceImpl implements OptimizedService {
     private RequireTransactionRepository requireTransactionRepo;
     private UserRepository userRepo;
     private UUID_Helper uuidHelper;
-    private static final Logger logger = LoggerFactory.getLogger(OptimizedServiceImpl.class);
 
     /**
      * optimizationOfp2p
@@ -61,28 +60,25 @@ public class OptimizedServiceImpl implements OptimizedService {
      * result1) if (totalAmount >0) {sender=(0),recipient(1) , totalAmount 는 그대로
      * }else{sender=(1), recipient=(0), |totalAmount| }
      */
-    @Override // 여기에 트랜젝션 붙이는거 맞아?
-    public void optimizationOfp2p(TransactionDto targetDto) throws CustomException {
+    @Override
+    public List<Long> optimizationOfp2p(TransactionDto targetDto) throws CustomException {
         optimizedTransactionRepo.updateIsUsedStatusByGroup(targetDto.getGroup(), Status.USED);
         List<List<Long>> nodeList = createCombinationList(targetDto.getGroup());
         System.out.println("heyNode:" + nodeList);
-        optimizationTargetList(targetDto.getGroup(), nodeList);
+        return optimizationTargetList(targetDto.getGroup(), nodeList);
     }
 
-    private void optimizationTargetList(GroupEntity group, List<List<Long>> nodeList) {
+    private List<Long> optimizationTargetList(GroupEntity group, List<List<Long>> nodeList) {
         List<RequiresTransactionEntity> targetGroupList = requireTransactionRepo.findByGroupIdAndStatusNotClear(group.getId());
+        List<Long> savedOptimizedTransactionIds = new ArrayList<>();
+        System.out.println("Total node pairs to process: " + nodeList.size());
 
-        System.out.println("Total node pairs to process: " + nodeList.size()); // 전체 처리해야 할 쌍의 수를 출력
-
-        // nodeList에 있는 각 사용자 ID 쌍에 대해 순회합니다.
         for (List<Long> node : nodeList) {
             Long senderId = node.get(0);
             Long recipientId = node.get(1);
 
-            // 각 ID 쌍에 대한 정보를 출력합니다.
             System.out.println("Processing pair - Sender ID: " + senderId + ", Recipient ID: " + recipientId);
 
-            // targetGroupList에서 해당 senderId와 recipientId를 가진 거래를 필터링합니다.
             List<RequiresTransactionEntity> filteredTransactions = new ArrayList<>();
             for (RequiresTransactionEntity transaction : targetGroupList) {
                 if ((transaction.getSenderUser().getId().equals(senderId) && transaction.getRecipientUser().getId().equals(recipientId))
@@ -95,7 +91,6 @@ public class OptimizedServiceImpl implements OptimizedService {
             System.out.println("Filtered transactions count for this pair: " + filteredTransactions.size());
             if (!filteredTransactions.isEmpty()) {
                 double totalAmount = 0;
-                // totalAmount 계산
                 for (RequiresTransactionEntity transaction : filteredTransactions) {
                     if (transaction.getSenderUser().getId().equals(senderId)) {
                         totalAmount += transaction.getTransactionAmount();
@@ -130,7 +125,8 @@ public class OptimizedServiceImpl implements OptimizedService {
                     optimizedTransaction.setIsCleared(Status.PENDING);
                     optimizedTransaction.setIsUsed(Status.NOT_USED);
                     optimizedTransaction.setCreatedAt(LocalDateTime.now());
-                    optimizedTransactionRepo.save(optimizedTransaction);
+                    OptimizedTransactionEntity savedOptimizedTransaction = optimizedTransactionRepo.save(optimizedTransaction);
+                    savedOptimizedTransactionIds.add(savedOptimizedTransaction.getId());
 
                     for (RequiresTransactionEntity transaction : p2PDto.getDuringOptimizationUsed()) {
                         OptimizedTransactionDetailsEntity details = new OptimizedTransactionDetailsEntity();
@@ -149,7 +145,7 @@ public class OptimizedServiceImpl implements OptimizedService {
                 }
             }
 
-        }
+        }  return savedOptimizedTransactionIds;
     }
 
 

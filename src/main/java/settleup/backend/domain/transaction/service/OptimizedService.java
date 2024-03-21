@@ -7,12 +7,12 @@ import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.transaction.entity.dto.TransactionDto;
 import settleup.backend.global.exception.CustomException;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 
 public interface OptimizedService {
 
-   void optimizationOfp2p(TransactionDto targetDto) throws CustomException;
-//    void optimizationOfNet(OptimizationTargetDto targetDto) throws CustomException;
-//    void optimizationOfGroup(OptimizationTargetDto targetDto) throws CustomException;
+    List<Long> optimizationOfp2p(TransactionDto targetDto) throws CustomException;
+
 }

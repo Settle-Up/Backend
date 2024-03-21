@@ -12,7 +12,7 @@ import lombok.Setter;
 public class OptimizedTransactionDetailsEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     @Column(nullable = false)
     private String optimizedTransactionDetailUUID;//OPTD 로 시작
