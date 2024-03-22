@@ -67,9 +67,9 @@ public class OptimizedServiceImpl implements OptimizedService {
         System.out.println("heyNode:" + nodeList);
         return optimizationTargetList(targetDto.getGroup(), nodeList);
     }
-
     private List<Long> optimizationTargetList(GroupEntity group, List<List<Long>> nodeList) {
         List<RequiresTransactionEntity> targetGroupList = requireTransactionRepo.findByGroupIdAndStatusNotClear(group.getId());
+        System.out.println("here's List size:"+targetGroupList.size());
         List<Long> savedOptimizedTransactionIds = new ArrayList<>();
         System.out.println("Total node pairs to process: " + nodeList.size());
 
@@ -87,7 +87,7 @@ public class OptimizedServiceImpl implements OptimizedService {
                 }
             }
 
-            // 거래 리스트가 필터링된 후, 해당 거래들에 대해 정보를 출력합니다.
+            // 거래 리스트가 필터링된 후, 해당 거래들에 대해 정보를 출력
             System.out.println("Filtered transactions count for this pair: " + filteredTransactions.size());
             if (!filteredTransactions.isEmpty()) {
                 double totalAmount = 0;

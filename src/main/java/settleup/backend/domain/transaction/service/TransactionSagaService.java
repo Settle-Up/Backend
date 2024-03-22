@@ -8,5 +8,5 @@ import settleup.backend.global.exception.CustomException;
 import java.util.concurrent.CompletableFuture;
 
 public interface TransactionSagaService {
-    void performAsyncOperations(TransactionDto transactionDto) throws CustomException;
+    void performOptimizationOperations(TransactionDto transactionDto) throws CustomException;
 }

@@ -30,24 +30,26 @@ public class TransactionSagaServiceImpl implements TransactionSagaService {
     private final NetService netService;
 
     @Override
-    public void performAsyncOperations(TransactionDto transactionDto) {
-        TransactionDto transactionDto1 = requireService.createExpense(transactionDto);
-        List<NetDto> netList = netService.calculateNet(transactionDto1);
-        List<Long> optimizedP2PList=optimizedService.optimizationOfp2p(transactionDto1);
-        groupOptimizedService.optimizationInGroup(optimizedP2PList,netList);
-    }
-    }
+    public void performOptimizationOperations(TransactionDto transactionDto) {
+        try {
+            TransactionDto transactionDto1 = requireService.createExpense(transactionDto);
 
-//
-//        return requireService.createExpense(transactionDto)
-//            .thenCompose(resultId -> optimizedService.optimizationOfp2p(resultId))
-//            .exceptionally(ex -> {
-//        // Sentry를 이용해 로그를 남깁니다.
-//        Sentry.captureException(ex);
-//        // exceptionally 블록 안에서 예외를 던지는 것은 권장되지 않습니다.
-//        // 이 블록은 예외를 처리하기 위한 것이지, 전파하기 위한 것이 아닙니다.
-//        // 실패를 나타내려면 다른 방법을 고려해야 합니다.
-//        return null;
-//    });
-//}
-//}
+            CompletableFuture<List<NetDto>> netListFuture = CompletableFuture.supplyAsync(() -> netService.calculateNet(transactionDto1));
+            CompletableFuture<List<Long>> optimizedP2PListFuture = CompletableFuture.supplyAsync(() -> optimizedService.optimizationOfp2p(transactionDto1));
+
+            CompletableFuture<Void> allFutures = CompletableFuture.allOf(netListFuture, optimizedP2PListFuture);
+
+            allFutures.thenAccept(v -> {
+                List<NetDto> netList = netListFuture.join();
+                List<Long> optimizedP2PList = optimizedP2PListFuture.join();
+
+                groupOptimizedService.optimizationInGroup(optimizedP2PList, netList);
+            }).exceptionally(e -> {
+                Sentry.captureException(e);
+                return null;
+            }).join();
+        } catch (Exception e) {
+            Sentry.captureException(e);
+        }
+    }
+}

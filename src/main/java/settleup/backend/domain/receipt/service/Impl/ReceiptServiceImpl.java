@@ -1,11 +1,10 @@
 package settleup.backend.domain.receipt.service.Impl;
 
 import lombok.AllArgsConstructor;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
-import settleup.backend.domain.group.entity.GroupUserEntity;
 import settleup.backend.domain.group.repository.GroupRepository;
 import settleup.backend.domain.group.repository.GroupUserRepository;
 import settleup.backend.domain.receipt.entity.ReceiptEntity;
@@ -19,13 +18,13 @@ import settleup.backend.domain.receipt.repository.ReceiptRepository;
 import settleup.backend.domain.receipt.service.ReceiptService;
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.domain.user.repository.UserRepository;
+import settleup.backend.domain.receipt.receiptCommons.ReceiptCreatedEvent;
 import settleup.backend.global.common.UUID_Helper;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,6 +39,7 @@ public class ReceiptServiceImpl implements ReceiptService {
     private final GroupRepository groupRepo;
     private final GroupUserRepository groupUserRepo;
     private final UUID_Helper uuidHelper;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * createReceipt
@@ -51,7 +51,6 @@ public class ReceiptServiceImpl implements ReceiptService {
 
     @Override
     public TransactionDto createReceipt(ReceiptDto requestDto) {
-
 
         GroupEntity groupEntity = groupRepo.findByGroupUUID(requestDto.getGroupId())
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
@@ -113,9 +112,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                 itemUserEntity.setUser(owedUser);
 
                 receiptItemUserRepo.save(itemUserEntity);
-
             });
-
         });
 
         TransactionDto transactionDto = new TransactionDto();
@@ -124,6 +121,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         transactionDto.setAllocationType(requestDto.getAllocationType());
         transactionDto.setPayerUser(receiptEntity.getPayerUser());
         transactionDto.setOwedUser(new ArrayList<>(owedUsers));
+        eventPublisher.publishEvent(new ReceiptCreatedEvent(this, transactionDto));
         return transactionDto;
     }
 

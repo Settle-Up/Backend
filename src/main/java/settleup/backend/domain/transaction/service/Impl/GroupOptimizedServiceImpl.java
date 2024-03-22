@@ -64,7 +64,7 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
 
         // orderedUserIdList에 따라 각 사용자 ID로부터 DFS 시작
         for (Long userId : orderedUserIdList) {
-            // 이전에 방문하지 않은 노드에서 DFS 탐색 시작
+            //  DFS 탐색 시작
             if (!visitedEdges.contains(userId)) {
                 dfs(graph, userId, visitedEdges, edgeTransactionIdMap, group);
             }
@@ -78,17 +78,17 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
                      GroupEntity group) {
         // 현재 노드에서 출발하는 모든 에지에 대해서 반복
         for (DefaultWeightedEdge edge : graph.outgoingEdgesOf(currentNode)) {
-            if (visitedEdges.contains(edge)) continue; // 이미 방문한 에지는 건너뜀
+            if (visitedEdges.contains(edge)) continue; // 이미 방문한 에지는 패스
 
             Long targetNode = graph.getEdgeTarget(edge);
             double weight = graph.getEdgeWeight(edge);
 
-            // 해당 에지를 방문 처리
+            // 방문 에지를 방문 처리
             visitedEdges.add(edge);
 
-            // 다음 노드에서 출발하는 에지를 탐색하며 조건에 맞는 경로를 찾음
+            // 다음 노드에서 출발하는 에지를 탐색, 조건에 맞는 경로를 찾음
             for (DefaultWeightedEdge nextEdge : graph.outgoingEdgesOf(targetNode)) {
-                if (visitedEdges.contains(nextEdge)) continue; // 이미 방문한 에지는 건너뜀
+                if (visitedEdges.contains(nextEdge)) continue; // 이미 방문한 에지는 패스
 
                 double nextWeight = graph.getEdgeWeight(nextEdge);
                 Long nextTarget = graph.getEdgeTarget(nextEdge);
@@ -108,7 +108,7 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
     }
 
 
-    // 새로운 최적화된 트랜잭션을 생성하고 저장하는 메소드
+    // 최적화 거래를 생성하고 저장
     private GroupOptimizedTransactionEntity createOptimizedTransaction(Long senderId, Long recipientId, double amount, GroupEntity group) {
         GroupOptimizedTransactionEntity newTransaction = new GroupOptimizedTransactionEntity();
         newTransaction.setGroupOptimizedTransactionUUID(uuidHelper.UUIDForGroupOptimizedTransactions());
@@ -122,7 +122,7 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
         return newTransaction;
     }
 
-    // 트랜잭션 세부 정보를 저장하는 메소드
+    // 거래 세부 정보를 저장
     private void saveTransactionDetails(GroupOptimizedTransactionEntity optimizedTransaction, Long transactionId) {
         GroupOptimizedTransactionDetailsEntity details = new GroupOptimizedTransactionDetailsEntity();
         details.setGroupOptimizedTransaction(optimizedTransaction);
@@ -149,7 +149,7 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
                 DefaultWeightedEdge edge = graph.addEdge(senderId, recipientId);
                 if (edge != null) {
                     graph.setEdgeWeight(edge, amount);
-                    // 여기서 에지와 transactionId를 매핑합니다.
+                    // 에지와 transactionId를 매핑
                     edgeTransactionIdMap.put(edge, transactionId);
                 }
             });
@@ -162,7 +162,7 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
     private List createGraphOrder(List<NetDto> net) {
         List<NetDto> sortedNetList = new ArrayList<>(net);
 
-        // Bubble sort 사용하여 순액에 따라 정렬
+        // Bubble sort
         boolean sorted = false;
         while (!sorted) {
             sorted = true;
