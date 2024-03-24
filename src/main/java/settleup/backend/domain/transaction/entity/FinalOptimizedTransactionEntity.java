@@ -8,33 +8,32 @@ import settleup.backend.global.common.Status;
 
 import java.time.LocalDateTime;
 
-
 @Entity
 @Setter
 @Getter
-@Table(name = "OptimizedTransaction")
-public class OptimizedTransactionEntity {
+@Table(name = "final_optimized_transaction")
+public class FinalOptimizedTransactionEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String optimizedTransactionUUID; // OPT 로 시작
+    private String finalOptimizedTransactionUUID;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_Id")
+    @JoinColumn(name = "groupId")
     private GroupEntity group;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id")
+    @JoinColumn(name = "senderUser")
     private UserEntity senderUser;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "recipient_id")
+    @JoinColumn(name = "recipientUser")
     private UserEntity recipientUser;
 
     @Column(nullable = false)
-    private double transactionAmount;
+    private double optimizedAmount;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -46,4 +45,5 @@ public class OptimizedTransactionEntity {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
 }

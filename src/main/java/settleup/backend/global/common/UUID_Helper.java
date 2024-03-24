@@ -48,4 +48,15 @@ public class UUID_Helper {
         String uniquePart = UUID.randomUUID().toString();
         return prefix + uniquePart;
     }
+
+    public String UUIDForFinalOptimizedDetail() {
+        String prefix = "FPTD";
+        String uniquePart = UUID.randomUUID().toString();
+        return prefix + uniquePart;
+    }
+    public String UUIDForFinalOptimized() {
+        String prefix = "FPT";
+        String uniquePart = UUID.randomUUID().toString();
+        return prefix + uniquePart;
+    }
 }

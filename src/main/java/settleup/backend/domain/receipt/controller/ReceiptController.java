@@ -43,12 +43,13 @@ public class ReceiptController {
 
             TransactionDto transactionDto = receiptService.createReceipt(requestDto);
 
-            CompletableFuture.runAsync(() ->
-                            transactionSagaService.performOptimizationOperations(transactionDto))
-                    .exceptionally(ex -> {
-                        Sentry.captureException(ex);
-                        return null;
-                    });
+//            // 리스너가 들으면 바로 transactionSaga 서비스를 부르는게 아니라 리스너가 들으면 아래 구문이 실행되도록 해줘
+//            CompletableFuture.runAsync(() ->
+//                            transactionSagaService.performOptimizationOperations(transactionDto))
+//                    .exceptionally(ex -> {
+//                        Sentry.captureException(ex);
+//                        return null;
+//                    });
 
             Map<String, Object> receiptInfo = new HashMap<>();
             receiptInfo.put("receiptId", transactionDto.getReceipt().getReceiptUUID());

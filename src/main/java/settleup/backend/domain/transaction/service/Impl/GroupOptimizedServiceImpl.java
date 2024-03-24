@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 import org.jgrapht.graph.DefaultWeightedEdge;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionDetailsEntity;
@@ -11,6 +13,7 @@ import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionEntit
 import settleup.backend.domain.transaction.entity.OptimizedTransactionEntity;
 import settleup.backend.domain.transaction.entity.dto.GraphResult;
 import settleup.backend.domain.transaction.entity.dto.NetDto;
+import settleup.backend.domain.transaction.entity.dto.TransactionP2PResultDto;
 import settleup.backend.domain.transaction.repository.GroupOptimizedTransactionDetailRepository;
 import settleup.backend.domain.transaction.repository.GroupOptimizedTransactionRepository;
 import settleup.backend.domain.transaction.repository.OptimizedTransactionRepository;
@@ -34,30 +37,31 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
 
     // p2pList 41,42,43
     // 1. 그래프 만들기 2. DFS 를 돌을 순서 정하기 3.
+    private static final Logger logger = LoggerFactory.getLogger(GroupOptimizedServiceImpl.class);
 
     @Override
-    public void optimizationInGroup(List<Long> p2pList, List<NetDto> net) {
-        GraphResult graphResult = createGraphFromTransactions(p2pList);
+    public void optimizationInGroup(TransactionP2PResultDto resultDto, List<NetDto> net) {
+        logger.debug("Starting optimizationInGroup with p2pList: {}, netList size: {}",resultDto.getP2pList(), net.size());
+        GraphResult graphResult = createGraphFromTransactions(resultDto.getP2pList());
         List<Long> orderedUserIdList = createGraphOrder(net);
-        GroupEntity group = getGroup(p2pList);
+        GroupEntity group = getGroup(resultDto.getP2pList());
+        logger.debug("Graph created. Starting group optimization for group: {}", group.getId());
         startGroupOptimization(graphResult, orderedUserIdList, group);
+        logger.debug("Group optimization completed for group: {}", group.getId());
 
     }
 
     private GroupEntity getGroup(List<Long> p2pList) {
+        logger.debug("Retrieving group for p2pList first element: {}", p2pList.get(0));
         return transactionRepo.findGroupByTransactionId(p2pList.get(0));
     }
 
-    // 1. orderedUserIdList 를 순서대로  graphResult 의 그래프의 노드의 깊이 탐색을 시작
-    // 2. 한번 방문한 에지는 또 방문하지 않도록 방문배열을 활용
-    // 3.  DFS 를 돌면서 A->(500)->B->(500)->C 처럼 앞 뒤의 가중치가 같은 노드가 발견되면
-    //     A->(500)->C 라는 새로운 노드 만들어서 새로운 sender 와 recipent , amount 를 groupOptimizedTransactionRepo.save
-    //    (3). 번에서 만들어진 새로운 노드의 GroupTransaction pk 값 다음 4번 함수로 전해주기
-    // 4. 새로운 노드를 만들기 위해 사용되었던 두 노드의 정보를 graph 에서 transaction_id 를 꺼내고 (3번) 에서 받은 GroupTransaction_id 와 , 각자 transaction_id 저장
-    //      groupOptimizedDetailRepo.save
+
     private void startGroupOptimization(GraphResult graphResult,
                                         List<Long> orderedUserIdList,
                                         GroupEntity group) {
+        logger.debug("Starting group optimization. User list size: {}", orderedUserIdList.size());
+        groupOptimizedTransactionRepo.updateIsUsedStatusByGroup(group,Status.USED);
         Graph<Long, DefaultWeightedEdge> graph = graphResult.getGraph();
         Map<DefaultWeightedEdge, Long> edgeTransactionIdMap = graphResult.getEdgeTransactionIdMap();
         Set<DefaultWeightedEdge> visitedEdges = new HashSet<>();
@@ -76,6 +80,7 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
                      Set<DefaultWeightedEdge> visitedEdges,
                      Map<DefaultWeightedEdge, Long> edgeTransactionIdMap,
                      GroupEntity group) {
+        logger.debug("DFS started for node: {}", currentNode);
         // 현재 노드에서 출발하는 모든 에지에 대해서 반복
         for (DefaultWeightedEdge edge : graph.outgoingEdgesOf(currentNode)) {
             if (visitedEdges.contains(edge)) continue; // 이미 방문한 에지는 패스
@@ -118,7 +123,11 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
         newTransaction.setOptimizedAmount(amount);
         newTransaction.setIsCleared(Status.PENDING);
         newTransaction.setCreatedAt(LocalDateTime.now());
+        newTransaction.setIsUsed(Status.NOT_USED);
         groupOptimizedTransactionRepo.save(newTransaction);
+        logger.debug("Created and saved new optimized transaction: {}, Sender ID: {}, Recipient ID: {}, Amount: {}",
+                newTransaction.getGroupOptimizedTransactionUUID(), senderId, recipientId, amount);
+
         return newTransaction;
     }
 
@@ -128,6 +137,9 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
         details.setGroupOptimizedTransaction(optimizedTransaction);
         details.setGroupOptimizedTransactionDetailUUID(uuidHelper.UUIDForGroupOptimizedDetail());
         details.setOptimizedTransaction(transactionRepo.findById(transactionId).get());
+        logger.debug("Saved transaction detail: {}, for optimized transaction UUID: {}, based on original transaction ID: {}",
+                details.getGroupOptimizedTransactionDetailUUID(), optimizedTransaction.getGroupOptimizedTransactionUUID(), transactionId);
+
         groupOptimizedDetailRepo.save(details);
     }
 
@@ -158,18 +170,18 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
         return new GraphResult(graph, edgeTransactionIdMap);
     }
 
-
-    private List createGraphOrder(List<NetDto> net) {
+    private List<Long> createGraphOrder(List<NetDto> net) {
         List<NetDto> sortedNetList = new ArrayList<>(net);
 
-        // Bubble sort
+        // Bubble sort for ascending order by netAmount
         boolean sorted = false;
         while (!sorted) {
             sorted = true;
             for (int i = 0; i < sortedNetList.size() - 1; i++) {
                 NetDto current = sortedNetList.get(i);
                 NetDto next = sortedNetList.get(i + 1);
-                if (current.getNetAmount() < next.getNetAmount() ||
+                // Change the condition for ascending order
+                if (current.getNetAmount() > next.getNetAmount() ||
                         (current.getNetAmount() == next.getNetAmount() && current.getUser().getId() > next.getUser().getId())) {
                     // swap
                     sortedNetList.set(i, next);
@@ -179,7 +191,7 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
             }
         }
 
-        // 정렬된 리스트에서 userId만 추출
+        // Extracting userIds from the sorted list
         List<Long> orderedUserIdList = new ArrayList<>();
         for (NetDto dto : sortedNetList) {
             orderedUserIdList.add(dto.getUser().getId());
@@ -187,5 +199,4 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
 
         return orderedUserIdList;
     }
-
 }

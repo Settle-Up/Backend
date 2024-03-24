@@ -41,6 +41,10 @@ public class GroupOptimizedTransactionEntity {
     private Status isCleared;
 
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Status isUsed;
+
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
 }

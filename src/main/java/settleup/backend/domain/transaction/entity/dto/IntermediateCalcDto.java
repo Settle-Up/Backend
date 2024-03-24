@@ -12,11 +12,12 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class P2PDto {
+public class IntermediateCalcDto {
     private GroupEntity group;
     private UserEntity SenderUser;
     private UserEntity recipientUser;
     private double transactionAmount;
     private List<RequiresTransactionEntity> duringOptimizationUsed;
+    private List<CombinedListDto> duringFinalOptimizationUsed;
 }
 

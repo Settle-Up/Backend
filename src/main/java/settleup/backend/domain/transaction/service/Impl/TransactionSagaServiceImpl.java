@@ -10,6 +10,7 @@ import settleup.backend.domain.receipt.repository.ReceiptRepository;
 import settleup.backend.domain.receipt.service.ReceiptService;
 import settleup.backend.domain.transaction.entity.dto.NetDto;
 import settleup.backend.domain.transaction.entity.dto.TransactionDto;
+import settleup.backend.domain.transaction.entity.dto.TransactionP2PResultDto;
 import settleup.backend.domain.transaction.service.*;
 import settleup.backend.global.api.ResponseDto;
 import settleup.backend.global.exception.CustomException;
@@ -28,26 +29,24 @@ public class TransactionSagaServiceImpl implements TransactionSagaService {
     private final GroupOptimizedService groupOptimizedService;
     private final OptimizedService optimizedService;
     private final NetService netService;
+    private final FinalOptimizedService mergeTransaction;
 
     @Override
     public void performOptimizationOperations(TransactionDto transactionDto) {
         try {
+            // createExpense 호출하여 영수증 처리
             TransactionDto transactionDto1 = requireService.createExpense(transactionDto);
 
-            CompletableFuture<List<NetDto>> netListFuture = CompletableFuture.supplyAsync(() -> netService.calculateNet(transactionDto1));
-            CompletableFuture<List<Long>> optimizedP2PListFuture = CompletableFuture.supplyAsync(() -> optimizedService.optimizationOfp2p(transactionDto1));
+            // Net 계산을 동기적으로 처리
+            List<NetDto> netList = netService.calculateNet(transactionDto1);
 
-            CompletableFuture<Void> allFutures = CompletableFuture.allOf(netListFuture, optimizedP2PListFuture);
+            // P2P 최적화를 동기적으로 처리
+            TransactionP2PResultDto resultDto = optimizedService.optimizationOfp2p(transactionDto1);
 
-            allFutures.thenAccept(v -> {
-                List<NetDto> netList = netListFuture.join();
-                List<Long> optimizedP2PList = optimizedP2PListFuture.join();
+            // 그룹 내 최적화를 동기적으로 처리
+            groupOptimizedService.optimizationInGroup(resultDto, netList);
+            mergeTransaction.lastMergeTransaction(resultDto);
 
-                groupOptimizedService.optimizationInGroup(optimizedP2PList, netList);
-            }).exceptionally(e -> {
-                Sentry.captureException(e);
-                return null;
-            }).join();
         } catch (Exception e) {
             Sentry.captureException(e);
         }

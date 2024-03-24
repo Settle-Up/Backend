@@ -45,55 +45,6 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
      * @throws CustomException
      */
 
-//    @Transactional
-//    @Override
-//    public CompletableFuture<TransactionDto> createExpense(TransactionDto requestDto) throws CustomException {
-//        try {
-//
-//            Long receiptId = requestDto.getReceipt().getId();
-//            List<ReceiptItemEntity> itemList = itemRepository.findByReceiptId(receiptId);
-//
-//            for (ReceiptItemEntity item : itemList) {
-//                double itemPrice = item.getUnitPrice();
-//                double totalItemQuantity = item.getItemQuantity();
-//                double JointPurchaserCount = item.getJointPurchaserCount();
-//
-//                Float targetDividedValue = (float) (itemPrice * totalItemQuantity);
-//
-//                List<ReceiptItemUserEntity> itemUserList = itemUserRepository.findByReceiptItemId(item.getId());
-//                for (ReceiptItemUserEntity itemUser : itemUserList) {
-//                    double saveAmount;
-//                    if (itemUser.getPurchasedQuantity() != null) {
-//                        double itemQuantityEachPerson = itemUser.getPurchasedQuantity();
-//                        saveAmount = (targetDividedValue * itemQuantityEachPerson / totalItemQuantity);
-//                    } else {
-//                        saveAmount = targetDividedValue / JointPurchaserCount;
-//                    }
-//                    if (!itemUser.getUser().getId().equals(requestDto.getReceipt().getPayerUser().getId())) {
-//                        RequiresTransactionEntity transaction = new RequiresTransactionEntity();
-//                        String transactionUUID = uuidHelper.UUIDForTransaction();
-//                        transaction.setTransactionUUID(transactionUUID);
-//                        transaction.setReceipt(requestDto.getReceipt());
-//                        transaction.setGroup(requestDto.getGroup());
-//                        transaction.setRecipientUser(requestDto.getPayerUser());
-//                        transaction.setIsRecipientStatus(Status.PENDING);
-//                        transaction.setIsSenderStatus(Status.PENDING);
-//                        transaction.setSenderUser(userRepository.findById(itemUser.getUser().getId()).get());
-//                        transaction.setTransactionAmount(Double.valueOf(saveAmount));
-//                        transactionRepository.save(transaction);
-//                    }
-//                }
-//            }
-//            return requestDto;
-//        } catch (DataAccessException e) {
-//            throw new CustomException(ErrorCode.DATABASE_ERROR, "Database error occurred while saving the transaction.");
-//        } catch (ConstraintViolationException e) {
-//            throw new CustomException(ErrorCode.DATABASE_ERROR, "Constraint violation occurred while saving the transaction.");
-//        } catch (Exception e) {
-//            throw new CustomException(ErrorCode.EXTERNAL_API_ERROR, "An unexpected error occurred.");
-//        }
-//    }
-//}
 
     @Override
     @Transactional

@@ -9,6 +9,8 @@ import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.transaction.entity.OptimizedTransactionEntity;
 import settleup.backend.global.common.Status;
 
+import java.util.List;
+
 @Repository
 public interface OptimizedTransactionRepository extends JpaRepository<OptimizedTransactionEntity,Long> {
     @Modifying
@@ -16,4 +18,15 @@ public interface OptimizedTransactionRepository extends JpaRepository<OptimizedT
     void updateIsUsedStatusByGroup(@Param("group") GroupEntity group, @Param("status") Status status);
     @Query("SELECT o.group FROM OptimizedTransactionEntity o WHERE o.id = :transactionId")
     GroupEntity findGroupByTransactionId(@Param("transactionId") Long transactionId);
+
+    @Query("SELECT ot FROM OptimizedTransactionEntity ot " +
+            "WHERE ot.group = :group " +
+            "AND ot.isUsed = 'NOT_USED' " +
+            "AND ot.id NOT IN (" +
+            "SELECT god.optimizedTransaction.id FROM GroupOptimizedTransactionDetailsEntity god " +
+            "WHERE god.groupOptimizedTransaction.id = :groupOptimizedTransactionId)")
+    List<OptimizedTransactionEntity> findAvailableOptimizedTransactions(@Param("group") GroupEntity group,
+                                                                        @Param("groupOptimizedTransactionId") Long groupOptimizedTransactionId);
+    OptimizedTransactionEntity findByOptimizedTransactionUUID(String uuid);
+
 }

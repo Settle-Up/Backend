@@ -1,9 +1,6 @@
 package settleup.backend.domain.transaction.service.Impl;
 
 import lombok.AllArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
@@ -12,9 +9,9 @@ import settleup.backend.domain.group.repository.GroupUserRepository;
 import settleup.backend.domain.transaction.entity.OptimizedTransactionEntity;
 import settleup.backend.domain.transaction.entity.OptimizedTransactionDetailsEntity;
 import settleup.backend.domain.transaction.entity.RequiresTransactionEntity;
-import settleup.backend.domain.transaction.entity.dto.P2PDto;
+import settleup.backend.domain.transaction.entity.dto.IntermediateCalcDto;
 import settleup.backend.domain.transaction.entity.dto.TransactionDto;
-import settleup.backend.domain.transaction.entity.dto.TransactionP2PCalculationResultDto;
+import settleup.backend.domain.transaction.entity.dto.TransactionP2PResultDto;
 import settleup.backend.domain.transaction.repository.OptimizedTransactionDetailsRepository;
 import settleup.backend.domain.transaction.repository.OptimizedTransactionRepository;
 import settleup.backend.domain.transaction.repository.RequireTransactionRepository;
@@ -29,9 +26,9 @@ import settleup.backend.global.exception.ErrorCode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
 
 @Service
 @AllArgsConstructor
@@ -61,16 +58,18 @@ public class OptimizedServiceImpl implements OptimizedService {
      * }else{sender=(1), recipient=(0), |totalAmount| }
      */
     @Override
-    public List<Long> optimizationOfp2p(TransactionDto targetDto) throws CustomException {
+    public TransactionP2PResultDto optimizationOfp2p(TransactionDto targetDto) throws CustomException {
         optimizedTransactionRepo.updateIsUsedStatusByGroup(targetDto.getGroup(), Status.USED);
         List<List<Long>> nodeList = createCombinationList(targetDto.getGroup());
         System.out.println("heyNode:" + nodeList);
         return optimizationTargetList(targetDto.getGroup(), nodeList);
     }
-    private List<Long> optimizationTargetList(GroupEntity group, List<List<Long>> nodeList) {
+    private TransactionP2PResultDto optimizationTargetList(GroupEntity group, List<List<Long>> nodeList) {
+        TransactionP2PResultDto resultDto = new TransactionP2PResultDto();
+        resultDto.setNodeList(nodeList);
+        List<Long> savedOptimizedTransactionIds = new ArrayList<>();
         List<RequiresTransactionEntity> targetGroupList = requireTransactionRepo.findByGroupIdAndStatusNotClear(group.getId());
         System.out.println("here's List size:"+targetGroupList.size());
-        List<Long> savedOptimizedTransactionIds = new ArrayList<>();
         System.out.println("Total node pairs to process: " + nodeList.size());
 
         for (List<Long> node : nodeList) {
@@ -100,35 +99,37 @@ public class OptimizedServiceImpl implements OptimizedService {
                 }
 
                 // P2PDto 객체 생성 및 설정
-                P2PDto p2PDto = new P2PDto();
-                p2PDto.setGroup(group);
-                p2PDto.setTransactionAmount(Math.abs(totalAmount));
-                p2PDto.setDuringOptimizationUsed(filteredTransactions);
+                IntermediateCalcDto intermediateCalcDto = new IntermediateCalcDto();
+                intermediateCalcDto.setGroup(group);
+                intermediateCalcDto.setTransactionAmount(Math.abs(totalAmount));
+                intermediateCalcDto.setDuringOptimizationUsed(filteredTransactions);
 
                 // Sender와 Recipient 설정
                 if (totalAmount > 0) {
-                    p2PDto.setSenderUser(userRepo.findById(senderId).get());
-                    p2PDto.setRecipientUser(userRepo.findById(recipientId).get());
+                    intermediateCalcDto.setSenderUser(userRepo.findById(senderId).get());
+                    intermediateCalcDto.setRecipientUser(userRepo.findById(recipientId).get());
                 } else if (totalAmount < 0) {
-                    p2PDto.setSenderUser(userRepo.findById(recipientId).get());
-                    p2PDto.setRecipientUser(userRepo.findById(senderId).get());
+                    intermediateCalcDto.setSenderUser(userRepo.findById(recipientId).get());
+                    intermediateCalcDto.setRecipientUser(userRepo.findById(senderId).get());
                 }
 
                 // totalAmount가 0이 아닌 경우, OptimizedTransactionEntity 및 OptimizedTransactionDetailsEntity 저장
                 if (totalAmount != 0) {
                     OptimizedTransactionEntity optimizedTransaction = new OptimizedTransactionEntity();
                     optimizedTransaction.setOptimizedTransactionUUID(uuidHelper.UUIDForOptimizedTransaction());
-                    optimizedTransaction.setGroup(p2PDto.getGroup());
-                    optimizedTransaction.setSenderUser(p2PDto.getSenderUser());
-                    optimizedTransaction.setRecipientUser(p2PDto.getRecipientUser());
-                    optimizedTransaction.setTransactionAmount(p2PDto.getTransactionAmount());
+                    optimizedTransaction.setGroup(intermediateCalcDto.getGroup());
+                    optimizedTransaction.setSenderUser(intermediateCalcDto.getSenderUser());
+                    optimizedTransaction.setRecipientUser(intermediateCalcDto.getRecipientUser());
+                    optimizedTransaction.setTransactionAmount(intermediateCalcDto.getTransactionAmount());
                     optimizedTransaction.setIsCleared(Status.PENDING);
                     optimizedTransaction.setIsUsed(Status.NOT_USED);
                     optimizedTransaction.setCreatedAt(LocalDateTime.now());
-                    OptimizedTransactionEntity savedOptimizedTransaction = optimizedTransactionRepo.save(optimizedTransaction);
+                    OptimizedTransactionEntity savedOptimizedTransaction =
+                            optimizedTransactionRepo.save(optimizedTransaction);
                     savedOptimizedTransactionIds.add(savedOptimizedTransaction.getId());
+                    resultDto.setP2pList(savedOptimizedTransactionIds);
 
-                    for (RequiresTransactionEntity transaction : p2PDto.getDuringOptimizationUsed()) {
+                    for (RequiresTransactionEntity transaction : intermediateCalcDto.getDuringOptimizationUsed()) {
                         OptimizedTransactionDetailsEntity details = new OptimizedTransactionDetailsEntity();
                         details.setOptimizedTransactionDetailUUID(uuidHelper.UUIDForOptimizedTransactionsDetail());
                         details.setOptimizedTransaction(optimizedTransaction);
@@ -145,7 +146,7 @@ public class OptimizedServiceImpl implements OptimizedService {
                 }
             }
 
-        }  return savedOptimizedTransactionIds;
+        }  return resultDto;
     }
 
 
