@@ -21,8 +21,8 @@ public class GroupInfoListDto {
     public static class UserGroupListDto {
         private String groupId;
         private String groupName;
-        private Integer groupMemberCount;
-        private Float net;
+        private String groupMemberCount;
+        private String net;
         private String lastActive;
     }
 }

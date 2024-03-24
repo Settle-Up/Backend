@@ -44,7 +44,7 @@ public class RetrievedServiceImpl implements RetrievedService {
             groupInfoDto.setGroupId(group.getGroupUUID());
             groupInfoDto.setGroupName(group.getGroupName());
             int groupMemberCount = groupUserRepo.findByGroup_Id(group.getId()).size();
-            groupInfoDto.setGroupMemberCount(groupMemberCount);
+            groupInfoDto.setGroupMemberCount(String.valueOf(groupMemberCount));
 
             // Receipt 조회
             List<ReceiptEntity> receipts = receiptRepo.findReceiptByGroupId(groupUser.getGroup().getId());
@@ -60,7 +60,7 @@ public class RetrievedServiceImpl implements RetrievedService {
                 if (netDto.getUser().equals(existingUser)) {
                     Float netAmount = netDto.getNetAmount();
                     if (netAmount != null) {
-                        groupInfoDto.setNet(netAmount);
+                        groupInfoDto.setNet(String.valueOf(netAmount));
                         groupInfoDto.setLastActive(lastActive);
                     }
                     break;
