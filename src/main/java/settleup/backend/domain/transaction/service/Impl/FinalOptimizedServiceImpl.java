@@ -36,6 +36,7 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
     }
 
     private void mergeTransaction(List<CombinedListDto> targetList, List<List<Long>> nodeList,GroupEntity group) {
+        mergeTransactionRepo.updateIsUsedStatusByGroup(group,Status.USED);
         List<Long> saveFinalOptimizedIds = new ArrayList<>();
 
         for (List<Long> node : nodeList) {
