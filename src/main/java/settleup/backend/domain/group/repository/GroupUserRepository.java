@@ -13,6 +13,7 @@ public interface GroupUserRepository extends JpaRepository<GroupUserEntity,Long>
     List<GroupUserEntity> findByGroup_Id(Long id);
     List<GroupUserEntity> findByGroup_GroupUUID(String groupUUID);
     List<GroupUserEntity> findByUser_Id(Long userId);
+
     @Query("SELECT gue.user.id FROM GroupUserEntity gue WHERE gue.group.groupUUID = :groupUUID")
     List<Long> findUserIdsByGroup_GroupUUID(@Param("groupUUID") String groupUUID);
     List<GroupUserEntity> findByUserId(Long userId);

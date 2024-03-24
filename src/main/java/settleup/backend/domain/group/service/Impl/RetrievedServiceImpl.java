@@ -3,6 +3,7 @@ package settleup.backend.domain.group.service.Impl;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.group.entity.GroupUserEntity;
 import settleup.backend.domain.group.entity.dto.GroupInfoListDto;
 import settleup.backend.domain.group.repository.GroupUserRepository;
@@ -35,31 +36,38 @@ public class RetrievedServiceImpl implements RetrievedService {
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         List<GroupUserEntity> userGroupList = groupUserRepo.findByUser_Id(existingUser.getId());
-        List<GroupInfoListDto.userGroupListDto> groupList = new ArrayList<>();
+        List<GroupInfoListDto.UserGroupListDto> groupList = new ArrayList<>();
 
         for (GroupUserEntity groupUser : userGroupList) {
-            TransactionDto transactionDto = new TransactionDto();
-            transactionDto.setGroup(groupUser.getGroup());
-            List<NetDto> groupAllNetList = netService.calculateNet(transactionDto);
+            GroupEntity group = groupUser.getGroup();
+            GroupInfoListDto.UserGroupListDto groupInfoDto = new GroupInfoListDto.UserGroupListDto();
+            groupInfoDto.setGroupId(group.getGroupUUID());
+            groupInfoDto.setGroupName(group.getGroupName());
+            int groupMemberCount = groupUserRepo.findByGroup_Id(group.getId()).size();
+            groupInfoDto.setGroupMemberCount(groupMemberCount);
 
             // Receipt 조회
             List<ReceiptEntity> receipts = receiptRepo.findReceiptByGroupId(groupUser.getGroup().getId());
-            // receipts가 비어있지 않다면 첫 번째 요소의 createdAt을 사용, 그렇지 않다면 "N/A"
-            String lastActive = receipts.isEmpty() ? "N/A" : receipts.get(0).getCreatedAt().toString();
+            String lastActive = receipts.isEmpty() ? null : receipts.get(0).getCreatedAt().toString();
+            groupInfoDto.setLastActive(lastActive);
+
+            // Net 계산
+            TransactionDto transactionDto = new TransactionDto();
+            transactionDto.setGroup(group);
+            List<NetDto> groupAllNetList = netService.calculateNet(transactionDto);
 
             for (NetDto netDto : groupAllNetList) {
                 if (netDto.getUser().equals(existingUser)) {
-                    GroupInfoListDto.userGroupListDto groupInfo = new GroupInfoListDto.userGroupListDto(
-                            groupUser.getGroup().getId().toString(),
-                            groupUser.getGroup().getGroupName(), // 가정한 메서드명
-                            netDto.getNetAmount(),
-                            lastActive
-                    );
-
-                    groupList.add(groupInfo);
-                    break; // 현재 사용자에 대한 정보를 찾았으므로 루프 중지
+                    Float netAmount = netDto.getNetAmount();
+                    if (netAmount != null) {
+                        groupInfoDto.setNet(netAmount);
+                        groupInfoDto.setLastActive(lastActive);
+                    }
+                    break;
                 }
             }
+
+            groupList.add(groupInfoDto);
         }
 
         return new GroupInfoListDto(existingUser.getUserUUID(), existingUser.getUserName(), groupList);
