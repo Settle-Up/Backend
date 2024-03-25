@@ -15,8 +15,8 @@ public class FinalOptimizedTransactionDetailEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String finalOptimizedTransactionDetailUUID;
+    @Column(name = "transaction_detail_uuid",nullable = false,unique = true)
+    private String transactionDetailUUID;
 
 
     @Column(name = "used_optimized_transaction_uuid")

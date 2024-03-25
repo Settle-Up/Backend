@@ -12,8 +12,8 @@ public class GroupOptimizedTransactionDetailsEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String groupOptimizedTransactionDetailUUID;
+    @Column(name = "transaction_detail_uuid",nullable = false,unique = true)
+    private String transactionDetailUUID;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "groupOptimizedTransaction_id")

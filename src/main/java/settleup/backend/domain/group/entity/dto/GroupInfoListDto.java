@@ -13,7 +13,7 @@ import java.util.List;
 public class GroupInfoListDto {
     private String userId;
     private String userName;
-    private List<UserGroupListDto> groupList; // 클래스 이름은 대문자로 시작해야 합니다.
+    private List<UserGroupListDto> groupList;
 
     @Data
     @AllArgsConstructor

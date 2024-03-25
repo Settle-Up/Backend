@@ -116,17 +116,17 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
     // 최적화 거래를 생성하고 저장
     private GroupOptimizedTransactionEntity createOptimizedTransaction(Long senderId, Long recipientId, double amount, GroupEntity group) {
         GroupOptimizedTransactionEntity newTransaction = new GroupOptimizedTransactionEntity();
-        newTransaction.setGroupOptimizedTransactionUUID(uuidHelper.UUIDForGroupOptimizedTransactions());
+        newTransaction.setTransactionUUID(uuidHelper.UUIDForGroupOptimizedTransactions());
         newTransaction.setSenderUser(userRepo.findById(senderId).get());
         newTransaction.setRecipientUser(userRepo.findById(recipientId).get());
         newTransaction.setGroup(group);
-        newTransaction.setOptimizedAmount(amount);
+        newTransaction.setTransactionAmount(amount);
         newTransaction.setIsCleared(Status.PENDING);
         newTransaction.setCreatedAt(LocalDateTime.now());
         newTransaction.setIsUsed(Status.NOT_USED);
         groupOptimizedTransactionRepo.save(newTransaction);
         logger.debug("Created and saved new optimized transaction: {}, Sender ID: {}, Recipient ID: {}, Amount: {}",
-                newTransaction.getGroupOptimizedTransactionUUID(), senderId, recipientId, amount);
+                newTransaction.getTransactionUUID(), senderId, recipientId, amount);
 
         return newTransaction;
     }
@@ -135,10 +135,10 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
     private void saveTransactionDetails(GroupOptimizedTransactionEntity optimizedTransaction, Long transactionId) {
         GroupOptimizedTransactionDetailsEntity details = new GroupOptimizedTransactionDetailsEntity();
         details.setGroupOptimizedTransaction(optimizedTransaction);
-        details.setGroupOptimizedTransactionDetailUUID(uuidHelper.UUIDForGroupOptimizedDetail());
+        details.setTransactionDetailUUID(uuidHelper.UUIDForGroupOptimizedDetail());
         details.setOptimizedTransaction(transactionRepo.findById(transactionId).get());
         logger.debug("Saved transaction detail: {}, for optimized transaction UUID: {}, based on original transaction ID: {}",
-                details.getGroupOptimizedTransactionDetailUUID(), optimizedTransaction.getGroupOptimizedTransactionUUID(), transactionId);
+                details.getTransactionDetailUUID(), optimizedTransaction.getTransactionUUID(), transactionId);
 
         groupOptimizedDetailRepo.save(details);
     }

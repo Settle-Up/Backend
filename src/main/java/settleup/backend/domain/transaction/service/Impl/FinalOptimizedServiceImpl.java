@@ -75,11 +75,11 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
 
                 if (totalFinalAmount != 0) {
                     FinalOptimizedTransactionEntity finalOptimizedTransaction = new FinalOptimizedTransactionEntity();
-                    finalOptimizedTransaction.setFinalOptimizedTransactionUUID(uuidHelper.UUIDForFinalOptimized());
+                    finalOptimizedTransaction.setTransactionUUID(uuidHelper.UUIDForFinalOptimized());
                     finalOptimizedTransaction.setGroup(intermediateCalcDto.getGroup());
                     finalOptimizedTransaction.setSenderUser(intermediateCalcDto.getSenderUser());
                     finalOptimizedTransaction.setRecipientUser(intermediateCalcDto.getRecipientUser());
-                    finalOptimizedTransaction.setOptimizedAmount(intermediateCalcDto.getTransactionAmount());
+                    finalOptimizedTransaction.setTransactionAmount(intermediateCalcDto.getTransactionAmount());
                     finalOptimizedTransaction.setIsCleared(Status.PENDING);
                     finalOptimizedTransaction.setIsUsed(Status.NOT_USED);
                     finalOptimizedTransaction.setCreatedAt(LocalDateTime.now());
@@ -89,7 +89,7 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
 
                     for (CombinedListDto transaction : intermediateCalcDto.getDuringFinalOptimizationUsed()) {
                         FinalOptimizedTransactionDetailEntity finalOptimizedTransactionDetail = new FinalOptimizedTransactionDetailEntity();
-                        finalOptimizedTransactionDetail.setFinalOptimizedTransactionDetailUUID(uuidHelper.UUIDForFinalOptimizedDetail());
+                        finalOptimizedTransactionDetail.setTransactionDetailUUID(uuidHelper.UUIDForFinalOptimizedDetail());
                         finalOptimizedTransactionDetail.setFinalOptimizedTransaction(finalOptimizedTransaction);
                         finalOptimizedTransactionDetail.setUsedOptimizedTransaction(transaction.getOptimizedUUID());
                         mergeTransactionDetailsRepo.save(finalOptimizedTransactionDetail);
@@ -99,13 +99,13 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
                         String uuid = transactionForClear.getOptimizedUUID();
                         if (uuid.startsWith("OPT")) {
 
-                            OptimizedTransactionEntity optimizedTransaction = p2pRepo.findByOptimizedTransactionUUID(uuid);
+                            OptimizedTransactionEntity optimizedTransaction = p2pRepo.findByTransactionUUID(uuid);
                             if (optimizedTransaction != null) {
                                 optimizedTransaction.setIsCleared(Status.CLEAR);
                                 p2pRepo.save(optimizedTransaction);
                             }
                         } else if (uuid.startsWith("GPT")) {
-                            GroupOptimizedTransactionEntity groupOptimizedTransaction = groupOptimizedTransactionRepo.findByGroupOptimizedTransactionUUID(uuid);
+                            GroupOptimizedTransactionEntity groupOptimizedTransaction = groupOptimizedTransactionRepo.findByTransactionUUID(uuid);
                             if (groupOptimizedTransaction != null) {
                                 groupOptimizedTransaction.setIsCleared(Status.CLEAR);
                                 groupOptimizedTransactionRepo.save(groupOptimizedTransaction);
@@ -127,10 +127,10 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
         // GroupOptimizedTransactionEntity 목록을 순회하며 CombinedListDto 리스트 생성
         for (GroupOptimizedTransactionEntity optimizedTransaction : optimizedList) {
             CombinedListDto dto = new CombinedListDto(
-                    optimizedTransaction.getGroupOptimizedTransactionUUID(),
+                    optimizedTransaction.getTransactionUUID(),
                     optimizedTransaction.getSenderUser(),
                     optimizedTransaction.getRecipientUser(),
-                    optimizedTransaction.getOptimizedAmount());
+                    optimizedTransaction.getTransactionAmount());
             combinedDtoList.add(dto);
 
             // 현재 최적화된 트랜잭션에 해당하는 사용가능한 P2P 트랜잭션 조회
@@ -142,7 +142,7 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
         // OptimizedTransactionEntity 목록을 순회하며 CombinedListDto 리스트에 추가
         for (OptimizedTransactionEntity optimizedP2P : optimizedP2PList) {
             CombinedListDto dto = new CombinedListDto(
-                    optimizedP2P.getOptimizedTransactionUUID(),
+                    optimizedP2P.getTransactionUUID(),
                     optimizedP2P.getSenderUser(),
                     optimizedP2P.getRecipientUser(),
                     optimizedP2P.getTransactionAmount());

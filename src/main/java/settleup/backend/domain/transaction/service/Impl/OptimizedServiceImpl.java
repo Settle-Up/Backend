@@ -116,7 +116,7 @@ public class OptimizedServiceImpl implements OptimizedService {
                 // totalAmount가 0이 아닌 경우, OptimizedTransactionEntity 및 OptimizedTransactionDetailsEntity 저장
                 if (totalAmount != 0) {
                     OptimizedTransactionEntity optimizedTransaction = new OptimizedTransactionEntity();
-                    optimizedTransaction.setOptimizedTransactionUUID(uuidHelper.UUIDForOptimizedTransaction());
+                    optimizedTransaction.setTransactionUUID(uuidHelper.UUIDForOptimizedTransaction());
                     optimizedTransaction.setGroup(intermediateCalcDto.getGroup());
                     optimizedTransaction.setSenderUser(intermediateCalcDto.getSenderUser());
                     optimizedTransaction.setRecipientUser(intermediateCalcDto.getRecipientUser());
@@ -131,7 +131,7 @@ public class OptimizedServiceImpl implements OptimizedService {
 
                     for (RequiresTransactionEntity transaction : intermediateCalcDto.getDuringOptimizationUsed()) {
                         OptimizedTransactionDetailsEntity details = new OptimizedTransactionDetailsEntity();
-                        details.setOptimizedTransactionDetailUUID(uuidHelper.UUIDForOptimizedTransactionsDetail());
+                        details.setTransactionDetailUUID(uuidHelper.UUIDForOptimizedTransactionsDetail());
                         details.setOptimizedTransaction(optimizedTransaction);
                         details.setRequiresTransaction(transaction);
                         optimizedTransactionDetailsRepo.save(details);

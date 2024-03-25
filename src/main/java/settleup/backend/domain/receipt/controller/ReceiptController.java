@@ -34,7 +34,7 @@ public class ReceiptController {
     @PostMapping("/expense/create")
     public ResponseEntity<ResponseDto> createExpenseByReceipt(
             @RequestHeader(value = "Authorization") String token, @RequestBody ReceiptDto requestDto) {
-        try {
+
             loginService.validTokenOrNot(token);
             String missingFields = ControllerHelper.checkRequiredWithFilter(requestDto);
             if (!missingFields.isEmpty()) {
@@ -43,24 +43,13 @@ public class ReceiptController {
 
             TransactionDto transactionDto = receiptService.createReceipt(requestDto);
 
-//            // 리스너가 들으면 바로 transactionSaga 서비스를 부르는게 아니라 리스너가 들으면 아래 구문이 실행되도록 해줘
-//            CompletableFuture.runAsync(() ->
-//                            transactionSagaService.performOptimizationOperations(transactionDto))
-//                    .exceptionally(ex -> {
-//                        Sentry.captureException(ex);
-//                        return null;
-//                    });
-
             Map<String, Object> receiptInfo = new HashMap<>();
             receiptInfo.put("receiptId", transactionDto.getReceipt().getReceiptUUID());
             receiptInfo.put("receiptName", transactionDto.getReceipt().getReceiptName());
             receiptInfo.put("createdAt", transactionDto.getReceipt().getCreatedAt().toString());
 
             return ResponseEntity.ok(new ResponseDto(true, "Receipt creation process started.", receiptInfo));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseDto(false, "Error occurred", null));
 
-        }
     }
 
 

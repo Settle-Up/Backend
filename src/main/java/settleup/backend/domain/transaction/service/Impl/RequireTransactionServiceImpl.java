@@ -33,8 +33,7 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
     private final UUID_Helper uuidHelper;
     private final ReceiptItemRepository itemRepository;
     private final ReceiptItemUserRepository itemUserRepository;
-    private final OptimizedTransactionRepository optimizedP2PRepo;
-    private final OptimizedTransactionDetailsRepository optimizedP2PDetailsRepo;
+
     private final RequireTransactionRepository transactionRepository;
 
     /**

@@ -3,6 +3,7 @@ package settleup.backend.domain.group.entity.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import settleup.backend.global.common.Status;
 
 import java.util.List;
 
@@ -28,9 +29,9 @@ public class GroupOverviewDto {
         private String counterPartyName;
         private String transactionAmount;
         private String transactionId;
-        private String transactionDirection;
+        private Status transactionDirection;
         private boolean hasSentOrReceived;
-        private String isReject;
+        private Status isReject;
     }
 
     @Data

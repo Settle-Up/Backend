@@ -6,7 +6,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import settleup.backend.domain.group.entity.GroupEntity;
+import settleup.backend.domain.transaction.entity.FinalOptimizedTransactionEntity;
 import settleup.backend.domain.transaction.entity.OptimizedTransactionEntity;
+import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.global.common.Status;
 
 import java.util.List;
@@ -27,6 +29,14 @@ public interface OptimizedTransactionRepository extends JpaRepository<OptimizedT
             "WHERE god.groupOptimizedTransaction.id = :groupOptimizedTransactionId)")
     List<OptimizedTransactionEntity> findAvailableOptimizedTransactions(@Param("group") GroupEntity group,
                                                                         @Param("groupOptimizedTransactionId") Long groupOptimizedTransactionId);
-    OptimizedTransactionEntity findByOptimizedTransactionUUID(String uuid);
+    OptimizedTransactionEntity findByTransactionUUID(String uuid);
+    @Query("SELECT o FROM OptimizedTransactionEntity o WHERE o.group = :group AND (o.senderUser = :user OR o.recipientUser = :user) AND o.isUsed = 'NOT_USED' AND o.isCleared <> 'CLEAR'")
+    List<OptimizedTransactionEntity> findByGroupAndUserAndStatusNotUsedAndNotCleared(@Param("group") GroupEntity group, @Param("user") UserEntity user);
+
+    @Query("SELECT o FROM OptimizedTransactionEntity o WHERE o.group = :group AND (o.senderUser = :user OR o.recipientUser = :user) AND o.isUsed = 'NOT_USED' AND o.isCleared <> 'CLEAR' AND o.id NOT IN :excludedTransactionIds")
+    List<OptimizedTransactionEntity> findByGroupAndUserAndStatusNotUsedAndNotClearedExcludingTransactions(
+            @Param("group") GroupEntity group,
+            @Param("user") UserEntity user,
+            @Param("excludedTransactionIds") List<Long> excludedTransactionIds);
 
 }

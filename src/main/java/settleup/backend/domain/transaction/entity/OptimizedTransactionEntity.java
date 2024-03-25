@@ -13,27 +13,27 @@ import java.time.LocalDateTime;
 @Setter
 @Getter
 @Table(name = "OptimizedTransaction")
-public class OptimizedTransactionEntity {
+public class OptimizedTransactionEntity implements TransactionalEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String optimizedTransactionUUID; // OPT 로 시작
+    @Column(name = "transaction_uuid", nullable = false, unique = true)
+    private String transactionUUID; // OPT 로 시작
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_Id")
+    @JoinColumn(name = "group_Id",nullable = false)
     private GroupEntity group;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sender_id")
+    @JoinColumn(name = "sender_user",nullable = false)
     private UserEntity senderUser;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "recipient_id")
+    @JoinColumn(name = "recipient_user",nullable = false)
     private UserEntity recipientUser;
 
-    @Column(nullable = false)
+    @Column(name = "transaction_amount", nullable = false)
     private double transactionAmount;
 
     @Column(nullable = false)
@@ -46,4 +46,20 @@ public class OptimizedTransactionEntity {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+    @Override
+    public Long getId(){return this.id;}
+    @Override
+    public String getTransactionUUID() {
+        return this.transactionUUID;
+    }
+
+    @Override
+    public UserEntity getSenderUser(){return this.senderUser;}
+
+    @Override
+    public UserEntity getRecipient(){return  this.recipientUser;}
+
+    @Override
+    public double getTransactionAmount(){return  this.transactionAmount;}
+
 }

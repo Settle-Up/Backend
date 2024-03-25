@@ -14,8 +14,8 @@ public class OptimizedTransactionDetailsEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String optimizedTransactionDetailUUID;//OPTD 로 시작
+    @Column(name = "transaction_detail_uuid",nullable = false,unique = true)
+    private String transactionDetailUUID;//OPTD 로 시작
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "optimizedTransaction_id")
