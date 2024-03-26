@@ -8,10 +8,9 @@ import settleup.backend.domain.group.entity.dto.GroupOverviewDto;
 import settleup.backend.domain.group.entity.dto.OptimizedDetailUUIDsDto;
 import settleup.backend.domain.group.repository.GroupRepository;
 import settleup.backend.domain.group.service.OverviewService;
-import settleup.backend.domain.transaction.entity.FinalOptimizedTransactionEntity;
-import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionEntity;
-import settleup.backend.domain.transaction.entity.OptimizedTransactionEntity;
-import settleup.backend.domain.transaction.entity.TransactionalEntity;
+import settleup.backend.domain.receipt.entity.ReceiptEntity;
+import settleup.backend.domain.receipt.repository.ReceiptRepository;
+import settleup.backend.domain.transaction.entity.*;
 import settleup.backend.domain.transaction.entity.dto.NetDto;
 import settleup.backend.domain.transaction.entity.dto.TransactionDto;
 import settleup.backend.domain.transaction.repository.*;
@@ -41,6 +40,8 @@ public class OverviewServiceImpl implements OverviewService {
     private final GroupOptimizedTransactionDetailRepository groupOptimizedDetailRepo;
     private final FinalOptimizedTransactionRepository finalOptimizedRepo;
     private final FinalOptimizedTransactionDetailRepository finalOptimizedDetailRepo;
+    private final ReceiptRepository receiptRepo;
+    private final RequireTransactionRepository requireTransactionRepo;
 
     @Override
     public GroupOverviewDto retrievedOverview(String groupUUID, UserInfoDto userInfoDto) throws CustomException {
@@ -134,7 +135,54 @@ public class OverviewServiceImpl implements OverviewService {
 
 
         overviewDto.setNeededTransactionList(combinedTransactionList);
+        buildExpenseList(existingGroup,existingUser,overviewDto);
+        buildLastWeekSettledTransactionList(existingGroup,existingUser,overviewDto);
         return overviewDto;
+    }
+
+    private void buildLastWeekSettledTransactionList(Optional<GroupEntity> existingGroup, Optional<UserEntity> existingUser, GroupOverviewDto overviewDto) {
+        if (overviewDto.getLastWeekSettledTransactionList() == null) {
+            overviewDto.setLastWeekSettledTransactionList(new ArrayList<>());
+        }
+        // require_transaction 에서
+
+    }
+
+    private void buildExpenseList(Optional<GroupEntity> existingGroup, Optional<UserEntity> existingUser,GroupOverviewDto overviewDto) {
+        if (overviewDto.getExpenseList() == null) {
+            overviewDto.setExpenseList(new ArrayList<>());
+        }
+        List<ReceiptEntity> groupReceiptList = receiptRepo.findReceiptByGroupId(existingGroup.get().getId());
+        for(ReceiptEntity expense: groupReceiptList){
+            GroupOverviewDto.ExpenseDto expenseTransaction = new GroupOverviewDto.ExpenseDto();
+            expenseTransaction.setReceiptId(expense.getReceiptUUID());
+            expenseTransaction.setReceiptName(expense.getReceiptName());
+            expenseTransaction.setCreateAt(String.valueOf(expense.getCreatedAt()));
+            expenseTransaction.setPayerUserId(expense.getPayerUser().getUserUUID());
+            expenseTransaction.setPayerUserName(expense.getPayerUser().getUserName());
+            expenseTransaction.setTotalAmount(String.valueOf(expense.getActualPaidPrice()));
+            List<RequiresTransactionEntity> requireExpenseList = requireTransactionRepo.findByReceiptId(expense.getId());
+            if(existingUser.get().getId() == expense.getPayerUser().getId()){
+                Double totalAmountForRecipient = requireExpenseList.stream()
+                        .filter(transaction -> transaction.getRecipientUser().getId().equals(existingUser.get().getId()))
+                        .mapToDouble(RequiresTransactionEntity::getTransactionAmount)
+                        .sum();
+                expenseTransaction.setUserOwedAmount(String.valueOf(totalAmountForRecipient));
+            } else {
+                Double totalAmountForSender = requireExpenseList.stream()
+                        .filter(transaction -> transaction.getSenderUser().getId().equals(existingUser.get().getId()))
+                        .mapToDouble(RequiresTransactionEntity::getTransactionAmount)
+                        .sum();
+                if (totalAmountForSender != 0) {
+                    expenseTransaction.setUserOwedAmount(String.valueOf(-totalAmountForSender));
+                } else {
+                    expenseTransaction.setUserOwedAmount(String.valueOf(totalAmountForSender));
+                }
+            }
+
+            overviewDto.getExpenseList().add(expenseTransaction);
+        }
+
     }
 
 

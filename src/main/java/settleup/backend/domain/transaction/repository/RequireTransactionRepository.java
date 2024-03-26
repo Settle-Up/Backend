@@ -18,6 +18,10 @@ public interface RequireTransactionRepository extends JpaRepository<RequiresTran
     @Query("SELECT r FROM RequiresTransactionEntity r WHERE r.group.id = :groupId AND r.id <> :id")
     List<RequiresTransactionEntity> findAllByGroupIdExcludingId(@Param("groupId") Long groupId, @Param("id") Long id);
 
+    @Query("SELECT r FROM RequiresTransactionEntity r WHERE r.receipt.id = :receiptId")
+    List<RequiresTransactionEntity> findByReceiptId(@Param("receiptId") Long receiptId);
+
 }
+
 
 

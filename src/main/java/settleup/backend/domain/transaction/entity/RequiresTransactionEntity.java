@@ -10,6 +10,8 @@ import settleup.backend.domain.receipt.entity.ReceiptEntity;
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.global.common.Status;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "requires_transaction")
 @Getter
@@ -48,5 +50,15 @@ public class RequiresTransactionEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "is_recipient_status", nullable = false)
     private Status isRecipientStatus;
+
+    @Column(name = "clear_status_timestamp", nullable = true)
+    private LocalDateTime clearStatusTimestamp;
+
+    @PreUpdate
+    private void onStatusUpdate() {
+        if (this.isSenderStatus == Status.CLEAR && this.isRecipientStatus == Status.CLEAR && this.clearStatusTimestamp == null) {
+            this.clearStatusTimestamp = LocalDateTime.now();
+        }
+    }
 }
 

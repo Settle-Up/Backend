@@ -44,6 +44,7 @@ public class GroupOverviewDto {
         private String receiptName;
         private String totalAmount;
         private String userOwedAmount;
+        private String createAt;
     }
 
 }
