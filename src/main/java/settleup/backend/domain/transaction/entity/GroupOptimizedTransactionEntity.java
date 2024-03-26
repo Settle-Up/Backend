@@ -36,9 +36,6 @@ public class GroupOptimizedTransactionEntity implements TransactionalEntity {
     @Column(name = "transaction_amount", nullable = false)
     private double transactionAmount;
 
-    @Column(nullable = false)
-    @Enumerated(EnumType.STRING)
-    private Status isCleared;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -46,6 +43,31 @@ public class GroupOptimizedTransactionEntity implements TransactionalEntity {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "is_sender_status", nullable = false)
+    private Status isSenderStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "is_recipient_status", nullable = false)
+    private Status isRecipientStatus;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "is_inheritances_status", nullable = false)
+    private Status isInheritanceStatus;
+
+    @Column(name = "clear_status_timestamp", nullable = true)
+    private LocalDateTime clearStatusTimestamp;
+
+    @PreUpdate
+    private void onStatusUpdate() {
+        if ((this.isInheritanceStatus == Status.INHERITED_CLEAR ||
+                (this.isSenderStatus == Status.CLEAR && this.isRecipientStatus == Status.CLEAR))
+                && this.clearStatusTimestamp == null) {
+            this.clearStatusTimestamp = LocalDateTime.now();
+        }
+    }
+
 
     @Override
     public Long getId(){return this.id;}

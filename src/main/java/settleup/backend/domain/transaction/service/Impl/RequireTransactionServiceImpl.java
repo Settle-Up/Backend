@@ -95,6 +95,7 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
         transaction.setRecipientUser(requestDto.getPayerUser());
         transaction.setIsRecipientStatus(Status.PENDING);
         transaction.setIsSenderStatus(Status.PENDING);
+        transaction.setIsInheritanceStatus(Status.PENDING);
         transaction.setSenderUser(itemUser.getUser());
         transaction.setTransactionAmount(saveAmount);
         return transaction;

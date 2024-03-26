@@ -22,6 +22,7 @@ import settleup.backend.global.common.Status;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -80,12 +81,15 @@ public class OverviewServiceImpl implements OverviewService {
             System.out.println("here:" + overviewTransaction1st);
 
         }
-            // 2번과정 groupOptimizedRepo 조회 시 null 값이라면 3번 과정으로 간다
+
+
+
+        // 2번과정 groupOptimizedRepo 조회 시 null 값이라면 3번 과정으로 간다
             List<GroupOptimizedTransactionEntity> groupOptimizedTransactionForDetails = groupOptimizedRepo.
                     findByGroupAndUserAndStatusNotUsedAndNotCleared(existingGroup.get(), existingUser.get());
+
             List<OptimizedTransactionEntity> searchForOptimizedFromGroupIn =
                     groupOptimizedDetailRepo.findOptimizedTransactionsByGroupOptimizedTransactions(groupOptimizedTransactionForDetails);
-
 
         List<GroupOptimizedTransactionEntity> groupOptimizedTransactionList = new ArrayList<>();
         if (searchUUIDForOptimized.getSearchUUIDForGroupOptimized() != null &&
@@ -144,9 +148,50 @@ public class OverviewServiceImpl implements OverviewService {
         if (overviewDto.getLastWeekSettledTransactionList() == null) {
             overviewDto.setLastWeekSettledTransactionList(new ArrayList<>());
         }
-        // require_transaction 에서
+        LocalDateTime startDate = LocalDateTime.now().minusWeeks(1);
+        List<FinalOptimizedTransactionEntity> clearListFromFinal = finalOptimizedRepo.findByGroupAndUserAndTransactionsWithinLastWeek(existingGroup.get(), existingUser.get(), startDate);
+        List<GroupOptimizedTransactionEntity> clearListFromGroup = groupOptimizedRepo.findByGroupAndUserAndTransactionsWithinLastWeek(existingGroup.get(), existingUser.get(), startDate);
+        List<OptimizedTransactionEntity> clearListFromOptimized = optimizedRepo.findByGroupAndUserAndTransactionsWithinLastWeek(existingGroup.get(), existingUser.get(), startDate);
 
+        for (FinalOptimizedTransactionEntity transaction : clearListFromFinal) {
+            GroupOverviewDto.OverviewTransactionDto dto = convertToOverviewTransactionDto(transaction ,existingUser);
+            overviewDto.getLastWeekSettledTransactionList().add(dto);
+        }
+
+
+        for (GroupOptimizedTransactionEntity transaction : clearListFromGroup) {
+            GroupOverviewDto.OverviewTransactionDto dto = convertToOverviewTransactionDto(transaction ,existingUser);
+            overviewDto.getLastWeekSettledTransactionList().add(dto);
+        }
+
+
+        for (OptimizedTransactionEntity transaction : clearListFromOptimized) {
+            GroupOverviewDto.OverviewTransactionDto dto = convertToOverviewTransactionDto(transaction,existingUser);
+            overviewDto.getLastWeekSettledTransactionList().add(dto);
+        }
     }
+
+    private GroupOverviewDto.OverviewTransactionDto convertToOverviewTransactionDto(TransactionalEntity transaction, Optional<UserEntity> existingUser) {
+        GroupOverviewDto.OverviewTransactionDto dto = new GroupOverviewDto.OverviewTransactionDto();
+        dto.setTransactionId(transaction.getTransactionUUID());
+        dto.setTransactionAmount(String.valueOf(transaction.getTransactionAmount()));
+
+        Long userId = existingUser.get().getId();
+        if (transaction.getSenderUser().getId().equals(userId)) {
+            dto.setCounterPartyId(transaction.getRecipientUser().getUserUUID());
+            dto.setCounterPartyName(transaction.getRecipientUser().getUserName());
+            dto.setTransactionDirection(Status.OWE);
+        } else if (transaction.getRecipientUser().getId().equals(userId)) {
+            dto.setCounterPartyId(transaction.getSenderUser().getUserUUID());
+            dto.setCounterPartyName(transaction.getSenderUser().getUserName());
+            dto.setTransactionDirection(Status.OWED);
+        }
+
+        return dto;
+    }
+
+
+
 
     private void buildExpenseList(Optional<GroupEntity> existingGroup, Optional<UserEntity> existingUser,GroupOverviewDto overviewDto) {
         if (overviewDto.getExpenseList() == null) {

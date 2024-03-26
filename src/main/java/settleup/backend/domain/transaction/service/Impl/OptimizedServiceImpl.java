@@ -68,7 +68,7 @@ public class OptimizedServiceImpl implements OptimizedService {
         TransactionP2PResultDto resultDto = new TransactionP2PResultDto();
         resultDto.setNodeList(nodeList);
         List<Long> savedOptimizedTransactionIds = new ArrayList<>();
-        List<RequiresTransactionEntity> targetGroupList = requireTransactionRepo.findByGroupIdAndStatusNotClear(group.getId());
+        List<RequiresTransactionEntity> targetGroupList = requireTransactionRepo.findByGroupIdAndStatusNotClearAndNotInherited(group.getId());
         System.out.println("here's List size:"+targetGroupList.size());
         System.out.println("Total node pairs to process: " + nodeList.size());
 
@@ -121,7 +121,9 @@ public class OptimizedServiceImpl implements OptimizedService {
                     optimizedTransaction.setSenderUser(intermediateCalcDto.getSenderUser());
                     optimizedTransaction.setRecipientUser(intermediateCalcDto.getRecipientUser());
                     optimizedTransaction.setTransactionAmount(intermediateCalcDto.getTransactionAmount());
-                    optimizedTransaction.setIsCleared(Status.PENDING);
+                    optimizedTransaction.setIsSenderStatus(Status.PENDING);
+                    optimizedTransaction.setIsRecipientStatus(Status.PENDING);
+                    optimizedTransaction.setIsInheritanceStatus(Status.PENDING);
                     optimizedTransaction.setIsUsed(Status.NOT_USED);
                     optimizedTransaction.setCreatedAt(LocalDateTime.now());
                     OptimizedTransactionEntity savedOptimizedTransaction =
@@ -137,10 +139,10 @@ public class OptimizedServiceImpl implements OptimizedService {
                         optimizedTransactionDetailsRepo.save(details);
                     }
                 } else {
-                    // totalAmount가 0인 경우, 모든 거래의 상태를 CLEAR로 설정
+                    // totalAmount가 0인 경우, 모든 거래의 상태를 CLEAR로 설정이 아니라 상속에 의한 clear 만 설정한다
+                    // sender, recipent clear 를 set 하면 유저가 정산한 것 처럼 나오기 때문에
                     for (RequiresTransactionEntity transactionForClear : filteredTransactions) {
-                        transactionForClear.setIsSenderStatus(Status.CLEAR);
-                        transactionForClear.setIsRecipientStatus(Status.CLEAR);
+                        transactionForClear.setIsInheritanceStatus(Status.INHERITED_CLEAR);
                         transactionRepo.save(transactionForClear);
                     }
                 }

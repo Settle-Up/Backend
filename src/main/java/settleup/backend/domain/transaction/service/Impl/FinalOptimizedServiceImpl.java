@@ -80,7 +80,8 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
                     finalOptimizedTransaction.setSenderUser(intermediateCalcDto.getSenderUser());
                     finalOptimizedTransaction.setRecipientUser(intermediateCalcDto.getRecipientUser());
                     finalOptimizedTransaction.setTransactionAmount(intermediateCalcDto.getTransactionAmount());
-                    finalOptimizedTransaction.setIsCleared(Status.PENDING);
+                    finalOptimizedTransaction.setIsSenderStatus(Status.PENDING);
+                    finalOptimizedTransaction.setIsRecipientStatus(Status.PENDING);
                     finalOptimizedTransaction.setIsUsed(Status.NOT_USED);
                     finalOptimizedTransaction.setCreatedAt(LocalDateTime.now());
                     FinalOptimizedTransactionEntity saveFinalOptimizedTransaction =
@@ -95,19 +96,23 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
                         mergeTransactionDetailsRepo.save(finalOptimizedTransactionDetail);
                     }
                 } else {
+                    // totalAmount가 0인 경우, 모든 거래의 상태를 CLEAR로 설정이 아니라 상속에 의한 clear 만 설정한다
+                    // sender, recipent clear 를 set 하면 유저가 정산한 것 처럼 나오기 때문에
+
+                    // totalAmount =0 에 기여한 추가적으로 씌임이 있었던 optimizedTransaction > requireTransactioin => inherited_clear
+                    // totalAmount =0 에 기여한 추가적으로 씌임이 있었던  group_optimized >optimizedTransaction > requireTransaction => inherited_clear
                     for (CombinedListDto transactionForClear : filteredTransactionsFinal) {
                         String uuid = transactionForClear.getOptimizedUUID();
                         if (uuid.startsWith("OPT")) {
-
                             OptimizedTransactionEntity optimizedTransaction = p2pRepo.findByTransactionUUID(uuid);
                             if (optimizedTransaction != null) {
-                                optimizedTransaction.setIsCleared(Status.CLEAR);
+                                optimizedTransaction.setIsInheritanceStatus(Status.INHERITED_CLEAR);
                                 p2pRepo.save(optimizedTransaction);
                             }
                         } else if (uuid.startsWith("GPT")) {
                             GroupOptimizedTransactionEntity groupOptimizedTransaction = groupOptimizedTransactionRepo.findByTransactionUUID(uuid);
                             if (groupOptimizedTransaction != null) {
-                                groupOptimizedTransaction.setIsCleared(Status.CLEAR);
+                                groupOptimizedTransaction.setIsInheritanceStatus(Status.INHERITED_CLEAR);
                                 groupOptimizedTransactionRepo.save(groupOptimizedTransaction);
                             }
 
@@ -133,11 +138,16 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
                     optimizedTransaction.getTransactionAmount());
             combinedDtoList.add(dto);
 
-            // 현재 최적화된 트랜잭션에 해당하는 사용가능한 P2P 트랜잭션 조회
+
+
+
+            // 현재 최적화된 트랜잭션에 해당하는 사용가능한 P2P 트랜잭션 조회...???
             List<OptimizedTransactionEntity> availableTransactions =
                     p2pRepo.findAvailableOptimizedTransactions(optimizedTransaction.getGroup(), optimizedTransaction.getId());
             optimizedP2PList.addAll(availableTransactions);
         }
+
+
 
         // OptimizedTransactionEntity 목록을 순회하며 CombinedListDto 리스트에 추가
         for (OptimizedTransactionEntity optimizedP2P : optimizedP2PList) {

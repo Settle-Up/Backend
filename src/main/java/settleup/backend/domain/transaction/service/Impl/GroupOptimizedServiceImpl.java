@@ -29,19 +29,24 @@ import java.util.*;
 @AllArgsConstructor
 public class GroupOptimizedServiceImpl implements GroupOptimizedService {
 
-    private final OptimizedTransactionRepository transactionRepo;
+    private final OptimizedTransactionRepository optimizedTransactionRepo;
     private final GroupOptimizedTransactionRepository groupOptimizedTransactionRepo;
     private final GroupOptimizedTransactionDetailRepository groupOptimizedDetailRepo;
     private final UserRepository userRepo;
     private final UUID_Helper uuidHelper;
 
-    // p2pList 41,42,43
-    // 1. 그래프 만들기 2. DFS 를 돌을 순서 정하기 3.
+    // p2pList 41,42,43 p2pList 방금 만들어진 1차 최적화 id 값 ,
+    // 2차 최적화는 왜 ? status 를 고려하지 않는가 ?
+    // -> 방금만들어진 영수증을 기반 하는거라 status 무의미 하다고 생각 (새로 영수증이 만들어지는 시기 = 1차 최적화 = 2차 최적화 )
+    // 3차는 1차 2차 기반 status 고려 할 필요 없는가 .? => 같은 시기에 이루어지기 때문에 필요 없다고 생각이 된다
+    // 1차에서 status 고려하면 충분하다고 생각
+    // 2차 최적화만 따로 진행된다면 status를 고려해야함 , 단 1차와 2차가 연쇄적으로 이루어지기 때문에 2차의 대상이 되는 1차를 불러올때 고려할 필요없다
+    // 무조건적으로 status 는 pending 이기 때문에
     private static final Logger logger = LoggerFactory.getLogger(GroupOptimizedServiceImpl.class);
 
     @Override
     public void optimizationInGroup(TransactionP2PResultDto resultDto, List<NetDto> net) {
-        logger.debug("Starting optimizationInGroup with p2pList: {}, netList size: {}",resultDto.getP2pList(), net.size());
+        logger.debug("Starting optimizationInGroup with p2pList: {}, netList size: {}", resultDto.getP2pList(), net.size());
         GraphResult graphResult = createGraphFromTransactions(resultDto.getP2pList());
         List<Long> orderedUserIdList = createGraphOrder(net);
         GroupEntity group = getGroup(resultDto.getP2pList());
@@ -53,7 +58,7 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
 
     private GroupEntity getGroup(List<Long> p2pList) {
         logger.debug("Retrieving group for p2pList first element: {}", p2pList.get(0));
-        return transactionRepo.findGroupByTransactionId(p2pList.get(0));
+        return optimizedTransactionRepo.findGroupByTransactionId(p2pList.get(0));
     }
 
 
@@ -121,7 +126,9 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
         newTransaction.setRecipientUser(userRepo.findById(recipientId).get());
         newTransaction.setGroup(group);
         newTransaction.setTransactionAmount(amount);
-        newTransaction.setIsCleared(Status.PENDING);
+        newTransaction.setIsSenderStatus(Status.PENDING);
+        newTransaction.setIsRecipientStatus(Status.PENDING);
+        newTransaction.setIsInheritanceStatus(Status.PENDING);
         newTransaction.setCreatedAt(LocalDateTime.now());
         newTransaction.setIsUsed(Status.NOT_USED);
         groupOptimizedTransactionRepo.save(newTransaction);
@@ -136,7 +143,7 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
         GroupOptimizedTransactionDetailsEntity details = new GroupOptimizedTransactionDetailsEntity();
         details.setGroupOptimizedTransaction(optimizedTransaction);
         details.setTransactionDetailUUID(uuidHelper.UUIDForGroupOptimizedDetail());
-        details.setOptimizedTransaction(transactionRepo.findById(transactionId).get());
+        details.setOptimizedTransaction(optimizedTransactionRepo.findById(transactionId).get());
         logger.debug("Saved transaction detail: {}, for optimized transaction UUID: {}, based on original transaction ID: {}",
                 details.getTransactionDetailUUID(), optimizedTransaction.getTransactionUUID(), transactionId);
 
@@ -149,7 +156,7 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
         Map<DefaultWeightedEdge, Long> edgeTransactionIdMap = new HashMap<>();
 
         for (Long transactionId : p2pList) {
-            Optional<OptimizedTransactionEntity> transactionOpt = transactionRepo.findById(transactionId);
+            Optional<OptimizedTransactionEntity> transactionOpt = optimizedTransactionRepo.findById(transactionId);
             transactionOpt.ifPresent(transaction -> {
                 Long senderId = transaction.getSenderUser().getId();
                 Long recipientId = transaction.getRecipientUser().getId();

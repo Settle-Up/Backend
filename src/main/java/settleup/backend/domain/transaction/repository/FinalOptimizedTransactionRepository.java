@@ -10,6 +10,7 @@ import settleup.backend.domain.transaction.entity.FinalOptimizedTransactionEntit
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.global.common.Status;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -18,10 +19,12 @@ public interface FinalOptimizedTransactionRepository extends JpaRepository<Final
     @Query("UPDATE FinalOptimizedTransactionEntity f SET f.isUsed = :status WHERE f.group = :group")
     void updateIsUsedStatusByGroup(@Param("group") GroupEntity group, @Param("status") Status status);
 
-    @Query("SELECT f FROM FinalOptimizedTransactionEntity f WHERE f.group = :group AND (f.senderUser = :user OR f.recipientUser = :user) AND f.isUsed = 'NOT_USED' AND f.isCleared <> 'CLEAR'")
+    @Query("SELECT f FROM FinalOptimizedTransactionEntity f WHERE f.group = :group AND (f.senderUser = :user OR f.recipientUser = :user) AND f.isUsed = 'NOT_USED' AND (f.isSenderStatus <> 'CLEAR' OR f.isRecipientStatus <> 'CLEAR')")
     List<FinalOptimizedTransactionEntity> findByGroupAndUserAndStatusNotUsedAndNotCleared(@Param("group") GroupEntity group, @Param("user") UserEntity user);
 
     @Query("SELECT f FROM FinalOptimizedTransactionEntity f WHERE f.group = :group AND f.isUsed = 'NOT_USED'")
     List<FinalOptimizedTransactionEntity> findNotUsedTransactionsByGroup(@Param("group") GroupEntity group);
 
+    @Query("SELECT f FROM FinalOptimizedTransactionEntity f WHERE f.group = :group AND (f.senderUser = :user OR f.recipientUser = :user) AND f.createdAt >= :startDate")
+    List<FinalOptimizedTransactionEntity> findByGroupAndUserAndTransactionsWithinLastWeek(@Param("group") GroupEntity group, @Param("user") UserEntity user, @Param("startDate") LocalDateTime startDate);
 }

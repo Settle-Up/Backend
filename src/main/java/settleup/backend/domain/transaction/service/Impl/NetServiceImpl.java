@@ -32,7 +32,7 @@ public class NetServiceImpl implements NetService {
 
         // group_id에 해당하면서 상태가 CLEAR가 아닌 모든 거래를 불러옵니다.
         List<RequiresTransactionEntity> netTargetList =
-                transactionRepo.findByGroupIdAndStatusNotClear(transactionDto.getGroup().getId());
+                transactionRepo.findByGroupIdAndStatusNotClearAndNotInherited(transactionDto.getGroup().getId());
 
         Map<UserEntity, Float> userNetAmountMap = new HashMap<>();
 

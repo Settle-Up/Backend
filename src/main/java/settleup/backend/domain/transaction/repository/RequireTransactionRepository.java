@@ -12,8 +12,9 @@ import java.util.Optional;
 
 @Repository
 public interface RequireTransactionRepository extends JpaRepository<RequiresTransactionEntity, Long> {
-    @Query("SELECT r FROM RequiresTransactionEntity r WHERE r.group.id = :groupId AND r.isSenderStatus != 'CLEAR' AND r.isRecipientStatus != 'CLEAR'")
-    List<RequiresTransactionEntity> findByGroupIdAndStatusNotClear(@Param("groupId") Long groupId);
+
+    @Query("SELECT r FROM RequiresTransactionEntity r WHERE r.group.id = :groupId AND (r.isSenderStatus <> 'CLEAR' OR r.isRecipientStatus <> 'CLEAR') AND r.isInheritanceStatus <> 'INHERITED_CLEAR'")
+    List<RequiresTransactionEntity> findByGroupIdAndStatusNotClearAndNotInherited(@Param("groupId") Long groupId);
 
     @Query("SELECT r FROM RequiresTransactionEntity r WHERE r.group.id = :groupId AND r.id <> :id")
     List<RequiresTransactionEntity> findAllByGroupIdExcludingId(@Param("groupId") Long groupId, @Param("id") Long id);

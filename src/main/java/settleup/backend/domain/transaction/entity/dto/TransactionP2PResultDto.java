@@ -14,5 +14,4 @@ import java.util.List;
 public class TransactionP2PResultDto {
     private List<Long> p2pList = new ArrayList<>();
     private List<List<Long>> nodeList;
-
 }
