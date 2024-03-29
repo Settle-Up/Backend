@@ -1,6 +1,8 @@
 package settleup.backend.domain.user.service.Impl;
 
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.user.entity.UserEntity;
@@ -19,8 +21,8 @@ public class SearchServiceImpl implements SearchService {
     private final UserRepository userRepository;
 
     @Override
-    public List<UserInfoDto> getUserList(String partOfEmail) {
-        List<UserEntity> userEntities = userRepository.findByUserEmailContaining(partOfEmail);
+    public List<UserInfoDto> getUserList(String partOfEmail, Pageable pageable ) {
+        Page<UserEntity> userEntities = userRepository.findByUserEmailContaining(partOfEmail,pageable);
         return userEntities.stream().map(this::toUserInfo).collect(Collectors.toList());
     }
 

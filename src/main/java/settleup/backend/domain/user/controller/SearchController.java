@@ -1,6 +1,9 @@
 package settleup.backend.domain.user.controller;
 
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,9 +28,15 @@ public class SearchController {
 
     @GetMapping("/")
     public ResponseEntity<ResponseDto> findUserEmail(
-            @RequestHeader(value = "Authorization") String token, @RequestParam("search") String partOfEmail) {
+            @RequestHeader(value = "Authorization") String token,
+            @RequestParam("search") String partOfEmail,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size
+    ) {
         loginService.validTokenOrNot(token);
-        List<UserInfoDto> userInfoDto = searchService.getUserList(partOfEmail);
+
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("userEmail").ascending());
+        List<UserInfoDto> userInfoDto = searchService.getUserList(partOfEmail,pageable);
         Map<String, Object> data = new HashMap<>();
         data.put("searchList", userInfoDto);
         ResponseDto<Map<String, Object>> responseDto;

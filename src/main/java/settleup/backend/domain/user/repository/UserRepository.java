@@ -1,5 +1,7 @@
 package settleup.backend.domain.user.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import settleup.backend.domain.user.entity.UserEntity;
@@ -12,7 +14,8 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     Optional<UserEntity> findById(Long id);
     Optional<UserEntity> findByUserEmail(String email);
     Optional<UserEntity> findByUserUUID(String UUID);
-    List<UserEntity> findByUserEmailContaining(String partOfEmail);
+    Page<UserEntity> findByUserEmailContaining(String email, Pageable pageable);
+
 
 }
 

@@ -6,6 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.repository.UserRepository;
@@ -41,10 +43,10 @@ public class SearchServiceImplTest {
 
         List<UserEntity> mockUserEntities = Arrays.asList(userEntityOne, userEntityTwo);
 
-        when(userRepository.findByUserEmailContaining(partOfEmail)).thenReturn(mockUserEntities);
+        when(userRepository.findByUserEmailContaining(partOfEmail,Pageable.unpaged())).thenReturn((Page<UserEntity>) mockUserEntities);
 
         // When
-        List<UserInfoDto> result = searchService.getUserList(partOfEmail);
+        List<UserInfoDto> result = searchService.getUserList(partOfEmail, Pageable.unpaged());
 
         // Then
         assertNotNull(result);
@@ -55,6 +57,6 @@ public class SearchServiceImplTest {
         assertEquals("uuid2", result.get(1).getUserId());
 
         // Verify interaction
-        verify(userRepository, times(1)).findByUserEmailContaining(partOfEmail);
+        verify(userRepository, times(1)).findByUserEmailContaining(partOfEmail,Pageable.unpaged());
     }
 }
