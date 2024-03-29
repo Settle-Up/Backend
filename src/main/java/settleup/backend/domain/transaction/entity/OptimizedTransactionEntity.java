@@ -77,7 +77,12 @@ public class OptimizedTransactionEntity implements TransactionalEntity {
     public UserEntity getSenderUser(){return this.senderUser;}
 
     @Override
-    public UserEntity getRecipient(){return  this.recipientUser;}
+    public UserEntity getRecipientUser(){return  this.recipientUser;}
+
+    @Override
+    public LocalDateTime getClearStatusTimeStamp() {
+        return this.clearStatusTimestamp;
+    }
 
     @Override
     public double getTransactionAmount(){return  this.transactionAmount;}

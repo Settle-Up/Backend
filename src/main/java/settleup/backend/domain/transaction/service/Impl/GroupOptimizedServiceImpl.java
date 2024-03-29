@@ -66,7 +66,7 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
                                         List<Long> orderedUserIdList,
                                         GroupEntity group) {
         logger.debug("Starting group optimization. User list size: {}", orderedUserIdList.size());
-        groupOptimizedTransactionRepo.updateIsUsedStatusByGroup(group,Status.USED);
+        groupOptimizedTransactionRepo.updateIsUsedStatusByGroup(group, Status.USED);
         Graph<Long, DefaultWeightedEdge> graph = graphResult.getGraph();
         Map<DefaultWeightedEdge, Long> edgeTransactionIdMap = graphResult.getEdgeTransactionIdMap();
         Set<DefaultWeightedEdge> visitedEdges = new HashSet<>();
@@ -85,6 +85,8 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
                      Set<DefaultWeightedEdge> visitedEdges,
                      Map<DefaultWeightedEdge, Long> edgeTransactionIdMap,
                      GroupEntity group) {
+        // dfs 로직 변경
+        // 에지를 끝까지 돌고 가중치가 같은 에지를 기록 해서 첫 번째랑 마지막을 이어야함
         logger.debug("DFS started for node: {}", currentNode);
         // 현재 노드에서 출발하는 모든 에지에 대해서 반복
         for (DefaultWeightedEdge edge : graph.outgoingEdgesOf(currentNode)) {
@@ -112,6 +114,7 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
 
                     // 다음 타겟 노드에서 DFS 계속 진행
                     dfs(graph, nextTarget, visitedEdges, edgeTransactionIdMap, group);
+
                 }
             }
         }
@@ -177,33 +180,29 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
         return new GraphResult(graph, edgeTransactionIdMap);
     }
 
-    private List<Long> createGraphOrder(List<NetDto> net) {
-        List<NetDto> sortedNetList = new ArrayList<>(net);
 
-        // Bubble sort for ascending order by netAmount
-        boolean sorted = false;
-        while (!sorted) {
-            sorted = true;
-            for (int i = 0; i < sortedNetList.size() - 1; i++) {
-                NetDto current = sortedNetList.get(i);
-                NetDto next = sortedNetList.get(i + 1);
-                // Change the condition for ascending order
-                if (current.getNetAmount() > next.getNetAmount() ||
-                        (current.getNetAmount() == next.getNetAmount() && current.getUser().getId() > next.getUser().getId())) {
-                    // swap
-                    sortedNetList.set(i, next);
-                    sortedNetList.set(i + 1, current);
-                    sorted = false;
-                }
+    private List<Long> createGraphOrder(List<NetDto> net) {
+        // 정렬 조건 정의
+        Collections.sort(net, (o1, o2) -> {
+            // 음수 금액을 고려한 비교
+            if (o1.getNetAmount() < 0 && o2.getNetAmount() < 0) {
+                // 음수일 때는 큰 금액(절대값이 작은)이 앞으로 오도록, 즉 o2에서 o1을 뺀 결과를 반환
+                return Float.compare(o2.getNetAmount(), o1.getNetAmount());
+            } else if (Float.compare(o1.getNetAmount(), o2.getNetAmount()) == 0) {
+                // 금액이 같을 때는 userId로 정렬
+                return Long.compare(o1.getUser().getId(), o2.getUser().getId());
             }
-        }
+            // 금액이 양수일 때는 작은 금액이 앞으로 오도록, 즉 o1에서 o2를 뺀 결과를 반환
+            return Float.compare(o1.getNetAmount(), o2.getNetAmount());
+        });
 
         // Extracting userIds from the sorted list
         List<Long> orderedUserIdList = new ArrayList<>();
-        for (NetDto dto : sortedNetList) {
+        for (NetDto dto : net) {
             orderedUserIdList.add(dto.getUser().getId());
         }
 
         return orderedUserIdList;
     }
+
 }

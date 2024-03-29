@@ -31,7 +31,8 @@ public class GroupOverviewDto {
         private String transactionId;
         private Status transactionDirection;
         private boolean hasSentOrReceived;
-        private Status isReject;
+        private Status isRejected;
+        private String clearedAt;
     }
 
     @Data
@@ -42,7 +43,7 @@ public class GroupOverviewDto {
         private String payerUserName;
         private String receiptId;
         private String receiptName;
-        private String totalAmount;
+        private String totalPrice;
         private String userOwedAmount;
         private String createAt;
     }

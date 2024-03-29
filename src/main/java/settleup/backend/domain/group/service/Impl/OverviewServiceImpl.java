@@ -1,12 +1,17 @@
 package settleup.backend.domain.group.service.Impl;
 
 import lombok.AllArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
+import settleup.backend.domain.group.entity.GroupUserEntity;
 import settleup.backend.domain.group.entity.dto.GroupOverviewDto;
 import settleup.backend.domain.group.entity.dto.OptimizedDetailUUIDsDto;
 import settleup.backend.domain.group.repository.GroupRepository;
+import settleup.backend.domain.group.repository.GroupUserRepository;
 import settleup.backend.domain.group.service.OverviewService;
 import settleup.backend.domain.receipt.entity.ReceiptEntity;
 import settleup.backend.domain.receipt.repository.ReceiptRepository;
@@ -23,10 +28,7 @@ import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,6 +37,7 @@ import java.util.stream.Collectors;
 public class OverviewServiceImpl implements OverviewService {
     private final GroupRepository groupRepo;
     private final UserRepository userRepo;
+    private final GroupUserRepository groupUserRepo;
     private final NetService netService;
     private final OptimizedTransactionRepository optimizedRepo;
     private final GroupOptimizedTransactionRepository groupOptimizedRepo;
@@ -45,8 +48,9 @@ public class OverviewServiceImpl implements OverviewService {
     private final RequireTransactionRepository requireTransactionRepo;
 
     @Override
-    public GroupOverviewDto retrievedOverview(String groupUUID, UserInfoDto userInfoDto) throws CustomException {
+    public GroupOverviewDto retrievedOverview(String groupUUID, UserInfoDto userInfoDto, Pageable pageable) throws CustomException {
         GroupOverviewDto overviewDto = new GroupOverviewDto();
+
         Optional<UserEntity> existingUser = Optional.ofNullable(userRepo.findByUserUUID(userInfoDto.getUserId()))
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         overviewDto.setUserId(existingUser.get().getUserUUID());
@@ -56,6 +60,12 @@ public class OverviewServiceImpl implements OverviewService {
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND)));
         overviewDto.setGroupId(existingGroup.get().getGroupUUID());
         overviewDto.setGroupName(existingGroup.get().getGroupName());
+
+        groupUserRepo.findByGroup_Id(existingGroup.get().getId()).stream().findFirst()
+                .ifPresent(groupUserEntity -> {
+                    overviewDto.setMonthlyReportUpdateOn(groupUserEntity.isMonthlyReportUpdateOn());
+                });
+
 
         TransactionDto transactionDto = new TransactionDto();
         transactionDto.setGroup(existingGroup.get());
@@ -83,13 +93,12 @@ public class OverviewServiceImpl implements OverviewService {
         }
 
 
-
         // 2번과정 groupOptimizedRepo 조회 시 null 값이라면 3번 과정으로 간다
-            List<GroupOptimizedTransactionEntity> groupOptimizedTransactionForDetails = groupOptimizedRepo.
-                    findByGroupAndUserAndStatusNotUsedAndNotCleared(existingGroup.get(), existingUser.get());
+        List<GroupOptimizedTransactionEntity> groupOptimizedTransactionForDetails = groupOptimizedRepo.
+                findByGroupAndUserAndStatusNotUsedAndNotCleared(existingGroup.get(), existingUser.get());
 
-            List<OptimizedTransactionEntity> searchForOptimizedFromGroupIn =
-                    groupOptimizedDetailRepo.findOptimizedTransactionsByGroupOptimizedTransactions(groupOptimizedTransactionForDetails);
+        List<OptimizedTransactionEntity> searchForOptimizedFromGroupIn =
+                groupOptimizedDetailRepo.findOptimizedTransactionsByGroupOptimizedTransactions(groupOptimizedTransactionForDetails);
 
         List<GroupOptimizedTransactionEntity> groupOptimizedTransactionList = new ArrayList<>();
         if (searchUUIDForOptimized.getSearchUUIDForGroupOptimized() != null &&
@@ -119,62 +128,78 @@ public class OverviewServiceImpl implements OverviewService {
 
 
         List<Long> transactionIds = searchForOptimizedFromGroupIn.stream()
-                    .map(OptimizedTransactionEntity::getId)
-                    .collect(Collectors.toList());
+                .map(OptimizedTransactionEntity::getId)
+                .collect(Collectors.toList());
 
 
-            //3번째 과정
-            List<OptimizedTransactionEntity> optimizedTransactionList = new ArrayList<>();
-            if (!searchForOptimizedFromGroupIn.isEmpty()) {
-                optimizedTransactionList = optimizedRepo.findByGroupAndUserAndStatusNotUsedAndNotClearedExcludingTransactions(
-                        existingGroup.get(), existingUser.get(), transactionIds);
-            } else {
-                optimizedTransactionList = optimizedRepo.findByGroupAndUserAndStatusNotUsedAndNotCleared(existingGroup.get(), existingUser.get());
-            }
+        //3번째 과정
+        List<OptimizedTransactionEntity> optimizedTransactionList = new ArrayList<>();
+        if (!searchForOptimizedFromGroupIn.isEmpty()) {
+            optimizedTransactionList = optimizedRepo.findByGroupAndUserAndStatusNotUsedAndNotClearedExcludingTransactions(
+                    existingGroup.get(), existingUser.get(), transactionIds);
+        } else {
+            optimizedTransactionList = optimizedRepo.findByGroupAndUserAndStatusNotUsedAndNotCleared(existingGroup.get(), existingUser.get());
+        }
 
-            List<GroupOverviewDto.OverviewTransactionDto> overviewTransactionDto3nd =
-                    processTransactions(existingUser.get().getId(), optimizedTransactionList, userRepo);
-            combinedTransactionList.addAll(overviewTransactionDto3nd);
-
+        List<GroupOverviewDto.OverviewTransactionDto> overviewTransactionDto3nd =
+                processTransactions(existingUser.get().getId(), optimizedTransactionList, userRepo);
+        combinedTransactionList.addAll(overviewTransactionDto3nd);
 
 
         overviewDto.setNeededTransactionList(combinedTransactionList);
-        buildExpenseList(existingGroup,existingUser,overviewDto);
-        buildLastWeekSettledTransactionList(existingGroup,existingUser,overviewDto);
+        buildExpenseList(existingGroup, existingUser, overviewDto,pageable);
+        buildLastWeekSettledTransactionList(existingGroup, existingUser, overviewDto);
         return overviewDto;
     }
+
+
+//    private UserEntity findUserOrThrow(UserInfoDto userInfoDto) throws CustomException {
+//        return userRepo.findByUserUUID(userInfoDto.getUserId())
+//                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+//    }
+//
+//    private GroupEntity findGroupOrThrow(String groupUUID) throws CustomException {
+//        return groupRepo.findByGroupUUID(groupUUID)
+//                .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
+//    }
+//
+//
+
+
 
     private void buildLastWeekSettledTransactionList(Optional<GroupEntity> existingGroup, Optional<UserEntity> existingUser, GroupOverviewDto overviewDto) {
         if (overviewDto.getLastWeekSettledTransactionList() == null) {
             overviewDto.setLastWeekSettledTransactionList(new ArrayList<>());
         }
+
         LocalDateTime startDate = LocalDateTime.now().minusWeeks(1);
-        List<FinalOptimizedTransactionEntity> clearListFromFinal = finalOptimizedRepo.findByGroupAndUserAndTransactionsWithinLastWeek(existingGroup.get(), existingUser.get(), startDate);
-        List<GroupOptimizedTransactionEntity> clearListFromGroup = groupOptimizedRepo.findByGroupAndUserAndTransactionsWithinLastWeek(existingGroup.get(), existingUser.get(), startDate);
-        List<OptimizedTransactionEntity> clearListFromOptimized = optimizedRepo.findByGroupAndUserAndTransactionsWithinLastWeek(existingGroup.get(), existingUser.get(), startDate);
+        List<FinalOptimizedTransactionEntity> clearListFromFinal = finalOptimizedRepo.findByGroupAndUserWithStatusClearAndTransactionsSinceLastWeek(existingGroup.get(), existingUser.get(), startDate);
+        List<GroupOptimizedTransactionEntity> clearListFromGroup = groupOptimizedRepo.findByGroupAndUserWithClearStatusAndTransactionsSinceLastWeek(existingGroup.get(), existingUser.get(), startDate);
+        List<OptimizedTransactionEntity> clearListFromOptimized = optimizedRepo.findByGroupAndUserWithClearStatusAndTransactionsSinceLastWeek(existingGroup.get(), existingUser.get(), startDate);
+
+        List<GroupOverviewDto.OverviewTransactionDto> combinedList = new ArrayList<>();
 
         for (FinalOptimizedTransactionEntity transaction : clearListFromFinal) {
-            GroupOverviewDto.OverviewTransactionDto dto = convertToOverviewTransactionDto(transaction ,existingUser);
-            overviewDto.getLastWeekSettledTransactionList().add(dto);
+            combinedList.add(convertToOverviewTransactionDto(transaction, existingUser));
         }
-
-
         for (GroupOptimizedTransactionEntity transaction : clearListFromGroup) {
-            GroupOverviewDto.OverviewTransactionDto dto = convertToOverviewTransactionDto(transaction ,existingUser);
-            overviewDto.getLastWeekSettledTransactionList().add(dto);
+            combinedList.add(convertToOverviewTransactionDto(transaction, existingUser));
         }
-
-
         for (OptimizedTransactionEntity transaction : clearListFromOptimized) {
-            GroupOverviewDto.OverviewTransactionDto dto = convertToOverviewTransactionDto(transaction,existingUser);
-            overviewDto.getLastWeekSettledTransactionList().add(dto);
+            combinedList.add(convertToOverviewTransactionDto(transaction, existingUser));
         }
+        combinedList.sort(Comparator.comparing(dto -> dto.getClearedAt() == null ? LocalDateTime.MAX : LocalDateTime.parse(dto.getClearedAt())));
+
+        overviewDto.setLastWeekSettledTransactionList(combinedList);
     }
+
 
     private GroupOverviewDto.OverviewTransactionDto convertToOverviewTransactionDto(TransactionalEntity transaction, Optional<UserEntity> existingUser) {
         GroupOverviewDto.OverviewTransactionDto dto = new GroupOverviewDto.OverviewTransactionDto();
         dto.setTransactionId(transaction.getTransactionUUID());
         dto.setTransactionAmount(String.valueOf(transaction.getTransactionAmount()));
+        LocalDateTime clearedAt = transaction.getClearStatusTimeStamp();
+        dto.setClearedAt(clearedAt == null ? null : clearedAt.toString());
 
         Long userId = existingUser.get().getId();
         if (transaction.getSenderUser().getId().equals(userId)) {
@@ -191,23 +216,21 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
 
-
-
-    private void buildExpenseList(Optional<GroupEntity> existingGroup, Optional<UserEntity> existingUser,GroupOverviewDto overviewDto) {
+    private void buildExpenseList(Optional<GroupEntity> existingGroup, Optional<UserEntity> existingUser, GroupOverviewDto overviewDto ,Pageable pageable) {
         if (overviewDto.getExpenseList() == null) {
             overviewDto.setExpenseList(new ArrayList<>());
         }
-        List<ReceiptEntity> groupReceiptList = receiptRepo.findReceiptByGroupId(existingGroup.get().getId());
-        for(ReceiptEntity expense: groupReceiptList){
+        Page<ReceiptEntity> pagedReceipts = receiptRepo.findReceiptByGroupId(existingGroup.get().getId(),pageable);
+        for (ReceiptEntity expense : pagedReceipts) {
             GroupOverviewDto.ExpenseDto expenseTransaction = new GroupOverviewDto.ExpenseDto();
             expenseTransaction.setReceiptId(expense.getReceiptUUID());
             expenseTransaction.setReceiptName(expense.getReceiptName());
             expenseTransaction.setCreateAt(String.valueOf(expense.getCreatedAt()));
             expenseTransaction.setPayerUserId(expense.getPayerUser().getUserUUID());
             expenseTransaction.setPayerUserName(expense.getPayerUser().getUserName());
-            expenseTransaction.setTotalAmount(String.valueOf(expense.getActualPaidPrice()));
+            expenseTransaction.setTotalPrice(String.valueOf(expense.getActualPaidPrice()));
             List<RequiresTransactionEntity> requireExpenseList = requireTransactionRepo.findByReceiptId(expense.getId());
-            if(existingUser.get().getId() == expense.getPayerUser().getId()){
+            if (existingUser.get().getId() == expense.getPayerUser().getId()) {
                 Double totalAmountForRecipient = requireExpenseList.stream()
                         .filter(transaction -> transaction.getRecipientUser().getId().equals(existingUser.get().getId()))
                         .mapToDouble(RequiresTransactionEntity::getTransactionAmount)
@@ -229,6 +252,18 @@ public class OverviewServiceImpl implements OverviewService {
         }
 
     }
+
+    @Override
+    public GroupOverviewDto updateRetrievedExpenseList(GroupOverviewDto overviewDto, String groupUUID, UserInfoDto userInfoDto, Pageable pageable) throws CustomException {
+        Optional<GroupEntity> existingGroup = Optional.ofNullable(groupRepo.findByGroupUUID(groupUUID))
+                .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
+        Optional<UserEntity> existingUser = Optional.ofNullable(userRepo.findByUserUUID(userInfoDto.getUserId()))
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        buildExpenseList(existingGroup, existingUser, overviewDto, pageable);
+        return overviewDto;
+    }
+
 
 
     private OptimizedDetailUUIDsDto mergeOptimizedAndProcessAndExtractUUIDs(GroupEntity group, UserEntity
@@ -255,11 +290,10 @@ public class OverviewServiceImpl implements OverviewService {
                 }
             }
         }
-            return new OptimizedDetailUUIDsDto(searchUUIDForGroupOptimized, searchUUIDForOptimized);
+        return new OptimizedDetailUUIDsDto(searchUUIDForGroupOptimized, searchUUIDForOptimized);
 
 
     }
-
 
 
     public static List<GroupOverviewDto.OverviewTransactionDto> processTransactions(
@@ -286,7 +320,7 @@ public class OverviewServiceImpl implements OverviewService {
             overviewTransaction.setTransactionAmount(String.valueOf(transaction.getTransactionAmount()));
             overviewTransaction.setTransactionDirection(transactionDirection);
             overviewTransaction.setHasSentOrReceived(false);
-            overviewTransaction.setIsReject(Status.PENDING);
+            overviewTransaction.setIsRejected(Status.PENDING);
 
             overviewTransactionList.add(overviewTransaction);
         }

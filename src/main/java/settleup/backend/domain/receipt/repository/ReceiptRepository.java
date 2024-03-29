@@ -1,5 +1,7 @@
 package settleup.backend.domain.receipt.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -18,5 +20,7 @@ public interface ReceiptRepository extends JpaRepository<ReceiptEntity,Long> {
     List<ReceiptItemEntity> findItemsByReceiptUUID(String receiptUUID);
     @Query("SELECT r FROM ReceiptEntity r WHERE r.group.id = :groupId ORDER BY r.createdAt DESC")
     List<ReceiptEntity> findReceiptByGroupId(Long groupId);
+    @Query("SELECT r FROM ReceiptEntity r WHERE r.group.id = :groupId ORDER BY r.createdAt DESC")
+    Page<ReceiptEntity> findReceiptByGroupId(Long groupId, Pageable pageable);
 
 }

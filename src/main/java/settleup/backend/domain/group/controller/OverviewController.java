@@ -2,6 +2,9 @@ package settleup.backend.domain.group.controller;
 
 
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import settleup.backend.domain.group.entity.dto.GroupOverviewDto;
@@ -17,23 +20,49 @@ public class OverviewController {
     private final LoginService loginService;
     private final OverviewService overviewService;
 
-//    @GetMapping("/list/detail")
-//    public ResponseEntity<ResponseDto> retrievedDetailPage
-//            (@RequestHeader(value = "Authorization") String token, @RequestParam("groupId") String groupUUID) {
-//        UserInfoDto userInfoDto=loginService.validTokenOrNot(token);
-//        GroupOverviewDto data=overviewService.retrievedOverview(groupUUID,userInfoDto);
-//        ResponseDto responseDto = new ResponseDto<>(true,"",data);
-//        return ResponseEntity.ok(responseDto);
-//
-//    }
-    @GetMapping("/list/detail")
-    public ResponseEntity<ResponseDto> retrievedDetailPage
-            ( @RequestParam("groupId") String groupUUID,@RequestParam("userId") String userId ){
-        UserInfoDto userInfoDto =new UserInfoDto();
-        userInfoDto.setUserId(userId);
-        GroupOverviewDto data=overviewService.retrievedOverview(groupUUID,userInfoDto);
-        ResponseDto responseDto = new ResponseDto<>(true,"",data);
-        return ResponseEntity.ok(responseDto);
 
+//    }
+//    @GetMapping("/detail")
+//    public ResponseEntity<GroupOverviewDto> getGroupOverview(
+//            @RequestParam("groupId") String groupId,
+//            @RequestParam("userId") String userId,
+//            @RequestParam(value = "page", defaultValue = "1") int page,
+//            @RequestParam(value = "size", defaultValue = "10") int size) {
+//
+//        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").ascending());
+//        UserInfoDto userInfoDto = new UserInfoDto();
+//        userInfoDto.setUserId(userId);
+//        GroupOverviewDto overviewDto;
+//
+//        if (page == 1) {
+//            overviewDto = overviewService.retrievedOverview(groupId, userInfoDto, pageable);
+//        } else {
+//            overviewDto = new GroupOverviewDto();
+//            overviewService.updateRetrievedExpenseList(overviewDto, groupId, userInfoDto, pageable);
+//        }
+//
+//        return ResponseEntity.ok(overviewDto);
+//    }
+
+    @GetMapping("/detail")
+    public ResponseEntity<GroupOverviewDto> getGroupOverview(
+            @RequestHeader(value = "Authorization") String token,
+            @RequestParam("groupId") String groupId,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+
+        UserInfoDto userInfoDto=loginService.validTokenOrNot(token);
+        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").ascending());
+        GroupOverviewDto overviewDto;
+
+        if (page == 1) {
+            overviewDto = overviewService.retrievedOverview(groupId, userInfoDto, pageable);
+        } else {
+            overviewDto = new GroupOverviewDto();
+            overviewService.updateRetrievedExpenseList(overviewDto, groupId, userInfoDto, pageable);
+        }
+
+        return ResponseEntity.ok(overviewDto);
     }
+
 }

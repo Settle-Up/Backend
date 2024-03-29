@@ -1,5 +1,7 @@
 package settleup.backend.domain.transaction.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -43,7 +45,12 @@ public interface OptimizedTransactionRepository extends JpaRepository<OptimizedT
             @Param("user") UserEntity user,
             @Param("excludedTransactionIds") List<Long> excludedTransactionIds);
 
-    @Query("SELECT o FROM OptimizedTransactionEntity o WHERE o.group = :group AND (o.senderUser = :user OR o.recipientUser = :user) AND o.createdAt >= :startDate")
-    List<OptimizedTransactionEntity> findByGroupAndUserAndTransactionsWithinLastWeek(@Param("group") GroupEntity group, @Param("user") UserEntity user, @Param("startDate") LocalDateTime startDate);
+    @Query("SELECT o FROM OptimizedTransactionEntity o WHERE o.group = :group AND (o.senderUser = :user OR o.recipientUser = :user) AND o.isSenderStatus = 'CLEAR' AND o.isRecipientStatus = 'CLEAR' AND o.clearStatusTimestamp >= :sevenDaysAgo")
+    List<OptimizedTransactionEntity> findByGroupAndUserWithClearStatusAndTransactionsSinceLastWeek(@Param("group") GroupEntity group, @Param("user") UserEntity user, @Param("sevenDaysAgo") LocalDateTime sevenDaysAgo);
+
+
+//    @Query("SELECT o FROM OptimizedTransactionEntity o WHERE o.group = :group AND (o.senderUser = :user OR o.recipientUser = :user) AND o.isSenderStatus = 'CLEAR' AND o.isRecipientStatus = 'CLEAR' AND o.clearStatusTimestamp >= :sevenDaysAgo")
+//    Page<OptimizedTransactionEntity> findByGroupAndUserWithClearStatusAndTransactionsSinceLastWeek(@Param("group") GroupEntity group, @Param("user") UserEntity user, @Param("sevenDaysAgo") LocalDateTime sevenDaysAgo,Pageable pageable);
+
 
 }
