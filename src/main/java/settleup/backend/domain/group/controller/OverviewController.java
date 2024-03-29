@@ -15,7 +15,7 @@ import settleup.backend.global.api.ResponseDto;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("group/")
+@RequestMapping("/group")
 public class OverviewController {
     private final LoginService loginService;
     private final OverviewService overviewService;
@@ -44,8 +44,8 @@ public class OverviewController {
 //        return ResponseEntity.ok(overviewDto);
 //    }
 
-    @GetMapping("/detail")
-    public ResponseEntity<GroupOverviewDto> getGroupOverview(
+    @GetMapping("/overview")
+    public ResponseEntity<ResponseDto> getGroupOverview(
             @RequestHeader(value = "Authorization") String token,
             @RequestParam("groupId") String groupId,
             @RequestParam(value = "page", defaultValue = "1") int page,
@@ -61,8 +61,8 @@ public class OverviewController {
             overviewDto = new GroupOverviewDto();
             overviewService.updateRetrievedExpenseList(overviewDto, groupId, userInfoDto, pageable);
         }
-
-        return ResponseEntity.ok(overviewDto);
+        ResponseDto response = new ResponseDto<>(true,"GroupDetail retrieved successfully",overviewDto);
+        return ResponseEntity.ok(response);
     }
 
 }

@@ -78,6 +78,7 @@ public class OverviewServiceImpl implements OverviewService {
                 .ifPresent(netDto -> overviewDto.setSettlementBalance(String.valueOf(netDto.getNetAmount())));
 
 
+
         List<GroupOverviewDto.OverviewTransactionDto> combinedTransactionList = new ArrayList<>();
 
 
@@ -153,17 +154,6 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
 
-//    private UserEntity findUserOrThrow(UserInfoDto userInfoDto) throws CustomException {
-//        return userRepo.findByUserUUID(userInfoDto.getUserId())
-//                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-//    }
-//
-//    private GroupEntity findGroupOrThrow(String groupUUID) throws CustomException {
-//        return groupRepo.findByGroupUUID(groupUUID)
-//                .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
-//    }
-//
-//
 
 
 

@@ -22,7 +22,6 @@ import java.util.concurrent.CompletableFuture;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("")
 public class ReceiptController {
 
 
