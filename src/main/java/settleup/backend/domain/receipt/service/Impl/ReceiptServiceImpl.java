@@ -5,6 +5,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
+import settleup.backend.domain.group.entity.GroupUserEntity;
 import settleup.backend.domain.group.repository.GroupRepository;
 import settleup.backend.domain.group.repository.GroupUserRepository;
 import settleup.backend.domain.receipt.entity.ReceiptEntity;
@@ -17,6 +18,7 @@ import settleup.backend.domain.receipt.repository.ReceiptItemUserRepository;
 import settleup.backend.domain.receipt.repository.ReceiptRepository;
 import settleup.backend.domain.receipt.service.ReceiptService;
 import settleup.backend.domain.user.entity.UserEntity;
+import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.repository.UserRepository;
 import settleup.backend.domain.receipt.receiptCommons.ReceiptCreatedEvent;
 import settleup.backend.global.common.UUID_Helper;
@@ -162,12 +164,18 @@ public class ReceiptServiceImpl implements ReceiptService {
     }
 
         @Override
-        public ReceiptDto getReceiptInfo (String receiptUUID) throws CustomException {
+        public ReceiptDto getReceiptInfo (UserInfoDto userInfoDto,String receiptUUID) throws CustomException {
             ReceiptEntity existingReceipt = receiptRepo.findByReceiptUUID(receiptUUID)
                     .orElseThrow(() -> new CustomException(ErrorCode.RECEIPT_NOT_FOUND));
 
+            UserEntity existingUser =userRepo.findByUserUUID(userInfoDto.getUserId())
+                    .orElseThrow(()->new CustomException(ErrorCode.USER_NOT_FOUND));
+
             GroupEntity existingGroup = groupRepo.findByGroupUUID(receiptRepo.findByReceiptUUID(receiptUUID).get().getGroup().getGroupUUID())
                     .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
+
+             groupUserRepo.findByUserIdAndGroupId(existingUser.getId(),existingGroup.getId())
+                            .orElseThrow(()->new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
 
             receiptRepo.findByReceiptUUID(receiptUUID);
             ReceiptDto receiptDto = new ReceiptDto();

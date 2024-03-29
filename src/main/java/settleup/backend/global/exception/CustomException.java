@@ -31,7 +31,4 @@ public class CustomException extends RuntimeException {
         return String.valueOf(errorCode.getCode());
     }
 
-    public String getErrorCodeName() {
-        return errorCode.name();
-    }
 }

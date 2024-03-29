@@ -76,7 +76,7 @@ public class OcrServiceImpl implements OcrService {
                     return responseEntity.getHeaders().getFirst("Operation-Location");
                 } else {
                     logger.error("API call failed or returned unexpected status: {}", status);
-                    throw new CustomException(ErrorCode.EXTERNAL_API_ERROR);
+                    throw new CustomException(ErrorCode.EXTERNAL_OCR_API_ERROR);
                 }
             } catch (HttpClientErrorException e) {
                 logger.error("Client error during API call to Azure: ", e);

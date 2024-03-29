@@ -22,7 +22,7 @@ public class GroupInfoListDto {
         private String groupId;
         private String groupName;
         private String groupMemberCount;
-        private String net;
+        private String settlementBalance;
         private String lastActive;
     }
 }

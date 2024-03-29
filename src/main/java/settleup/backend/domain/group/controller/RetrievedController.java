@@ -19,6 +19,7 @@ import settleup.backend.global.api.ResponseDto;
 public class RetrievedController {
     private final LoginService loginService;
     private final RetrievedService retrievedService;
+
     @GetMapping("/list/summary")
     public ResponseEntity<ResponseDto> retrievedGroupList(@RequestHeader(value = "Authorization") String token){
     UserInfoDto userInfo =loginService.validTokenOrNot(token);

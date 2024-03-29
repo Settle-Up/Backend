@@ -60,7 +60,7 @@ public class RetrievedServiceImpl implements RetrievedService {
                 if (netDto.getUser().equals(existingUser)) {
                     Float netAmount = netDto.getNetAmount();
                     if (netAmount != null) {
-                        groupInfoDto.setNet(String.valueOf(netAmount));
+                        groupInfoDto.setSettlementBalance(String.valueOf(netAmount));
                         groupInfoDto.setLastActive(lastActive);
                     }
                     break;

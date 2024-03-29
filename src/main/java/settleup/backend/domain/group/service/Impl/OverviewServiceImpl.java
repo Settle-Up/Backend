@@ -58,10 +58,14 @@ public class OverviewServiceImpl implements OverviewService {
 
         Optional<GroupEntity> existingGroup = Optional.ofNullable(groupRepo.findByGroupUUID(groupUUID)
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND)));
+
+        Optional<GroupUserEntity> existingUserInGroup =Optional.ofNullable(groupUserRepo.findByUserIdAndGroupId(existingUser.get().getId(),existingGroup.get().getId()))
+                        .orElseThrow(()->new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
+
         overviewDto.setGroupId(existingGroup.get().getGroupUUID());
         overviewDto.setGroupName(existingGroup.get().getGroupName());
 
-        groupUserRepo.findByUserIdAndGroupId(existingGroup.get().getId(),existingUser.get().getId()).stream().findFirst()
+        existingUserInGroup
                 .ifPresent(groupUserEntity -> {
                     overviewDto.setIsMonthlyReportUpdateOn(groupUserEntity.getIsMonthlyReportUpdateOn());
                 });
@@ -89,7 +93,6 @@ public class OverviewServiceImpl implements OverviewService {
             List<GroupOverviewDto.OverviewTransactionDto> overviewTransaction1st =
                     processTransactions(existingUser.get().getId(), finalOptimizedTransactionList, userRepo);
             combinedTransactionList.addAll(overviewTransaction1st);
-            System.out.println("here:" + overviewTransaction1st);
 
         }
 
@@ -249,6 +252,8 @@ public class OverviewServiceImpl implements OverviewService {
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
         Optional<UserEntity> existingUser = Optional.ofNullable(userRepo.findByUserUUID(userInfoDto.getUserId()))
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        Optional.ofNullable(groupUserRepo.findByUserIdAndGroupId(existingUser.get().getId(),existingGroup.get().getId()))
+                .orElseThrow(()->new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
 
         buildExpenseList(existingGroup, existingUser, overviewDto, pageable);
         return overviewDto;
