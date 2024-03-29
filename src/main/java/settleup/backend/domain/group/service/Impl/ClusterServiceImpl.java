@@ -1,15 +1,20 @@
 package settleup.backend.domain.group.service.Impl;
 
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.group.entity.GroupUserEntity;
 import settleup.backend.domain.group.entity.dto.CreateGroupRequestDto;
 import settleup.backend.domain.group.entity.dto.CreateGroupResponseDto;
+import settleup.backend.domain.group.entity.dto.GroupMonthlyReportDto;
 import settleup.backend.domain.group.repository.GroupRepository;
 import settleup.backend.domain.group.repository.GroupUserRepository;
 import settleup.backend.domain.group.service.ClusterService;
+import settleup.backend.domain.transaction.entity.RequiresTransactionEntity;
+import settleup.backend.domain.transaction.repository.RequireTransactionRepository;
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.repository.UserRepository;
@@ -27,11 +32,14 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class ClusterServiceImpl implements ClusterService {
 
-    private GroupRepository groupRepository;
-    private GroupUserRepository groupUserRepository;
-    private UserRepository userRepository;
+    private GroupRepository groupRepo;
+    private GroupUserRepository groupUserRepo;
+    private UserRepository userRepo;
     private UUID_Helper uuidHelper;
     private UrlProvider urlProvider;
+    private RequireTransactionRepository requireTransactionRepo;
+
+    private static final Logger logger = LoggerFactory.getLogger(ClusterServiceImpl.class);
 
     /**
      * createGroup 그룹생성
@@ -62,7 +70,7 @@ public class ClusterServiceImpl implements ClusterService {
             groupInfo.setGroupUUID(uuidHelper.UUIDForGroup());
             groupInfo.setGroupUrl(urlProvider.generateUniqueUrl());
             groupInfo.setCreationTime(now);
-            groupRepository.save(groupInfo);
+            groupRepo.save(groupInfo);
             return groupInfo;
         } catch (Exception e) {
             throw new CustomException(ErrorCode.GROUP_CREATION_FAILED);
@@ -72,13 +80,13 @@ public class ClusterServiceImpl implements ClusterService {
     private void addUsersToGroup(List<String> userIds, GroupEntity groupInfo) throws CustomException {
         for (String userUUID : userIds) {
             try {
-                UserEntity user = userRepository.findByUserUUID(userUUID)
+                UserEntity user = userRepo.findByUserUUID(userUUID)
                         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
                 GroupUserEntity groupUser = new GroupUserEntity();
                 groupUser.setUser(user);
                 groupUser.setGroup(groupInfo);
-                groupUser.setMonthlyReportUpdateOn(false);
-                groupUserRepository.save(groupUser);
+                groupUser.setIsMonthlyReportUpdateOn(false);
+                groupUserRepo.save(groupUser);
             } catch (CustomException e) {
                 throw e;
             } catch (Exception e) {
@@ -88,7 +96,7 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     private CreateGroupResponseDto buildCreateGroupResponseDto(GroupEntity groupInfo, int memberCount) {
-        List<GroupUserEntity> groupUsers = groupUserRepository.findByGroup_Id(groupInfo.getId());
+        List<GroupUserEntity> groupUsers = groupUserRepo.findByGroup_Id(groupInfo.getId());
         List<UserInfoDto> userDtos = groupUsers.stream().map(groupUser -> new UserInfoDto(
                 groupUser.getUser().getUserUUID(),
                 groupUser.getUser().getUserName(),
@@ -109,10 +117,10 @@ public class ClusterServiceImpl implements ClusterService {
     @Override
     public List<UserInfoDto> getGroupUserInfo(String groupUUID) throws CustomException {
         try {
-            Optional<GroupEntity> existingGroup = Optional.ofNullable(groupRepository.findByGroupUUID(groupUUID)
+            Optional<GroupEntity> existingGroup = Optional.ofNullable(groupRepo.findByGroupUUID(groupUUID)
                     .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND)));
             Long groupPrimaryId = existingGroup.get().getId();
-            List<GroupUserEntity> userList = groupUserRepository.findByGroup_Id(groupPrimaryId);
+            List<GroupUserEntity> userList = groupUserRepo.findByGroup_Id(groupPrimaryId);
             List<UserInfoDto> userInfoDtoList = new ArrayList<>();
             for (GroupUserEntity userEntity : userList) {
                 UserInfoDto userInfoDto = new UserInfoDto();
@@ -123,6 +131,70 @@ public class ClusterServiceImpl implements ClusterService {
             return userInfoDtoList;
         } catch (CustomException e) {
             throw e;
+        }
+    }
+
+
+    @Override
+    public GroupMonthlyReportDto givenMonthlyReport(UserInfoDto userInfoDto, String groupId, GroupMonthlyReportDto groupMonthlyReportDto) throws CustomException {
+
+        UserEntity existingUser = userRepo.findByUserUUID(userInfoDto.getUserId())
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        GroupEntity existingGroup = groupRepo.findByGroupUUID(groupId)
+                .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
+
+
+        Optional<GroupUserEntity> userIdAndGroupId = groupUserRepo.findByUserIdAndGroupId(existingUser.getId(), existingGroup.getId());
+        if (userIdAndGroupId.isPresent()) {
+            GroupUserEntity groupUser = userIdAndGroupId.get();
+
+            groupUser.setIsMonthlyReportUpdateOn(groupMonthlyReportDto.getIsMonthlyReportUpdateOn());
+            groupUserRepo.save(groupUser);
+
+        } else {
+
+            throw new CustomException(ErrorCode.GROUP_USER_NOT_FOUND);
+        }
+
+        GroupMonthlyReportDto responseData = new GroupMonthlyReportDto();
+        responseData.setUserId(existingUser.getUserUUID());
+        responseData.setUserName(existingUser.getUserName());
+        responseData.setGroupId(existingGroup.getGroupUUID());
+        responseData.setGroupName(existingGroup.getGroupName());
+        responseData.setIsMonthlyReportUpdateOn(groupMonthlyReportDto.getIsMonthlyReportUpdateOn());
+
+
+        return responseData;
+    }
+
+    @Override
+    public Map<String, String> deleteGroupUserInfo(UserInfoDto userInfoDto, String groupId) throws CustomException {
+        UserEntity existingUser = userRepo.findByUserUUID(userInfoDto.getUserId())
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        GroupEntity existingGroup = groupRepo.findByGroupUUID(groupId)
+                .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
+
+        List<RequiresTransactionEntity> unSettledList = requireTransactionRepo.findByGroupAndUserAndStatusNotClearAndNotInherited(existingGroup.getId(), existingUser.getId());
+        if (!unSettledList.isEmpty()) {
+            throw new CustomException(ErrorCode.SETTLED_REQUIRED);
+        }
+
+        Optional<GroupUserEntity> userIdAndGroupId = groupUserRepo.findByUserIdAndGroupId(existingUser.getId(), existingGroup.getId());
+        if (userIdAndGroupId.isPresent()) {
+            GroupUserEntity groupUser = userIdAndGroupId.get();
+
+            groupUserRepo.delete(groupUser);
+
+            Map<String, String> responseData = new HashMap<>();
+            responseData.put("groupId", existingGroup.getGroupUUID());
+            responseData.put("groupName", existingGroup.getGroupName());
+            responseData.put("userId", existingUser.getUserUUID());
+            responseData.put("userName", existingUser.getUserName());
+            return responseData;
+        } else {
+            throw new CustomException(ErrorCode.GROUP_USER_NOT_FOUND);
         }
     }
 }

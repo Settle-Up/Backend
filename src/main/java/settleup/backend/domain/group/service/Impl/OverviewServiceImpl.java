@@ -61,9 +61,9 @@ public class OverviewServiceImpl implements OverviewService {
         overviewDto.setGroupId(existingGroup.get().getGroupUUID());
         overviewDto.setGroupName(existingGroup.get().getGroupName());
 
-        groupUserRepo.findByGroup_Id(existingGroup.get().getId()).stream().findFirst()
+        groupUserRepo.findByUserIdAndGroupId(existingGroup.get().getId(),existingUser.get().getId()).stream().findFirst()
                 .ifPresent(groupUserEntity -> {
-                    overviewDto.setMonthlyReportUpdateOn(groupUserEntity.isMonthlyReportUpdateOn());
+                    overviewDto.setIsMonthlyReportUpdateOn(groupUserEntity.getIsMonthlyReportUpdateOn());
                 });
 
 

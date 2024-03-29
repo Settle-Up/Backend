@@ -16,6 +16,10 @@ public interface RequireTransactionRepository extends JpaRepository<RequiresTran
     @Query("SELECT r FROM RequiresTransactionEntity r WHERE r.group.id = :groupId AND (r.isSenderStatus <> 'CLEAR' OR r.isRecipientStatus <> 'CLEAR') AND r.isInheritanceStatus <> 'INHERITED_CLEAR'")
     List<RequiresTransactionEntity> findByGroupIdAndStatusNotClearAndNotInherited(@Param("groupId") Long groupId);
 
+    @Query("SELECT r FROM RequiresTransactionEntity r WHERE r.group.id = :groupId AND (r.senderUser.id = :userId OR r.recipientUser.id = :userId) AND (r.isSenderStatus <> 'CLEAR' OR r.isRecipientStatus <> 'CLEAR') AND r.isInheritanceStatus <> 'INHERITED_CLEAR'")
+    List<RequiresTransactionEntity> findByGroupAndUserAndStatusNotClearAndNotInherited(@Param("groupId") Long groupId, @Param("userId") Long userId);
+
+
     @Query("SELECT r FROM RequiresTransactionEntity r WHERE r.group.id = :groupId AND r.id <> :id")
     List<RequiresTransactionEntity> findAllByGroupIdExcludingId(@Param("groupId") Long groupId, @Param("id") Long id);
 

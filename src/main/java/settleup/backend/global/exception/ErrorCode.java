@@ -34,7 +34,9 @@ public enum ErrorCode {
     GROUP_USER_NOT_FOUND(131,"user cannot find in group"),
     PAYER_USER_NOT_FOUND(132,"payer user cannot found"),
     OWED_USER_NOT_FOUND(133, "owed user cannot found"),
-    OPTIMIZATION_ERROR(134,"error during optimization");
+    OPTIMIZATION_ERROR(134,"error during optimization"),
+    SETTLED_REQUIRED(135, "user settled required");
+
 
 
 

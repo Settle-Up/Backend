@@ -25,8 +25,12 @@ public class GroupUserEntity implements Serializable {
     @JoinColumn(name = "group_id", nullable = false)
     private GroupEntity group;
 
-    @Getter
     @Column(name = "is_monthly_report_update_on", nullable = false)
-    private boolean isMonthlyReportUpdateOn ;
+    private Boolean isMonthlyReportUpdateOn;
+
+    public void setIsMonthlyReportUpdateOn(boolean isMonthlyReportUpdateOn) {
+        this.isMonthlyReportUpdateOn = isMonthlyReportUpdateOn;
+    }
+
 }
 
