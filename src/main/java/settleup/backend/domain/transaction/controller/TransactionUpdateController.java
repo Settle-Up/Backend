@@ -21,26 +21,14 @@ public class TransactionUpdateController {
     private final LoginService loginService;
     private final TransactionUpdateService transactionUpdateService;
 
-    //    @PatchMapping("/approval")
-//    public ResponseEntity<ResponseDto> updateTransaction(
-//            @RequestHeader(value = "Authorization") String token ,
-//            @RequestParam("groupId") String groupId ,
-//            @RequestBody TransactionUpdateRequestDto requestDto){
-//        UserInfoDto userInfoDto =loginService.validTokenOrNot(token);
-//        TransactionUpdateDto data =transactionUpdateService.transactionUpdate(userInfoDto,groupId,requestDto);
-//        ResponseDto responseDto = new ResponseDto<>(true,"update retrieved successfully",data);
-//        return ResponseEntity.ok(responseDto);
-//    }
     @PatchMapping("/approval")
     public ResponseEntity<ResponseDto> updateTransaction(
-            @RequestParam("userId") String userId,
+            @RequestHeader(value = "Authorization") String token,
             @RequestParam("groupId") String groupId,
-            @RequestBody TransactionUpdateRequestDto requestDto) throws CustomException, ExecutionException, InterruptedException {
-        UserInfoDto userInfoDto = new UserInfoDto();
-        userInfoDto.setUserId(userId);
+            @RequestBody TransactionUpdateRequestDto requestDto) throws CustomException{
+        UserInfoDto userInfoDto =loginService.validTokenOrNot(token);
         TransactionUpdateDto data = transactionUpdateService.transactionUpdate(userInfoDto, groupId, requestDto);
         ResponseDto responseDto = new ResponseDto<>(true, "update retrieved successfully", data);
         return ResponseEntity.ok(responseDto);
     }
-
 }
