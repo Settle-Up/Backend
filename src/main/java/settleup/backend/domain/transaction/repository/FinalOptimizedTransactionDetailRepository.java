@@ -13,5 +13,7 @@ public interface FinalOptimizedTransactionDetailRepository extends JpaRepository
 
     @Query("SELECT f.usedOptimizedTransaction FROM FinalOptimizedTransactionDetailEntity f WHERE f.finalOptimizedTransaction.id = :finalOptimizedTransactionId")
     List<String> findUsedOptimizedTransactionUuidsByFinalOptimizedTransactionId(@Param("finalOptimizedTransactionId") Long finalOptimizedTransactionId);
+
+    List<FinalOptimizedTransactionDetailEntity> findByFinalOptimizedTransactionId(Long id);
 }
 

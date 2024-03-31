@@ -1,42 +1,56 @@
 package settleup.backend.domain.transaction.service.Impl;
 
+
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.transaction.entity.*;
-import settleup.backend.domain.transaction.entity.dto.CombinedListDto;
-import settleup.backend.domain.transaction.entity.dto.IntermediateCalcDto;
-import settleup.backend.domain.transaction.entity.dto.TransactionP2PResultDto;
+import settleup.backend.domain.transaction.entity.dto.*;
 import settleup.backend.domain.transaction.repository.*;
 import settleup.backend.domain.transaction.service.FinalOptimizedService;
+import settleup.backend.domain.transaction.service.TransactionInheritanceService;
+
 import settleup.backend.domain.user.repository.UserRepository;
 import settleup.backend.global.common.Status;
 import settleup.backend.global.common.UUID_Helper;
+
+import settleup.backend.global.exception.CustomException;
+import settleup.backend.global.exception.ErrorCode;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
 
 @Service
 @AllArgsConstructor
+@Transactional
 public class FinalOptimizedServiceImpl implements FinalOptimizedService {
     private final GroupOptimizedTransactionRepository groupOptimizedTransactionRepo;
-    private final GroupOptimizedTransactionDetailRepository groupOptimizedTransactionDetailRepo;
     private final FinalOptimizedTransactionRepository mergeTransactionRepo;
     private final FinalOptimizedTransactionDetailRepository mergeTransactionDetailsRepo;
-    private final OptimizedTransactionRepository p2pRepo;
+    private final OptimizedTransactionRepository optimizedTransactionRepo;
     private final UserRepository userRepo;
-    private final OptimizedTransactionDetailsRepository p2pDetailRepo;
     private final UUID_Helper uuidHelper;
+    private final TransactionInheritanceService transactionInheritanceService;
+
+
+    private static final Logger logger = LoggerFactory.getLogger(FinalOptimizedServiceImpl.class);
 
     @Override
     public void lastMergeTransaction(TransactionP2PResultDto resultDto) {
-        GroupEntity group =  p2pRepo.findGroupByTransactionId(resultDto.getP2pList().get(0));
-        List<CombinedListDto> targetList=getCombinedList(group);
-        mergeTransaction(targetList,resultDto.getNodeList(),group);
+        GroupEntity group = optimizedTransactionRepo.findGroupByTransactionId(resultDto.getP2pList().get(0));
+        List<CombinedListDto> targetList = getCombinedList(group);
+        mergeTransaction(targetList, resultDto.getNodeList(), group);
     }
 
-    private void mergeTransaction(List<CombinedListDto> targetList, List<List<Long>> nodeList,GroupEntity group) {
-        mergeTransactionRepo.updateIsUsedStatusByGroup(group,Status.USED);
+    private void mergeTransaction(List<CombinedListDto> targetList, List<List<Long>> nodeList, GroupEntity group) {
+        mergeTransactionRepo.updateIsUsedStatusByGroup(group, Status.USED);
         List<Long> saveFinalOptimizedIds = new ArrayList<>();
 
         for (List<Long> node : nodeList) {
@@ -101,27 +115,31 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
 
                     // totalAmount =0 에 기여한 추가적으로 씌임이 있었던 optimizedTransaction > requireTransactioin => inherited_clear
                     // totalAmount =0 에 기여한 추가적으로 씌임이 있었던  group_optimized >optimizedTransaction > requireTransaction => inherited_clear
-                    for (CombinedListDto transactionForClear : filteredTransactionsFinal) {
+                    filteredTransactionsFinal.forEach(transactionForClear -> {
                         String uuid = transactionForClear.getOptimizedUUID();
                         if (uuid.startsWith("OPT")) {
-                            OptimizedTransactionEntity optimizedTransaction = p2pRepo.findByTransactionUUID(uuid);
-                            if (optimizedTransaction != null) {
+                            // Using Optional to handle potential null value gracefully
+                            Optional<OptimizedTransactionEntity> optimizedTransactionOpt = optimizedTransactionRepo.findByTransactionUUID(uuid);
+                            optimizedTransactionOpt.ifPresent(optimizedTransaction -> {
                                 optimizedTransaction.setIsInheritanceStatus(Status.INHERITED_CLEAR);
-                                p2pRepo.save(optimizedTransaction);
-                            }
+                                optimizedTransactionRepo.save(optimizedTransaction);
+                            });
                         } else if (uuid.startsWith("GPT")) {
-                            GroupOptimizedTransactionEntity groupOptimizedTransaction = groupOptimizedTransactionRepo.findByTransactionUUID(uuid);
-                            if (groupOptimizedTransaction != null) {
+                            // Similar approach for GroupOptimizedTransactionEntity
+                            Optional<GroupOptimizedTransactionEntity> groupOptimizedTransactionOpt = groupOptimizedTransactionRepo.findByTransactionUUID(uuid);
+                            groupOptimizedTransactionOpt.ifPresent(groupOptimizedTransaction -> {
                                 groupOptimizedTransaction.setIsInheritanceStatus(Status.INHERITED_CLEAR);
                                 groupOptimizedTransactionRepo.save(groupOptimizedTransaction);
-                            }
-
+                            });
                         }
-                    }
+                    });
+
                 }
             }
         }
     }
+
+
     private List<CombinedListDto> getCombinedList(GroupEntity group) {
         List<GroupOptimizedTransactionEntity> optimizedList =
                 groupOptimizedTransactionRepo.findByGroupAndIsUsed(group, Status.NOT_USED);
@@ -139,14 +157,11 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
             combinedDtoList.add(dto);
 
 
-
-
             // 현재 최적화된 트랜잭션에 해당하는 사용가능한 P2P 트랜잭션 조회...???
             List<OptimizedTransactionEntity> availableTransactions =
-                    p2pRepo.findAvailableOptimizedTransactions(optimizedTransaction.getGroup(), optimizedTransaction.getId());
+                    optimizedTransactionRepo.findAvailableOptimizedTransactions(optimizedTransaction.getGroup(), optimizedTransaction.getId());
             optimizedP2PList.addAll(availableTransactions);
         }
-
 
 
         // OptimizedTransactionEntity 목록을 순회하며 CombinedListDto 리스트에 추가
@@ -162,4 +177,58 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
         return combinedDtoList;
     }
 
+
+    @Override
+    public String processTransaction(String transactionId, TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
+        FinalOptimizedTransactionEntity transactionEntity = mergeTransactionRepo.findByTransactionUUID(transactionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP));
+
+        if (!transactionEntity.getGroup().getId().equals(existingGroup.getId())) {
+            throw new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP);
+        }
+
+        Status statusToUpdate = Status.valueOf(request.getApprovalStatus());
+
+        if ("sender".equals(request.getApprovalUser())) {
+            mergeTransactionRepo.updateIsSenderStatusByUUID(transactionId, statusToUpdate);
+
+        } else {
+            mergeTransactionRepo.updateIsRecipientStatusByUUID(transactionId, statusToUpdate);
+        }
+
+        Optional<FinalOptimizedTransactionEntity> searchTransaction = mergeTransactionRepo.findByTransactionUUID(transactionId);
+        if (searchTransaction.isPresent()) {
+            FinalOptimizedTransactionEntity goesToClearTransaction = searchTransaction.get();
+            if (goesToClearTransaction.getIsSenderStatus() == Status.CLEAR && goesToClearTransaction.getIsRecipientStatus() == Status.CLEAR) {
+                List<FinalOptimizedTransactionDetailEntity> thirdInheritanceTargetList =
+                        mergeTransactionDetailsRepo.findByFinalOptimizedTransactionId(goesToClearTransaction.getId());
+                thirdInheritanceTargetList.forEach(thirdInheritanceTarget -> {
+                    String usedTransactionId = thirdInheritanceTarget.getUsedOptimizedTransaction();
+                    selectServiceForUpdateInheritance(usedTransactionId);
+                });
+            }
+        }
+
+        return transactionEntity.getTransactionUUID();
+    }
+
+    private void selectServiceForUpdateInheritance(String transactionId) {
+        if (transactionId.startsWith("GPT")) {
+            Optional<GroupOptimizedTransactionEntity> groupTransaction = groupOptimizedTransactionRepo.findByTransactionUUID(transactionId);
+            if (!groupTransaction.isPresent()) {
+                throw new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP);
+            }
+            transactionInheritanceService.clearInheritanceStatusForFinalToGroup(groupTransaction);
+        } else if (transactionId.startsWith("OPT")) {
+            Optional<OptimizedTransactionEntity> optimizedTransaction = optimizedTransactionRepo.findByTransactionUUID(transactionId);
+            if (!optimizedTransaction.isPresent()) {
+                throw new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP);
+            }
+            transactionInheritanceService.clearInheritanceStatusForFinalToOptimized(optimizedTransaction);
+        } else {
+            throw new CustomException(ErrorCode.TRANSACTION_TYPE_NOT_SUPPORTED);
+        }
+    }
+
 }
+

@@ -125,7 +125,7 @@ public class OverviewServiceImpl implements OverviewService {
         List<String> searchTarget = searchUUIDForOptimized.getSearchUUIDForOptimized();
         if (searchTarget != null && !searchTarget.isEmpty()) {
             for (String search : searchTarget) {
-                Optional<OptimizedTransactionEntity> result = Optional.ofNullable(optimizedRepo.findByTransactionUUID(search));
+                Optional<OptimizedTransactionEntity> result = optimizedRepo.findByTransactionUUID(search);
                 result.ifPresent(searchForOptimizedFromGroupIn::add);
             }
         }

@@ -26,7 +26,6 @@ public class FinalOptimizedTransactionEntity implements TransactionalEntity {
     @JoinColumn(name = "groupId")
     private GroupEntity group;
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_user")
     private UserEntity senderUser;
@@ -37,7 +36,6 @@ public class FinalOptimizedTransactionEntity implements TransactionalEntity {
 
     @Column(name = "transaction_amount", nullable = false)
     private double transactionAmount;
-
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -54,7 +52,6 @@ public class FinalOptimizedTransactionEntity implements TransactionalEntity {
     @Column(name = "is_recipient_status", nullable = false)
     private Status isRecipientStatus;
 
-
     @Column(name = "clear_status_timestamp", nullable = true)
     private LocalDateTime clearStatusTimestamp;
 
@@ -65,15 +62,9 @@ public class FinalOptimizedTransactionEntity implements TransactionalEntity {
         }
     }
 
-
     @Override
     public Long getId() {
         return this.id;
-    }
-
-    @Override
-    public String getTransactionUUID() {
-        return this.transactionUUID;
     }
 
     @Override
@@ -86,17 +77,30 @@ public class FinalOptimizedTransactionEntity implements TransactionalEntity {
         return this.recipientUser;
     }
 
-
     @Override
     public double getTransactionAmount() {
         return this.transactionAmount;
     }
 
     @Override
+    public String getTransactionUUID() {
+        return this.transactionUUID;
+    }
+
+    @Override
+    public Status getIsSenderStatus() {
+        return this.isSenderStatus;
+    }
+
+    @Override
+    public Status getIsRecipientStatus() {
+        return this.isRecipientStatus;
+    }
+
+    @Override
     public LocalDateTime getClearStatusTimeStamp() {
         return this.clearStatusTimestamp;
     }
-
 }
 
 

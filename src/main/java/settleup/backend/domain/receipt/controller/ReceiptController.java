@@ -60,6 +60,5 @@ public class ReceiptController {
         return ResponseEntity.ok(responseDto);
 
     }
-
 }
 

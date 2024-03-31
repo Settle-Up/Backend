@@ -82,6 +82,17 @@ public class GroupOptimizedTransactionEntity implements TransactionalEntity {
     @Override
     public UserEntity getRecipientUser(){return  this.recipientUser;}
 
+
+    @Override
+    public Status getIsSenderStatus() {
+        return this.isSenderStatus;
+    }
+
+    @Override
+    public Status getIsRecipientStatus() {
+        return this.isRecipientStatus;
+    }
+
     @Override
     public LocalDateTime getClearStatusTimeStamp() {
         return this.clearStatusTimestamp;

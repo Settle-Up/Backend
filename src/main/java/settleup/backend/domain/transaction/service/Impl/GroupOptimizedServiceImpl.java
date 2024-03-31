@@ -6,21 +6,26 @@ import org.jgrapht.graph.DefaultDirectedWeightedGraph;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.stereotype.Service;
 import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionDetailsEntity;
 import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionEntity;
 import settleup.backend.domain.transaction.entity.OptimizedTransactionEntity;
-import settleup.backend.domain.transaction.entity.dto.GraphResult;
-import settleup.backend.domain.transaction.entity.dto.NetDto;
-import settleup.backend.domain.transaction.entity.dto.TransactionP2PResultDto;
+
+import settleup.backend.domain.transaction.entity.dto.*;
 import settleup.backend.domain.transaction.repository.GroupOptimizedTransactionDetailRepository;
 import settleup.backend.domain.transaction.repository.GroupOptimizedTransactionRepository;
 import settleup.backend.domain.transaction.repository.OptimizedTransactionRepository;
 import settleup.backend.domain.transaction.service.GroupOptimizedService;
+import settleup.backend.domain.transaction.service.TransactionInheritanceService;
+
 import settleup.backend.domain.user.repository.UserRepository;
 import settleup.backend.global.common.Status;
 import settleup.backend.global.common.UUID_Helper;
+
+import settleup.backend.global.exception.CustomException;
+import settleup.backend.global.exception.ErrorCode;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -34,6 +39,8 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
     private final GroupOptimizedTransactionDetailRepository groupOptimizedDetailRepo;
     private final UserRepository userRepo;
     private final UUID_Helper uuidHelper;
+    private final TransactionInheritanceService transactionInheritanceService;
+
 
     // p2pList 41,42,43 p2pList 방금 만들어진 1차 최적화 id 값 ,
     // 2차 최적화는 왜 ? status 를 고려하지 않는가 ?
@@ -205,4 +212,37 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
         return orderedUserIdList;
     }
 
-}
+    @Override
+    public String processTransaction(String transactionId, TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
+        GroupOptimizedTransactionEntity transactionEntity = groupOptimizedTransactionRepo.findByTransactionUUID(transactionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP));
+
+        if (!transactionEntity.getGroup().getId().equals(existingGroup.getId())) {
+            throw new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP);
+        }
+
+        Status statusToUpdate = Status.valueOf(request.getApprovalStatus());
+
+        if ("sender".equals(request.getApprovalUser())) {
+            groupOptimizedTransactionRepo.updateIsSenderStatusByUUID(transactionId, statusToUpdate);
+
+        } else {
+            groupOptimizedTransactionRepo.updateIsRecipientStatusByUUID(transactionId, statusToUpdate);
+
+        }
+
+        Optional<GroupOptimizedTransactionEntity> bothSideClearTransaction = groupOptimizedTransactionRepo.findByTransactionUUID(transactionId);
+        if (bothSideClearTransaction.isPresent()) {
+            GroupOptimizedTransactionEntity transaction = bothSideClearTransaction.get();
+            if (transaction.getIsSenderStatus() == Status.CLEAR && transaction.getIsRecipientStatus() == Status.CLEAR) {
+                List<GroupOptimizedTransactionDetailsEntity> secondInheritanceTargetList =
+                        groupOptimizedDetailRepo.findByGroupOptimizedTransactionId(transaction.getId());
+                for (GroupOptimizedTransactionDetailsEntity secondInheritanceTarget : secondInheritanceTargetList) {
+                    transactionInheritanceService.clearInheritanceStatusForOptimizedToRequired(secondInheritanceTarget.getOptimizedTransaction().getId());
+                }
+            }
+        }
+
+        return transactionEntity.getTransactionUUID();
+    }
+    }

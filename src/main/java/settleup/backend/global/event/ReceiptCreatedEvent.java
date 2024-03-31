@@ -1,4 +1,4 @@
-package settleup.backend.domain.receipt.receiptCommons;
+package settleup.backend.global.event;
 
 import org.springframework.context.ApplicationEvent;
 import settleup.backend.domain.transaction.entity.dto.TransactionDto;

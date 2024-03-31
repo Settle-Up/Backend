@@ -1,21 +1,20 @@
 package settleup.backend.domain.transaction.service.Impl;
 
 import lombok.AllArgsConstructor;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.group.entity.GroupUserEntity;
+
 import settleup.backend.domain.group.repository.GroupUserRepository;
-import settleup.backend.domain.transaction.entity.OptimizedTransactionEntity;
-import settleup.backend.domain.transaction.entity.OptimizedTransactionDetailsEntity;
-import settleup.backend.domain.transaction.entity.RequiresTransactionEntity;
-import settleup.backend.domain.transaction.entity.dto.IntermediateCalcDto;
-import settleup.backend.domain.transaction.entity.dto.TransactionDto;
-import settleup.backend.domain.transaction.entity.dto.TransactionP2PResultDto;
+import settleup.backend.domain.transaction.entity.*;
+import settleup.backend.domain.transaction.entity.dto.*;
 import settleup.backend.domain.transaction.repository.OptimizedTransactionDetailsRepository;
 import settleup.backend.domain.transaction.repository.OptimizedTransactionRepository;
 import settleup.backend.domain.transaction.repository.RequireTransactionRepository;
 import settleup.backend.domain.transaction.service.OptimizedService;
+import settleup.backend.domain.transaction.service.TransactionInheritanceService;
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.domain.user.repository.UserRepository;
 import settleup.backend.global.common.Status;
@@ -23,9 +22,12 @@ import settleup.backend.global.common.UUID_Helper;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import java.util.Optional;
 
 import java.util.stream.Collectors;
 
@@ -41,6 +43,8 @@ public class OptimizedServiceImpl implements OptimizedService {
     private RequireTransactionRepository requireTransactionRepo;
     private UserRepository userRepo;
     private UUID_Helper uuidHelper;
+    private final TransactionInheritanceService transactionInheritanceService;
+
 
     /**
      * optimizationOfp2p
@@ -64,12 +68,13 @@ public class OptimizedServiceImpl implements OptimizedService {
         System.out.println("heyNode:" + nodeList);
         return optimizationTargetList(targetDto.getGroup(), nodeList);
     }
+
     private TransactionP2PResultDto optimizationTargetList(GroupEntity group, List<List<Long>> nodeList) {
         TransactionP2PResultDto resultDto = new TransactionP2PResultDto();
         resultDto.setNodeList(nodeList);
         List<Long> savedOptimizedTransactionIds = new ArrayList<>();
         List<RequiresTransactionEntity> targetGroupList = requireTransactionRepo.findByGroupIdAndStatusNotClearAndNotInherited(group.getId());
-        System.out.println("here's List size:"+targetGroupList.size());
+        System.out.println("here's List size:" + targetGroupList.size());
         System.out.println("Total node pairs to process: " + nodeList.size());
 
         for (List<Long> node : nodeList) {
@@ -148,7 +153,8 @@ public class OptimizedServiceImpl implements OptimizedService {
                 }
             }
 
-        }  return resultDto;
+        }
+        return resultDto;
     }
 
 
@@ -178,4 +184,35 @@ public class OptimizedServiceImpl implements OptimizedService {
     }
 
 
+    @Override
+    public String processTransaction(String transactionId, TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
+        OptimizedTransactionEntity transactionEntity = optimizedTransactionRepo.findByTransactionUUID(transactionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP));
+
+        if (!transactionEntity.getGroup().getId().equals(existingGroup.getId())) {
+            throw new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP);
+        }
+
+
+        Status statusToUpdate = Status.valueOf(request.getApprovalStatus());
+
+        if ("sender".equals(request.getApprovalUser())) {
+            optimizedTransactionRepo.updateIsSenderStatusByUUID(transactionId, statusToUpdate);
+        } else {
+            optimizedTransactionRepo.updateIsRecipientStatusByUUID(transactionId, statusToUpdate);
+        }
+
+        Optional<OptimizedTransactionEntity> bothSideClearTransaction = optimizedTransactionRepo.findByTransactionUUID(transactionId);
+        if (bothSideClearTransaction.isPresent()) {
+            OptimizedTransactionEntity transaction = bothSideClearTransaction.get();
+            if (transaction.getIsSenderStatus() == Status.CLEAR && transaction.getIsRecipientStatus() == Status.CLEAR) {
+                transactionInheritanceService.clearInheritanceStatusForOptimizedToRequired(transaction.getId());
+            }
+        }
+
+        return transactionEntity.getTransactionUUID();
+    }
 }
+
+
+

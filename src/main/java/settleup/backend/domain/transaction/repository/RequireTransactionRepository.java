@@ -2,9 +2,11 @@ package settleup.backend.domain.transaction.repository;
 
 import com.sun.jdi.LongValue;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.transaction.entity.RequiresTransactionEntity;
 
 import java.util.List;
@@ -26,6 +28,10 @@ public interface RequireTransactionRepository extends JpaRepository<RequiresTran
     @Query("SELECT r FROM RequiresTransactionEntity r WHERE r.receipt.id = :receiptId")
     List<RequiresTransactionEntity> findByReceiptId(@Param("receiptId") Long receiptId);
 
+    @Modifying
+    @Transactional
+    @Query("UPDATE RequiresTransactionEntity r SET r.isInheritanceStatus = 'INHERITED_CLEAR' WHERE r.id = :id")
+    void updateInheritanceStatusToClearById(@Param("id") Long id);
 }
 
 

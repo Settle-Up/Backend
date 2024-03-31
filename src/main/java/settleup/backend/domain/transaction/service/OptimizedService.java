@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 
-public interface OptimizedService {
+public interface OptimizedService extends TransactionProcessingService{
 
     TransactionP2PResultDto optimizationOfp2p(TransactionDto targetDto) throws CustomException;
 
