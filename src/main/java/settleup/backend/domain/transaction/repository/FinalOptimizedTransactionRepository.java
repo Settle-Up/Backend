@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.transaction.entity.FinalOptimizedTransactionEntity;
+import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionEntity;
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.global.common.Status;
 
@@ -47,5 +48,10 @@ public interface FinalOptimizedTransactionRepository extends JpaRepository<Final
     @Transactional
     @Query("UPDATE FinalOptimizedTransactionEntity f SET f.isRecipientStatus = :status WHERE f.transactionUUID = :uuid")
     void updateIsRecipientStatusByUUID(@Param("uuid") String uuid, @Param("status") Status status);
+
+    @Query("SELECT f FROM FinalOptimizedTransactionEntity f WHERE f.group = :group AND " +
+            "((f.isSenderStatus = 'CLEAR' AND f.isRecipientStatus <> 'CLEAR') OR " +
+            "(f.isSenderStatus <> 'CLEAR' AND f.isRecipientStatus = 'CLEAR'))")
+    List<FinalOptimizedTransactionEntity> findTransactionsWithOneSideClear(@Param("group") GroupEntity group);
 
 }

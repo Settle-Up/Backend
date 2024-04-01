@@ -63,5 +63,9 @@ public interface GroupOptimizedTransactionRepository extends JpaRepository<Group
     @Query("UPDATE GroupOptimizedTransactionEntity g SET g.isInheritanceStatus = 'INHERITED_CLEAR' WHERE g.id = :id")
     void updateInheritanceStatusToClearById(@Param("id") Long id);
 
-
+    @Query("SELECT g FROM GroupOptimizedTransactionEntity  g WHERE g.group = :group AND " +
+            "((g.isSenderStatus = 'CLEAR' AND g.isRecipientStatus <> 'CLEAR') OR " +
+            "(g.isSenderStatus <> 'CLEAR' AND g.isRecipientStatus = 'CLEAR')) AND " +
+            "g.isInheritanceStatus <> 'INHERITED_CLEAR'")
+    List<GroupOptimizedTransactionEntity> findTransactionsWithOneSideClearAndNotInheritedClear(@Param("group") GroupEntity group);
 }
