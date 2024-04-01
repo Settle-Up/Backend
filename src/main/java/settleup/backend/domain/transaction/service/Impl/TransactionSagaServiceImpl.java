@@ -2,24 +2,14 @@ package settleup.backend.domain.transaction.service.Impl;
 
 import io.sentry.Sentry;
 import lombok.AllArgsConstructor;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import settleup.backend.domain.receipt.entity.dto.ReceiptDto;
-import settleup.backend.domain.receipt.repository.ReceiptRepository;
-import settleup.backend.domain.receipt.service.ReceiptService;
 import settleup.backend.domain.transaction.entity.dto.NetDto;
 import settleup.backend.domain.transaction.entity.dto.TransactionDto;
 import settleup.backend.domain.transaction.entity.dto.TransactionP2PResultDto;
 import settleup.backend.domain.transaction.service.*;
-import settleup.backend.global.api.ResponseDto;
-import settleup.backend.global.exception.CustomException;
-import settleup.backend.global.exception.ErrorCode;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 @AllArgsConstructor
 @Service

@@ -11,7 +11,7 @@ import settleup.backend.domain.group.entity.dto.GroupOverviewDto;
 import settleup.backend.domain.group.service.OverviewService;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.service.LoginService;
-import settleup.backend.global.api.ResponseDto;
+import settleup.backend.global.common.ResponseDto;
 
 @RestController
 @AllArgsConstructor

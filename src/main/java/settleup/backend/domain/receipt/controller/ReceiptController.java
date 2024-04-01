@@ -1,24 +1,20 @@
 package settleup.backend.domain.receipt.controller;
 
-import io.sentry.Sentry;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import settleup.backend.domain.receipt.entity.dto.ReceiptDto;
 import settleup.backend.domain.receipt.receiptCommons.ControllerHelper;
 import settleup.backend.domain.receipt.service.ReceiptService;
 import settleup.backend.domain.transaction.entity.dto.TransactionDto;
-import settleup.backend.domain.transaction.service.TransactionSagaService;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.service.LoginService;
-import settleup.backend.global.api.ResponseDto;
+import settleup.backend.global.common.ResponseDto;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 
 @RestController

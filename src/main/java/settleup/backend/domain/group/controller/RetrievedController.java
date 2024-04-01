@@ -10,7 +10,7 @@ import settleup.backend.domain.group.entity.dto.GroupInfoListDto;
 import settleup.backend.domain.group.service.RetrievedService;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.service.LoginService;
-import settleup.backend.global.api.ResponseDto;
+import settleup.backend.global.common.ResponseDto;
 
 
 @RestController

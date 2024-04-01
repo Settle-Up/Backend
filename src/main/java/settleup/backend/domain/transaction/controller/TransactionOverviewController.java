@@ -1,13 +1,10 @@
 package settleup.backend.domain.transaction.controller;
 
 import lombok.AllArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import settleup.backend.domain.transaction.service.OptimizedService;
-import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.service.LoginService;
-import settleup.backend.global.api.ResponseDto;
 
 @RestController
 @AllArgsConstructor

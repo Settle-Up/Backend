@@ -9,7 +9,7 @@ import settleup.backend.domain.group.entity.dto.GroupMonthlyReportDto;
 import settleup.backend.domain.group.service.ClusterService;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.service.LoginService;
-import settleup.backend.global.api.ResponseDto;
+import settleup.backend.global.common.ResponseDto;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 

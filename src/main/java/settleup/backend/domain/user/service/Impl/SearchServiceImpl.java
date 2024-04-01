@@ -21,15 +21,16 @@ public class SearchServiceImpl implements SearchService {
     private final UserRepository userRepository;
 
     @Override
-    public List<UserInfoDto> getUserList(String partOfEmail, Pageable pageable ) {
-        Page<UserEntity> userEntities = userRepository.findByUserEmailContaining(partOfEmail,pageable);
-        return userEntities.stream().map(this::toUserInfo).collect(Collectors.toList());
+    public Page<UserInfoDto> getUserList(String partOfEmail, Pageable pageable) {
+        Page<UserEntity> userEntities = userRepository.findByUserEmailContaining(partOfEmail, pageable);
+        return userEntities.map(this::toUserInfo);
     }
 
+    // UserEntity를 UserInfoDto로 변환하는 메서드
     private UserInfoDto toUserInfo(UserEntity userEntity) {
         UserInfoDto userInfo = new UserInfoDto();
-        userInfo.setUserEmail(userEntity.getUserEmail());
         userInfo.setUserId(userEntity.getUserUUID());
+        userInfo.setUserEmail(userEntity.getUserEmail());
         return userInfo;
     }
 }

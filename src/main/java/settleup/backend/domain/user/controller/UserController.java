@@ -9,7 +9,7 @@ import settleup.backend.domain.user.entity.dto.SettleUpTokenDto;
 import settleup.backend.domain.user.service.KakaoService;
 import settleup.backend.domain.user.service.LoginService;
 import settleup.backend.domain.user.entity.dto.KakaoTokenDto;
-import settleup.backend.global.api.ResponseDto;
+import settleup.backend.global.common.ResponseDto;
 
 import java.util.HashMap;
 import java.util.Map;
