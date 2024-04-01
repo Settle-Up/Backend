@@ -1,6 +1,8 @@
 package settleup.backend.domain.transaction.service.Impl;
 
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,8 +41,8 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
     private final UUID_Helper uuidHelper;
     private final TransactionInheritanceService transactionInheritanceService;
 
-
     private static final Logger logger = LoggerFactory.getLogger(FinalOptimizedServiceImpl.class);
+
 
     @Override
     public void lastMergeTransaction(TransactionP2PResultDto resultDto) {
@@ -179,6 +181,7 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
 
 
     @Override
+    @Transactional
     public String processTransaction(String transactionId, TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
         FinalOptimizedTransactionEntity transactionEntity = mergeTransactionRepo.findByTransactionUUID(transactionId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP));
@@ -195,11 +198,13 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
         } else {
             mergeTransactionRepo.updateIsRecipientStatusByUUID(transactionId, statusToUpdate);
         }
+        LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
 
         Optional<FinalOptimizedTransactionEntity> searchTransaction = mergeTransactionRepo.findByTransactionUUID(transactionId);
         if (searchTransaction.isPresent()) {
             FinalOptimizedTransactionEntity goesToClearTransaction = searchTransaction.get();
             if (goesToClearTransaction.getIsSenderStatus() == Status.CLEAR && goesToClearTransaction.getIsRecipientStatus() == Status.CLEAR) {
+                mergeTransactionRepo.updateClearStatusTimestampById(goesToClearTransaction.getId(),newClearStatusTimestamp);
                 List<FinalOptimizedTransactionDetailEntity> thirdInheritanceTargetList =
                         mergeTransactionDetailsRepo.findByFinalOptimizedTransactionId(goesToClearTransaction.getId());
                 thirdInheritanceTargetList.forEach(thirdInheritanceTarget -> {

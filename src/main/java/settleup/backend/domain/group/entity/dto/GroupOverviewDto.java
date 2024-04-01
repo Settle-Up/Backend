@@ -19,7 +19,7 @@ public class GroupOverviewDto {
     private String settlementBalance;
     private List <OverviewTransactionDto> neededTransactionList;
     private List <OverviewTransactionDto> lastWeekSettledTransactionList;
-    private List <ExpenseDto> expenseList;
+    private ExpenseListDto expenseList;
 
     @Data
     @AllArgsConstructor
@@ -38,6 +38,14 @@ public class GroupOverviewDto {
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
+    public static class ExpenseListDto {
+        private Boolean hasNextPage;
+        private List<ExpenseDto> expenses;
+    }
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
     public static class ExpenseDto {
         private String payerUserId;
         private String payerUserName;
@@ -45,7 +53,6 @@ public class GroupOverviewDto {
         private String receiptName;
         private String totalPrice;
         private String userOwedAmount;
-        private String createAt;
+        private String createdAt;
     }
-
 }

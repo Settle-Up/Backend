@@ -210,15 +210,15 @@ public class OverviewServiceImpl implements OverviewService {
 
 
     private void buildExpenseList(Optional<GroupEntity> existingGroup, Optional<UserEntity> existingUser, GroupOverviewDto overviewDto ,Pageable pageable) {
-        if (overviewDto.getExpenseList() == null) {
-            overviewDto.setExpenseList(new ArrayList<>());
-        }
+        GroupOverviewDto.ExpenseListDto expenseListDto = new GroupOverviewDto.ExpenseListDto();
+        expenseListDto.setExpenses(new ArrayList<>());
+
         Page<ReceiptEntity> pagedReceipts = receiptRepo.findReceiptByGroupId(existingGroup.get().getId(),pageable);
         for (ReceiptEntity expense : pagedReceipts) {
             GroupOverviewDto.ExpenseDto expenseTransaction = new GroupOverviewDto.ExpenseDto();
             expenseTransaction.setReceiptId(expense.getReceiptUUID());
             expenseTransaction.setReceiptName(expense.getReceiptName());
-            expenseTransaction.setCreateAt(String.valueOf(expense.getCreatedAt()));
+            expenseTransaction.setCreatedAt(String.valueOf(expense.getCreatedAt()));
             expenseTransaction.setPayerUserId(expense.getPayerUser().getUserUUID());
             expenseTransaction.setPayerUserName(expense.getPayerUser().getUserName());
             expenseTransaction.setTotalPrice(String.valueOf(expense.getActualPaidPrice()));
@@ -241,9 +241,12 @@ public class OverviewServiceImpl implements OverviewService {
                 }
             }
 
-            overviewDto.getExpenseList().add(expenseTransaction);
+            expenseListDto.getExpenses().add(expenseTransaction);
         }
 
+        expenseListDto.setHasNextPage(pagedReceipts.hasNext());
+
+        overviewDto.setExpenseList(expenseListDto);
     }
 
     @Override

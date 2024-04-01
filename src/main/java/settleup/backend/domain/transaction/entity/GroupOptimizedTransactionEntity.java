@@ -56,17 +56,10 @@ public class GroupOptimizedTransactionEntity implements TransactionalEntity {
     @Column(name = "is_inheritances_status", nullable = false)
     private Status isInheritanceStatus;
 
-    @Column(name = "clear_status_timestamp", nullable = true)
+    @Column(name = "clear_status_timestamp")
+    @Setter
     private LocalDateTime clearStatusTimestamp;
 
-    @PreUpdate
-    private void onStatusUpdate() {
-        if ((this.isInheritanceStatus == Status.INHERITED_CLEAR ||
-                (this.isSenderStatus == Status.CLEAR && this.isRecipientStatus == Status.CLEAR))
-                && this.clearStatusTimestamp == null) {
-            this.clearStatusTimestamp = LocalDateTime.now();
-        }
-    }
 
 
     @Override

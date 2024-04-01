@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionDetailsEntity;
 import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionEntity;
@@ -213,6 +214,7 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
     }
 
     @Override
+    @Transactional
     public String processTransaction(String transactionId, TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
         GroupOptimizedTransactionEntity transactionEntity = groupOptimizedTransactionRepo.findByTransactionUUID(transactionId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP));
@@ -230,11 +232,12 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
             groupOptimizedTransactionRepo.updateIsRecipientStatusByUUID(transactionId, statusToUpdate);
 
         }
-
+        LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
         Optional<GroupOptimizedTransactionEntity> bothSideClearTransaction = groupOptimizedTransactionRepo.findByTransactionUUID(transactionId);
         if (bothSideClearTransaction.isPresent()) {
             GroupOptimizedTransactionEntity transaction = bothSideClearTransaction.get();
             if (transaction.getIsSenderStatus() == Status.CLEAR && transaction.getIsRecipientStatus() == Status.CLEAR) {
+                groupOptimizedTransactionRepo.updateClearStatusTimestampById(transaction.getId(),newClearStatusTimestamp);
                 List<GroupOptimizedTransactionDetailsEntity> secondInheritanceTargetList =
                         groupOptimizedDetailRepo.findByGroupOptimizedTransactionId(transaction.getId());
                 for (GroupOptimizedTransactionDetailsEntity secondInheritanceTarget : secondInheritanceTargetList) {

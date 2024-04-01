@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.transaction.entity.RequiresTransactionEntity;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,6 +33,11 @@ public interface RequireTransactionRepository extends JpaRepository<RequiresTran
     @Transactional
     @Query("UPDATE RequiresTransactionEntity r SET r.isInheritanceStatus = 'INHERITED_CLEAR' WHERE r.id = :id")
     void updateInheritanceStatusToClearById(@Param("id") Long id);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE RequiresTransactionEntity r SET r.clearStatusTimestamp = :clearStatusTimestamp WHERE r.id = :id")
+    void updateClearStatusTimestampById(@Param("id") Long id, @Param("clearStatusTimestamp") LocalDateTime clearStatusTimestamp);
 }
 
 

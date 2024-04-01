@@ -54,4 +54,8 @@ public interface FinalOptimizedTransactionRepository extends JpaRepository<Final
             "(f.isSenderStatus <> 'CLEAR' AND f.isRecipientStatus = 'CLEAR'))")
     List<FinalOptimizedTransactionEntity> findTransactionsWithOneSideClear(@Param("group") GroupEntity group);
 
+    @Modifying
+    @Transactional
+    @Query("UPDATE FinalOptimizedTransactionEntity f SET f.clearStatusTimestamp = :clearStatusTimestamp WHERE f.id = :id")
+    void updateClearStatusTimestampById(@Param("id") Long id, @Param("clearStatusTimestamp") LocalDateTime clearStatusTimestamp);
 }

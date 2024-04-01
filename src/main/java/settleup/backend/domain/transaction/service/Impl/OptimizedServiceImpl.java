@@ -185,6 +185,7 @@ public class OptimizedServiceImpl implements OptimizedService {
 
 
     @Override
+    @Transactional
     public String processTransaction(String transactionId, TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
         OptimizedTransactionEntity transactionEntity = optimizedTransactionRepo.findByTransactionUUID(transactionId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP));
@@ -201,11 +202,12 @@ public class OptimizedServiceImpl implements OptimizedService {
         } else {
             optimizedTransactionRepo.updateIsRecipientStatusByUUID(transactionId, statusToUpdate);
         }
-
+        LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
         Optional<OptimizedTransactionEntity> bothSideClearTransaction = optimizedTransactionRepo.findByTransactionUUID(transactionId);
         if (bothSideClearTransaction.isPresent()) {
             OptimizedTransactionEntity transaction = bothSideClearTransaction.get();
             if (transaction.getIsSenderStatus() == Status.CLEAR && transaction.getIsRecipientStatus() == Status.CLEAR) {
+                optimizedTransactionRepo.updateClearStatusTimestampById(transaction.getId(),newClearStatusTimestamp);
                 transactionInheritanceService.clearInheritanceStatusForOptimizedToRequired(transaction.getId());
             }
         }

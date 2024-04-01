@@ -12,6 +12,7 @@ public class ErrorHttpStatusMapping {
             case GROUP_USER_NOT_FOUND:
             case PAYER_USER_NOT_FOUND:
             case OWED_USER_NOT_FOUND:
+            case TRANSACTION_ID_NOT_FOUND_IN_GROUP:
                 return HttpStatus.NOT_FOUND;
 
             case DATABASE_ERROR:
@@ -25,6 +26,7 @@ public class ErrorHttpStatusMapping {
             case ERROR_CREATION_TOKEN_IN_SERVER_B:
             case OPTIMIZATION_ERROR:
             case TOKEN_CREATION_FAILED:
+            case TRANSACTION_TYPE_NOT_SUPPORTED:
                 return HttpStatus.INTERNAL_SERVER_ERROR;
 
             case SIGNUP_ERROR:

@@ -74,6 +74,11 @@ public interface OptimizedTransactionRepository extends JpaRepository<OptimizedT
             "(o.isSenderStatus <> 'CLEAR' AND o.isRecipientStatus = 'CLEAR')) AND " +
             "o.isInheritanceStatus <> 'INHERITED_CLEAR'")
     List<OptimizedTransactionEntity> findTransactionsWithOneSideClearAndNotInheritedClear(@Param("group") GroupEntity group);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE OptimizedTransactionEntity o SET o.clearStatusTimestamp = :clearStatusTimestamp WHERE o.id = :id")
+    void updateClearStatusTimestampById(@Param("id") Long id, @Param("clearStatusTimestamp") LocalDateTime clearStatusTimestamp);
 }
 
 
