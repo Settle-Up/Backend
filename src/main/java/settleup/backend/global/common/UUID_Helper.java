@@ -59,4 +59,9 @@ public class UUID_Helper {
         String uniquePart = UUID.randomUUID().toString();
         return prefix + uniquePart;
     }
+    public String UUIDForBlackList() {
+        String prefix = "BlackList";
+        String uniquePart = UUID.randomUUID().toString();
+        return prefix + uniquePart;
+    }
 }

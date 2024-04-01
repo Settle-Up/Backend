@@ -44,6 +44,8 @@ dependencies {
     implementation 'io.sentry:sentry-spring-boot-starter:7.0.0'
     implementation 'io.sentry:sentry-logback:7.0.0'
     implementation 'org.jgrapht:jgrapht-core:1.5.0'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'it.ozimov:embedded-redis:0.7.2'
 }
 
 tasks.named('test') {
