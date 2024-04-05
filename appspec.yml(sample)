@@ -1,0 +1,27 @@
+# secrets 보안 관리를 위해 private repository 안에서
+# GitHub Actions와 AWS CodeDeploy, S3, EC2를 통해 CI/CD 파이프라인을 구축했습니다.
+# 아래는 private repository 안의 코드를 재현한 것입니다.
+
+version: 0.0
+os: linux
+
+files:
+  - source: /
+    destination: /home/ubuntu/app/deploy
+file_exists_behavior: OVERWRITE
+
+permissions:
+  - object: /
+    pattern: "**"
+    owner: ubuntu
+    group: ubuntu
+
+hooks:
+  AfterInstall:
+    - location: scripts/stop.sh
+      timeout: 60
+      runas: ubuntu
+  ApplicationStart:
+    - location: scripts/start.sh
+      timeout: 60
+      runas: ubuntu
