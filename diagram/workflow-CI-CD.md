@@ -124,3 +124,8 @@ else
 fi
 ```
 7. 배포 로그 관리: 배포 과정에서의 모든 중요 정보는 로그 파일에 기록되어 배포의 성공 여부 및 발생한 문제 등을 추후 확인할 수 있습니다.
+
+## 실제 workflow
+<img width="527" alt="스크린샷 2024-04-05 오후 9 59 13" src="https://github.com/Settle-Up/settle-up-server/assets/129722492/659f9e2e-f759-4220-add5-feb7f44e2e96">
+
+
