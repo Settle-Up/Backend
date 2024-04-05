@@ -1,5 +1,7 @@
 package settleup.backend.domain.group.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +15,10 @@ public interface GroupUserRepository extends JpaRepository<GroupUserEntity,Long>
     List<GroupUserEntity> findByGroup_Id(Long id);
 
     List<GroupUserEntity> findByUser_Id(Long userId);
+
+    // groupUserRepo Interface
+    @Query("SELECT gue FROM GroupUserEntity gue JOIN FETCH gue.group g LEFT JOIN ReceiptEntity r ON g.id = r.group.id WHERE gue.user.id = :userId GROUP BY gue.id ORDER BY MAX(r.createdAt) DESC")
+    Page<GroupUserEntity> findByUserIdWithLatestReceipt(Long userId, Pageable pageable);
 
     @Query("SELECT gue.user.id FROM GroupUserEntity gue WHERE gue.group.groupUUID = :groupUUID")
     List<Long> findUserIdsByGroup_GroupUUID(@Param("groupUUID") String groupUUID);

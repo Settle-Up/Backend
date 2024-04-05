@@ -13,6 +13,7 @@ import java.util.List;
 public class GroupInfoListDto {
     private String userId;
     private String userName;
+    private Boolean hasNextPage;
     private List<UserGroupListDto> groupList;
 
     @Data

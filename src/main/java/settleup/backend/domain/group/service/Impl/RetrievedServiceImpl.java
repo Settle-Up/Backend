@@ -1,6 +1,8 @@
 package settleup.backend.domain.group.service.Impl;
 
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
@@ -31,14 +33,14 @@ public class RetrievedServiceImpl implements RetrievedService {
     private final ReceiptRepository receiptRepo;
 
     @Override
-    public GroupInfoListDto getGroupInfoByUser(UserInfoDto userInfoDto) throws CustomException {
+    public GroupInfoListDto getGroupInfoByUser(UserInfoDto userInfoDto, Pageable pageable) throws CustomException {
         UserEntity existingUser = userRepo.findByUserUUID(userInfoDto.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        List<GroupUserEntity> userGroupList = groupUserRepo.findByUser_Id(existingUser.getId());
+        Page<GroupUserEntity> userGroupPage = groupUserRepo.findByUserIdWithLatestReceipt(existingUser.getId(), pageable);
         List<GroupInfoListDto.UserGroupListDto> groupList = new ArrayList<>();
 
-        for (GroupUserEntity groupUser : userGroupList) {
+        for (GroupUserEntity groupUser : userGroupPage.getContent()) { // 변경: getContent() 메소드 호출
             GroupEntity group = groupUser.getGroup();
             GroupInfoListDto.UserGroupListDto groupInfoDto = new GroupInfoListDto.UserGroupListDto();
             groupInfoDto.setGroupId(group.getGroupUUID());
@@ -70,6 +72,10 @@ public class RetrievedServiceImpl implements RetrievedService {
             groupList.add(groupInfoDto);
         }
 
-        return new GroupInfoListDto(existingUser.getUserUUID(), existingUser.getUserName(), groupList);
+
+        boolean hasNextPage = userGroupPage.hasNext();
+
+
+        return new GroupInfoListDto(existingUser.getUserUUID(), existingUser.getUserName(), hasNextPage, groupList);
     }
 }
