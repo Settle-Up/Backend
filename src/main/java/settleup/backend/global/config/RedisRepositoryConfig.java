@@ -40,28 +40,28 @@ public class RedisRepositoryConfig {
         this.environment = environment;
     }
 
-//    @Bean
-//    public RedisConnectionFactory redisConnectionFactory() {
-//        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
-//        redisStandaloneConfiguration.setHostName(redisHost);
-//        redisStandaloneConfiguration.setPort(redisPort);
-//        // redis password 설정
-//        Arrays.stream(environment.getActiveProfiles()).forEach(profile -> {
-//            if (profile.equals("dev")) {
-//                redisStandaloneConfiguration.setPassword(redisPassword);
-//            }
-//        });
-//        return new LettuceConnectionFactory(redisStandaloneConfiguration);
-//    }
-
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
         RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
         redisStandaloneConfiguration.setHostName(redisHost);
         redisStandaloneConfiguration.setPort(redisPort);
-        redisStandaloneConfiguration.setPassword(redisPassword);
+        // redis password 설정
+        Arrays.stream(environment.getActiveProfiles()).forEach(profile -> {
+            if (profile.equals("prod")) {
+                redisStandaloneConfiguration.setPassword(redisPassword);
+            }
+        });
         return new LettuceConnectionFactory(redisStandaloneConfiguration);
     }
+
+//    @Bean
+//    public RedisConnectionFactory redisConnectionFactory() {
+//        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
+//        redisStandaloneConfiguration.setHostName(redisHost);
+//        redisStandaloneConfiguration.setPort(redisPort);
+//        redisStandaloneConfiguration.setPassword(redisPassword);
+//        return new LettuceConnectionFactory(redisStandaloneConfiguration);
+//    }
 
     @Bean
     public RedisTemplate<?, ?> redisTemplate() {
