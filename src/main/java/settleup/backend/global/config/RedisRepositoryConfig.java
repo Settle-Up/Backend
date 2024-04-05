@@ -54,14 +54,6 @@ public class RedisRepositoryConfig {
         return new LettuceConnectionFactory(redisStandaloneConfiguration);
     }
 
-//    @Bean
-//    public RedisConnectionFactory redisConnectionFactory() {
-//        RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration();
-//        redisStandaloneConfiguration.setHostName(redisHost);
-//        redisStandaloneConfiguration.setPort(redisPort);
-//        redisStandaloneConfiguration.setPassword(redisPassword);
-//        return new LettuceConnectionFactory(redisStandaloneConfiguration);
-//    }
 
     @Bean
     public RedisTemplate<?, ?> redisTemplate() {
@@ -76,8 +68,8 @@ public class RedisRepositoryConfig {
         RedisCacheConfiguration configuration = RedisCacheConfiguration.defaultCacheConfig()
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()))
-                .prefixCacheNameWith("cache:") // Key Prefix로 "Test:"를 앞에 붙여 저장
-                .entryTtl(Duration.ofMinutes(30)); // 캐시 수명 30분
+                .prefixCacheNameWith("cache:")
+                .entryTtl(Duration.ofMinutes(30));
         builder.cacheDefaults(configuration);
 
         return builder.build();
