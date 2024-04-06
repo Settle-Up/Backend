@@ -91,7 +91,7 @@ public class OptimizedServiceImpl implements OptimizedService {
                 }
             }
 
-            // 거래 리스트가 필터링된 후, 해당 거래들에 대해 정보를 출력
+
             System.out.println("Filtered transactions count for this pair: " + filteredTransactions.size());
             if (!filteredTransactions.isEmpty()) {
                 double totalAmount = 0;
@@ -103,13 +103,13 @@ public class OptimizedServiceImpl implements OptimizedService {
                     }
                 }
 
-                // P2PDto 객체 생성 및 설정
+
                 IntermediateCalcDto intermediateCalcDto = new IntermediateCalcDto();
                 intermediateCalcDto.setGroup(group);
                 intermediateCalcDto.setTransactionAmount(Math.abs(totalAmount));
                 intermediateCalcDto.setDuringOptimizationUsed(filteredTransactions);
 
-                // Sender와 Recipient 설정
+
                 if (totalAmount > 0) {
                     intermediateCalcDto.setSenderUser(userRepo.findById(senderId).get());
                     intermediateCalcDto.setRecipientUser(userRepo.findById(recipientId).get());
@@ -118,7 +118,7 @@ public class OptimizedServiceImpl implements OptimizedService {
                     intermediateCalcDto.setRecipientUser(userRepo.findById(senderId).get());
                 }
 
-                // totalAmount가 0이 아닌 경우, OptimizedTransactionEntity 및 OptimizedTransactionDetailsEntity 저장
+
                 if (totalAmount != 0) {
                     OptimizedTransactionEntity optimizedTransaction = new OptimizedTransactionEntity();
                     optimizedTransaction.setTransactionUUID(uuidHelper.UUIDForOptimizedTransaction());
@@ -207,7 +207,7 @@ public class OptimizedServiceImpl implements OptimizedService {
         if (bothSideClearTransaction.isPresent()) {
             OptimizedTransactionEntity transaction = bothSideClearTransaction.get();
             if (transaction.getIsSenderStatus() == Status.CLEAR && transaction.getIsRecipientStatus() == Status.CLEAR) {
-                optimizedTransactionRepo.updateClearStatusTimestampById(transaction.getId(),newClearStatusTimestamp);
+                optimizedTransactionRepo.updateClearStatusTimestampById(transaction.getId(), newClearStatusTimestamp);
                 transactionInheritanceService.clearInheritanceStatusForOptimizedToRequired(transaction.getId());
             }
         }

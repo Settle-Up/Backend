@@ -41,8 +41,6 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
     private final UUID_Helper uuidHelper;
     private final TransactionInheritanceService transactionInheritanceService;
 
-    private static final Logger logger = LoggerFactory.getLogger(FinalOptimizedServiceImpl.class);
-
 
     @Override
     public void lastMergeTransaction(TransactionP2PResultDto resultDto) {
@@ -204,7 +202,7 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
         if (searchTransaction.isPresent()) {
             FinalOptimizedTransactionEntity goesToClearTransaction = searchTransaction.get();
             if (goesToClearTransaction.getIsSenderStatus() == Status.CLEAR && goesToClearTransaction.getIsRecipientStatus() == Status.CLEAR) {
-                mergeTransactionRepo.updateClearStatusTimestampById(goesToClearTransaction.getId(),newClearStatusTimestamp);
+                mergeTransactionRepo.updateClearStatusTimestampById(goesToClearTransaction.getId(), newClearStatusTimestamp);
                 List<FinalOptimizedTransactionDetailEntity> thirdInheritanceTargetList =
                         mergeTransactionDetailsRepo.findByFinalOptimizedTransactionId(goesToClearTransaction.getId());
                 thirdInheritanceTargetList.forEach(thirdInheritanceTarget -> {

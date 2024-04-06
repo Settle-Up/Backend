@@ -48,7 +48,6 @@ public class ApiCallHelper {
     }
 
 
-
     public HttpHeaders createHeaders() {
         HttpHeaders headers = new HttpHeaders();
         return headers;

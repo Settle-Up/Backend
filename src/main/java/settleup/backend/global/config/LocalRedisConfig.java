@@ -17,7 +17,11 @@ import java.util.Objects;
 
 
 @Slf4j
-@Profile("!prod") //profile이 prod가 아닐때만 활성화
+/**
+ * profile이 prod가 아닐때만 활성화
+ * 배포시 active = prod
+ */
+@Profile("!prod")
 @Configuration
 public class LocalRedisConfig {
     @Value("${spring.redis.port}")
@@ -25,13 +29,20 @@ public class LocalRedisConfig {
 
     private RedisServer redisServer;
 
+    /**
+     * Redis 서버가 이미 실행 중인지 확인하고, 실행 중이라면 사용 가능한 다른 포트를 찾아서 port 변수에 할당하고, 실행 중이 아니라면 redisPort 변수의 값을 사용
+     * 현재 시스템이 ARM 아키텍처인지 확인
+     * 만약 ARM 아키텍처라면,
+     * RedisServer 클래스를 사용하여 Redis 서버를 생성
+     * 그렇지 않으면, RedisServer.builder()를 사용하여 Redis 서버를 생성
+     * 전 단계에서 생성한 Redis 서버 객체를 실행
+     *
+     * @throws IOException
+     */
+
     @PostConstruct
     public void redisServer() throws IOException {
-        int port = isRedisRunning() ? findAvailablePort() : redisPort; //Redis 서버가 이미 실행 중인지 확인하고, 실행 중이라면 사용 가능한 다른 포트를 찾아서 port 변수에 할당하고, 실행 중이 아니라면 redisPort 변수의 값을 사용
-       /*현재 시스템이 ARM 아키텍처인지 확인
-       만약 ARM 아키텍처라면,
-       RedisServer 클래스를 사용하여 Redis 서버를 생성
-       그렇지 않으면, RedisServer.builder()를 사용하여 Redis 서버를 생성*/
+        int port = isRedisRunning() ? findAvailablePort() : redisPort;
         if (isArmArchitecture()) {
             System.out.println("ARM Architecture");
             redisServer = new RedisServer(Objects.requireNonNull(getRedisServerExecutable()), port);
@@ -41,7 +52,6 @@ public class LocalRedisConfig {
                     .setting("maxmemory 128M")
                     .build();
         }
-        //전 단계에서 생성한 Redis 서버 객체를 실행
         redisServer.start();
     }
 
@@ -117,7 +127,6 @@ public class LocalRedisConfig {
 
     private File getRedisServerExecutable() throws IOException {
         try {
-            //return  new ClassPathResource("binary/redis/redis-server-linux-arm64-arc").getFile();
             return new File("src/main/resources/binary/redis/redis-server");
         } catch (Exception e) {
             throw new IOException("Redis Server Executable not found");

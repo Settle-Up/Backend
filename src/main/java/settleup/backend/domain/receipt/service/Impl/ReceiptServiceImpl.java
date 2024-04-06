@@ -127,7 +127,6 @@ public class ReceiptServiceImpl implements ReceiptService {
     }
 
 
-
     private void isValidTotalAmount(ReceiptDto requestDto) throws CustomException {
         double expectedTotalPrice = Double.parseDouble(requestDto.getActualPaidPrice());
         double calculatedSimpleTotalPrice = requestDto.getReceiptItemList().stream()
@@ -162,65 +161,65 @@ public class ReceiptServiceImpl implements ReceiptService {
         }
     }
 
-        @Override
-        public ReceiptDto getReceiptInfo (UserInfoDto userInfoDto,String receiptUUID) throws CustomException {
-            ReceiptEntity existingReceipt = receiptRepo.findByReceiptUUID(receiptUUID)
-                    .orElseThrow(() -> new CustomException(ErrorCode.RECEIPT_NOT_FOUND));
+    @Override
+    public ReceiptDto getReceiptInfo(UserInfoDto userInfoDto, String receiptUUID) throws CustomException {
+        ReceiptEntity existingReceipt = receiptRepo.findByReceiptUUID(receiptUUID)
+                .orElseThrow(() -> new CustomException(ErrorCode.RECEIPT_NOT_FOUND));
 
-            UserEntity existingUser =userRepo.findByUserUUID(userInfoDto.getUserId())
-                    .orElseThrow(()->new CustomException(ErrorCode.USER_NOT_FOUND));
+        UserEntity existingUser = userRepo.findByUserUUID(userInfoDto.getUserId())
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-            GroupEntity existingGroup = groupRepo.findByGroupUUID(receiptRepo.findByReceiptUUID(receiptUUID).get().getGroup().getGroupUUID())
-                    .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
+        GroupEntity existingGroup = groupRepo.findByGroupUUID(receiptRepo.findByReceiptUUID(receiptUUID).get().getGroup().getGroupUUID())
+                .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
 
-             groupUserRepo.findByUserIdAndGroupId(existingUser.getId(),existingGroup.getId())
-                            .orElseThrow(()->new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
+        groupUserRepo.findByUserIdAndGroupId(existingUser.getId(), existingGroup.getId())
+                .orElseThrow(() -> new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
 
-            receiptRepo.findByReceiptUUID(receiptUUID);
-            ReceiptDto receiptDto = new ReceiptDto();
-            receiptDto.setReceiptId(existingReceipt.getReceiptUUID());
-            receiptDto.setReceiptName(existingReceipt.getReceiptName());
-            receiptDto.setAddress(existingReceipt.getAddress());
-            receiptDto.setReceiptDate(existingReceipt.getReceiptDate().toString());
-            receiptDto.setGroupId(existingGroup.getGroupUUID().toString());
-            receiptDto.setGroupName(existingReceipt.getGroup().getGroupName());
-            receiptDto.setPayerUserId(existingReceipt.getPayerUser().getUserUUID().toString());
-            receiptDto.setPayerUserName(existingReceipt.getPayerUser().getUserName());
-            receiptDto.setAllocationType(existingReceipt.getAllocationType());
-            receiptDto.setTotalPrice(String.format("%.0f", existingReceipt.getTotalPrice()));
-            receiptDto.setDiscountApplied(String.format("%.0f", existingReceipt.getDiscountApplied()));
-            receiptDto.setActualPaidPrice(String.format("%.0f", existingReceipt.getActualPaidPrice()));
+        receiptRepo.findByReceiptUUID(receiptUUID);
+        ReceiptDto receiptDto = new ReceiptDto();
+        receiptDto.setReceiptId(existingReceipt.getReceiptUUID());
+        receiptDto.setReceiptName(existingReceipt.getReceiptName());
+        receiptDto.setAddress(existingReceipt.getAddress());
+        receiptDto.setReceiptDate(existingReceipt.getReceiptDate().toString());
+        receiptDto.setGroupId(existingGroup.getGroupUUID().toString());
+        receiptDto.setGroupName(existingReceipt.getGroup().getGroupName());
+        receiptDto.setPayerUserId(existingReceipt.getPayerUser().getUserUUID().toString());
+        receiptDto.setPayerUserName(existingReceipt.getPayerUser().getUserName());
+        receiptDto.setAllocationType(existingReceipt.getAllocationType());
+        receiptDto.setTotalPrice(String.format("%.0f", existingReceipt.getTotalPrice()));
+        receiptDto.setDiscountApplied(String.format("%.0f", existingReceipt.getDiscountApplied()));
+        receiptDto.setActualPaidPrice(String.format("%.0f", existingReceipt.getActualPaidPrice()));
 
-            List<ReceiptItemEntity> receiptItems = receiptRepo.findItemsByReceiptUUID(receiptUUID);
+        List<ReceiptItemEntity> receiptItems = receiptRepo.findItemsByReceiptUUID(receiptUUID);
 
-            List<ReceiptDto.ReceiptItemDto> receiptItemList = receiptItems.stream()
-                    .map(item -> {
-                        ReceiptDto.ReceiptItemDto itemDto = new ReceiptDto.ReceiptItemDto();
-                        itemDto.setReceiptItemName(item.getReceiptItemName());
-                        itemDto.setTotalItemQuantity(String.format("%.0f", item.getItemQuantity()));
-                        itemDto.setUnitPrice(String.format("%.0f", item.getUnitPrice()));
-                        itemDto.setJointPurchaserCount(item.getJointPurchaserCount().toString());
+        List<ReceiptDto.ReceiptItemDto> receiptItemList = receiptItems.stream()
+                .map(item -> {
+                    ReceiptDto.ReceiptItemDto itemDto = new ReceiptDto.ReceiptItemDto();
+                    itemDto.setReceiptItemName(item.getReceiptItemName());
+                    itemDto.setTotalItemQuantity(String.format("%.0f", item.getItemQuantity()));
+                    itemDto.setUnitPrice(String.format("%.0f", item.getUnitPrice()));
+                    itemDto.setJointPurchaserCount(item.getJointPurchaserCount().toString());
 
 
-                        List<ReceiptDto.JointPurchaserDto> jointPurchaserList = receiptItemUserRepo.findByReceiptItemId(item.getId())
-                                .stream()
-                                .map(purchaser -> {
-                                    String formattedQuantity = purchaser.getPurchasedQuantity() != null ?
-                                            String.format("%.0f", purchaser.getPurchasedQuantity()) : null;
+                    List<ReceiptDto.JointPurchaserDto> jointPurchaserList = receiptItemUserRepo.findByReceiptItemId(item.getId())
+                            .stream()
+                            .map(purchaser -> {
+                                String formattedQuantity = purchaser.getPurchasedQuantity() != null ?
+                                        String.format("%.0f", purchaser.getPurchasedQuantity()) : null;
 
-                                    return new ReceiptDto.JointPurchaserDto(
-                                            purchaser.getUser().getUserUUID().toString(),
-                                            purchaser.getUser().getUserName(),
-                                            formattedQuantity);
-                                })
-                                .collect(Collectors.toList());
+                                return new ReceiptDto.JointPurchaserDto(
+                                        purchaser.getUser().getUserUUID().toString(),
+                                        purchaser.getUser().getUserName(),
+                                        formattedQuantity);
+                            })
+                            .collect(Collectors.toList());
 
-                        itemDto.setJointPurchaserList(jointPurchaserList);
-                        return itemDto;
-                    }).collect(Collectors.toList());
+                    itemDto.setJointPurchaserList(jointPurchaserList);
+                    return itemDto;
+                }).collect(Collectors.toList());
 
-            receiptDto.setReceiptItemList(receiptItemList);
+        receiptDto.setReceiptItemList(receiptItemList);
 
-            return receiptDto;
-        }
+        return receiptDto;
     }
+}

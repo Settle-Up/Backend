@@ -19,7 +19,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class JwtProvider {
 
- private final CryptographyConfig cryptographyConfig;
+    private final CryptographyConfig cryptographyConfig;
 
     public String createToken(UserInfoDto userInfoDto) {
         Date now = new Date();
@@ -36,10 +36,10 @@ public class JwtProvider {
                 .compact();
     }
 
-    private Map<String, Object> createClaims(UserInfoDto userInfoDto)throws CustomException {
+    private Map<String, Object> createClaims(UserInfoDto userInfoDto) throws CustomException {
         Map<String, Object> claims = new HashMap<>();
-        String encryptedUserIdAsUUID = ServerCryptUtil.encrypt(userInfoDto.getUserId().toString(),cryptographyConfig.getEncryptionSecretKey());
-        String encryptedUserName = ServerCryptUtil.encrypt(userInfoDto.getUserName().toString(),cryptographyConfig.getEncryptionSecretKey());
+        String encryptedUserIdAsUUID = ServerCryptUtil.encrypt(userInfoDto.getUserId().toString(), cryptographyConfig.getEncryptionSecretKey());
+        String encryptedUserName = ServerCryptUtil.encrypt(userInfoDto.getUserName().toString(), cryptographyConfig.getEncryptionSecretKey());
         claims.put("server-specified-key-01", encryptedUserIdAsUUID);
         claims.put("server-specified-key-02", encryptedUserName);
         return claims;

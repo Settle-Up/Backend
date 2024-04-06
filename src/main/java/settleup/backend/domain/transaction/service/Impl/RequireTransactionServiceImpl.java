@@ -82,7 +82,7 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
 
     private void saveTransaction(ReceiptItemUserEntity itemUser, TransactionDto requestDto, double saveAmount) {
         RequiresTransactionEntity transaction = createTransactionEntity(itemUser, requestDto, saveAmount);
-      transactionRepository.save(transaction);
+        transactionRepository.save(transaction);
 
     }
 

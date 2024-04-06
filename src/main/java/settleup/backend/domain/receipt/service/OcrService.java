@@ -8,10 +8,10 @@ import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 
-    public interface OcrService {
-        String processFormData(FormDataDto dataDto) throws IOException;
+public interface OcrService {
+    String processFormData(FormDataDto dataDto) throws IOException;
 
-        CompletableFuture<String> postToAzureApi(String base64) throws CustomException;
+    CompletableFuture<String> postToAzureApi(String base64) throws CustomException;
 
-        CompletableFuture<JsonNode>getToAzureApi(String operationLocation) throws CustomException;
-    }
+    CompletableFuture<JsonNode> getToAzureApi(String operationLocation) throws CustomException;
+}

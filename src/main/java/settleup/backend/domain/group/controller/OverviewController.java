@@ -21,29 +21,6 @@ public class OverviewController {
     private final OverviewService overviewService;
 
 
-//    }
-//    @GetMapping("/detail")
-//    public ResponseEntity<GroupOverviewDto> getGroupOverview(
-//            @RequestParam("groupId") String groupId,
-//            @RequestParam("userId") String userId,
-//            @RequestParam(value = "page", defaultValue = "1") int page,
-//            @RequestParam(value = "size", defaultValue = "10") int size) {
-//
-//        Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").ascending());
-//        UserInfoDto userInfoDto = new UserInfoDto();
-//        userInfoDto.setUserId(userId);
-//        GroupOverviewDto overviewDto;
-//
-//        if (page == 1) {
-//            overviewDto = overviewService.retrievedOverview(groupId, userInfoDto, pageable);
-//        } else {
-//            overviewDto = new GroupOverviewDto();
-//            overviewService.updateRetrievedExpenseList(overviewDto, groupId, userInfoDto, pageable);
-//        }
-//
-//        return ResponseEntity.ok(overviewDto);
-//    }
-
     @GetMapping("/overview")
     public ResponseEntity<ResponseDto> getGroupOverview(
             @RequestHeader(value = "Authorization") String token,
@@ -51,7 +28,7 @@ public class OverviewController {
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
 
-        UserInfoDto userInfoDto=loginService.validTokenOrNot(token);
+        UserInfoDto userInfoDto = loginService.validTokenOrNot(token);
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("createdAt").ascending());
         GroupOverviewDto overviewDto;
 
@@ -61,7 +38,7 @@ public class OverviewController {
             overviewDto = new GroupOverviewDto();
             overviewService.updateRetrievedExpenseList(overviewDto, groupId, userInfoDto, pageable);
         }
-        ResponseDto response = new ResponseDto<>(true,"GroupDetail retrieved successfully",overviewDto);
+        ResponseDto response = new ResponseDto<>(true, "GroupDetail retrieved successfully", overviewDto);
         return ResponseEntity.ok(response);
     }
 

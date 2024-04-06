@@ -8,5 +8,5 @@ import settleup.backend.global.exception.CustomException;
 import java.util.List;
 
 public interface RetrievedService {
- GroupInfoListDto getGroupInfoByUser(UserInfoDto userInfo , Pageable pageable)throws CustomException;
+    GroupInfoListDto getGroupInfoByUser(UserInfoDto userInfo, Pageable pageable) throws CustomException;
 }

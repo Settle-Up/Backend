@@ -22,17 +22,18 @@ public class TransactionUpdateController {
     public ResponseEntity<ResponseDto> updateTransaction(
             @RequestHeader(value = "Authorization") String token,
             @RequestParam("groupId") String groupId,
-            @RequestBody TransactionUpdateRequestDto requestDto) throws CustomException{
-        UserInfoDto userInfoDto =loginService.validTokenOrNot(token);
+            @RequestBody TransactionUpdateRequestDto requestDto) throws CustomException {
+        UserInfoDto userInfoDto = loginService.validTokenOrNot(token);
         TransactionUpdateDto data = transactionUpdateService.transactionUpdate(userInfoDto, groupId, requestDto);
         ResponseDto responseDto = new ResponseDto<>(true, "update retrieved successfully", data);
         return ResponseEntity.ok(responseDto);
     }
+
     @GetMapping("/history")
-    public ResponseEntity<ResponseDto> retrievedUpdateData(@RequestHeader(value = "Authorization")String token) throws  CustomException{
-        UserInfoDto userInfoDto =loginService.validTokenOrNot(token);
-        TransactionUpdateDto data=transactionUpdateService.retrievedUpdateListInGroup(userInfoDto);
-        ResponseDto responseDto = new ResponseDto<>(true,"update list retrieved successfully",data);
+    public ResponseEntity<ResponseDto> retrievedUpdateData(@RequestHeader(value = "Authorization") String token) throws CustomException {
+        UserInfoDto userInfoDto = loginService.validTokenOrNot(token);
+        TransactionUpdateDto data = transactionUpdateService.retrievedUpdateListInGroup(userInfoDto);
+        ResponseDto responseDto = new ResponseDto<>(true, "update list retrieved successfully", data);
         return ResponseEntity.ok(responseDto);
     }
 

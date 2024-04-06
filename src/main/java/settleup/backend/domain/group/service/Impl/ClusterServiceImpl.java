@@ -39,7 +39,6 @@ public class ClusterServiceImpl implements ClusterService {
     private UrlProvider urlProvider;
     private RequireTransactionRepository requireTransactionRepo;
 
-    private static final Logger logger = LoggerFactory.getLogger(ClusterServiceImpl.class);
 
     /**
      * createGroup 그룹생성

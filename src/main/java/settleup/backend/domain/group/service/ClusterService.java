@@ -10,8 +10,11 @@ import java.util.List;
 import java.util.Map;
 
 public interface ClusterService {
-    CreateGroupResponseDto createGroup(CreateGroupRequestDto requestDto)throws CustomException;
-    List<UserInfoDto> getGroupUserInfo(String groupUUID) throws  CustomException;
-    GroupMonthlyReportDto givenMonthlyReport(UserInfoDto userInfoDto , String groupId , GroupMonthlyReportDto groupMonthlyReportDto)throws CustomException;
-    Map<String,String> deleteGroupUserInfo (UserInfoDto userInfoDto ,String groupId) throws  CustomException;
+    CreateGroupResponseDto createGroup(CreateGroupRequestDto requestDto) throws CustomException;
+
+    List<UserInfoDto> getGroupUserInfo(String groupUUID) throws CustomException;
+
+    GroupMonthlyReportDto givenMonthlyReport(UserInfoDto userInfoDto, String groupId, GroupMonthlyReportDto groupMonthlyReportDto) throws CustomException;
+
+    Map<String, String> deleteGroupUserInfo(UserInfoDto userInfoDto, String groupId) throws CustomException;
 }

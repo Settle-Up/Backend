@@ -11,17 +11,13 @@ import settleup.backend.domain.user.entity.UserEntity;
 import java.util.List;
 import java.util.Optional;
 
-public interface GroupUserRepository extends JpaRepository<GroupUserEntity,Long> {
+public interface GroupUserRepository extends JpaRepository<GroupUserEntity, Long> {
     List<GroupUserEntity> findByGroup_Id(Long id);
 
     List<GroupUserEntity> findByUser_Id(Long userId);
 
-    // groupUserRepo Interface
     @Query("SELECT gue FROM GroupUserEntity gue JOIN FETCH gue.group g LEFT JOIN ReceiptEntity r ON g.id = r.group.id WHERE gue.user.id = :userId GROUP BY gue.id ORDER BY MAX(r.createdAt) DESC")
     Page<GroupUserEntity> findByUserIdWithLatestReceipt(Long userId, Pageable pageable);
-
-    @Query("SELECT gue.user.id FROM GroupUserEntity gue WHERE gue.group.groupUUID = :groupUUID")
-    List<Long> findUserIdsByGroup_GroupUUID(@Param("groupUUID") String groupUUID);
 
     boolean existsByUser_Id(Long userId);
 

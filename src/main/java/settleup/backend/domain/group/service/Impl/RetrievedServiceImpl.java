@@ -40,7 +40,7 @@ public class RetrievedServiceImpl implements RetrievedService {
         Page<GroupUserEntity> userGroupPage = groupUserRepo.findByUserIdWithLatestReceipt(existingUser.getId(), pageable);
         List<GroupInfoListDto.UserGroupListDto> groupList = new ArrayList<>();
 
-        for (GroupUserEntity groupUser : userGroupPage.getContent()) { // 변경: getContent() 메소드 호출
+        for (GroupUserEntity groupUser : userGroupPage.getContent()) {
             GroupEntity group = groupUser.getGroup();
             GroupInfoListDto.UserGroupListDto groupInfoDto = new GroupInfoListDto.UserGroupListDto();
             groupInfoDto.setGroupId(group.getGroupUUID());

@@ -26,7 +26,6 @@ public class SearchServiceImpl implements SearchService {
         return userEntities.map(this::toUserInfo);
     }
 
-    // UserEntity를 UserInfoDto로 변환하는 메서드
     private UserInfoDto toUserInfo(UserEntity userEntity) {
         UserInfoDto userInfo = new UserInfoDto();
         userInfo.setUserId(userEntity.getUserUUID());

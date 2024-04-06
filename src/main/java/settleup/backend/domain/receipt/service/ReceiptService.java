@@ -8,7 +8,7 @@ import settleup.backend.global.exception.CustomException;
 import java.util.concurrent.CompletableFuture;
 
 public interface ReceiptService {
-    TransactionDto createReceipt(ReceiptDto requestDto) ;
+    TransactionDto createReceipt(ReceiptDto requestDto);
 
-    ReceiptDto getReceiptInfo (UserInfoDto userInfoDto, String ReceiptUUID) throws CustomException;
+    ReceiptDto getReceiptInfo(UserInfoDto userInfoDto, String ReceiptUUID) throws CustomException;
 }

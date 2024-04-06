@@ -46,6 +46,7 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
     private final FinalOptimizedTransactionRepository mergeOptimizedTransactionRepo;
 
     private static final Logger log = LoggerFactory.getLogger(TransactionUpdateServiceImpl.class);
+
     @Override
     public TransactionUpdateDto transactionUpdate(UserInfoDto userInfoDto, String groupId, TransactionUpdateRequestDto request) throws CustomException {
         UserEntity existingUser = userRepo.findByUserUUID(userInfoDto.getUserId())
@@ -143,7 +144,8 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
         return transactionUpdateDto;
 
     }
-    private TransactionUpdateDto.TransactionListDto createTransactionListDto(TransactionalEntity transaction, UserEntity user,GroupEntity group) {
+
+    private TransactionUpdateDto.TransactionListDto createTransactionListDto(TransactionalEntity transaction, UserEntity user, GroupEntity group) {
 
         UserEntity counterParty = transaction.getSenderUser().equals(user) ? transaction.getRecipientUser() : transaction.getSenderUser();
         Status transactionDirection = transaction.getSenderUser().equals(user) ? Status.OWE : Status.OWED;

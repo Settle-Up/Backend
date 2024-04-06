@@ -3,11 +3,11 @@ package settleup.backend.domain.transaction.service;
 import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionEntity;
 import settleup.backend.domain.transaction.entity.OptimizedTransactionEntity;
 
-import java.util.List;
 import java.util.Optional;
 
 public interface TransactionInheritanceService {
     void clearInheritanceStatusForOptimizedToRequired(Long optimizedTransactionId);
+
     void clearInheritanceStatusForGroupToOptimized(Long optimizedTransactionId);
 
     void clearInheritanceStatusForFinalToGroup(Optional<GroupOptimizedTransactionEntity> groupOptimizedTransaction);

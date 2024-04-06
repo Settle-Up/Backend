@@ -65,8 +65,8 @@ public class ClusterController {
     public ResponseEntity<ResponseDto> withdrawalGroup(
             @RequestHeader(value = "Authorization") String token, @RequestParam("groupId") String groupUUID) {
         UserInfoDto userInfoDto = loginService.validTokenOrNot(token);
-        Map<String,String> data = clusterService.deleteGroupUserInfo(userInfoDto,groupUUID);
-        ResponseDto responseDto = new ResponseDto<>(true,"user Group Exit Completed",data);
+        Map<String, String> data = clusterService.deleteGroupUserInfo(userInfoDto, groupUUID);
+        ResponseDto responseDto = new ResponseDto<>(true, "user Group Exit Completed", data);
         return ResponseEntity.ok(responseDto);
     }
 }

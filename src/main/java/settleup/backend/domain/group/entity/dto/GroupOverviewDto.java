@@ -17,8 +17,8 @@ public class GroupOverviewDto {
     private String groupName;
     private Boolean isMonthlyReportUpdateOn;
     private String settlementBalance;
-    private List <OverviewTransactionDto> neededTransactionList;
-    private List <OverviewTransactionDto> lastWeekSettledTransactionList;
+    private List<OverviewTransactionDto> neededTransactionList;
+    private List<OverviewTransactionDto> lastWeekSettledTransactionList;
     private ExpenseListDto expenseList;
 
     @Data

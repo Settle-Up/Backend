@@ -18,6 +18,7 @@ import settleup.backend.domain.user.service.KakaoService;
 import settleup.backend.global.Util.JwtProvider;
 import settleup.backend.domain.user.entity.dto.KakaoTokenDto;
 import settleup.backend.global.config.KakaoConfig;
+
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
@@ -37,10 +38,10 @@ public class KaKaoServiceImpl implements KakaoService {
 
     /**
      * getKakaoAccessToken 인증번호로 카카오에 토큰요청
+     *
      * @param code (validCode)
+     * @throws CustomException EXTERNAL_API_ERROR_SOCIAL_TOKEN(113, "Failed to get social external api access token")
      * @process request to Kakao Post /response receive as KakaoTokenDto
-     * @throws CustomException
-     * EXTERNAL_API_ERROR_SOCIAL_TOKEN(113, "Failed to get social external api access token")
      */
 
     @Override
@@ -66,16 +67,15 @@ public class KaKaoServiceImpl implements KakaoService {
 
 
     /**
-     *  getUserInfo 카카오 토큰으로 카카오에서 유저 정보가져오기
+     * getUserInfo 카카오 토큰으로 카카오에서 유저 정보가져오기
+     *
      * @param accessToken from Kakao
+     * @return userInfoDto
+     * @throws CustomException 1.EXTERNAL_API_EMPTY_RESPONSE (115, user info response is empty)
+     *                         2.EXTERNAL_API_ERROR (114, Failed to retrieve user info from Kakao)
      * @process kakaoAccount = response (included flied kakao_account: {name, phone_number,email})
      * @privateMethod findUserInfoByKakao
      * @process kakaoAccount -> Transition (to) userInfoDto
-     * @return userInfoDto
-     * @throws CustomException
-     * 1.EXTERNAL_API_EMPTY_RESPONSE (115, user info response is empty)
-     * 2.EXTERNAL_API_ERROR (114, Failed to retrieve user info from Kakao)
-
      */
     @Override
     public UserInfoDto getUserInfo(String accessToken) throws CustomException {
@@ -85,7 +85,7 @@ public class KaKaoServiceImpl implements KakaoService {
 
             HttpEntity<?> requestEntity = new HttpEntity<>(headers);
             Map<String, Object> jsonResponse = apiCallHelper.callExternalApi(kakaoConfig.getUserInfoUri(), HttpMethod.GET, requestEntity, Map.class);
-            System.out.println("hereisKaKaoResponse:"+jsonResponse);
+            System.out.println("hereisKaKaoResponse:" + jsonResponse);
 
             if (jsonResponse == null || jsonResponse.isEmpty()) {
                 throw new CustomException(ErrorCode.EXTERNAL_API_EMPTY_RESPONSE);
@@ -108,16 +108,15 @@ public class KaKaoServiceImpl implements KakaoService {
 
     /**
      * registerUser 우리사이트 토큰 발행
+     *
      * @param userInfoDto {userName ,userName,userPhone }
-     * @process
-     *  <does user isPresent userEntity?>
+     * @throws CustomException 1.REGISTRATION_FAILED (116,"Errors occurred during uuid generation or save db")
+     *                         2.TOKEN_CREATION_FAILED (117,"Failed to create login token" )
+     * @process <does user isPresent userEntity?>
      * -> true  then.set userInfoDto from userEntity
      * -> false then.1.create uuid from email 2. set userEntity form userInfoDto
-     * @privateMethod  createSettleUpLoginTokenInfo(userInfo)
+     * @privateMethod createSettleUpLoginTokenInfo(userInfo)
      * @process set settleUpToKenDto using tokenProvider , userInfo
-     * @throws CustomException
-     * 1.REGISTRATION_FAILED (116,"Errors occurred during uuid generation or save db")
-     * 2.TOKEN_CREATION_FAILED (117,"Failed to create login token" )
      */
 
     @Override

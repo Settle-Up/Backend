@@ -32,7 +32,7 @@ public class TransactionInheritanceServiceImpl implements TransactionInheritance
         for (OptimizedTransactionDetailsEntity inheritedTarget : inheritedTargetList) {
             requireTransactionRepo.updateInheritanceStatusToClearById(inheritedTarget.getRequiresTransaction().getId());
             LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
-            requireTransactionRepo.updateClearStatusTimestampById(inheritedTarget.getRequiresTransaction().getId(),newClearStatusTimestamp);
+            requireTransactionRepo.updateClearStatusTimestampById(inheritedTarget.getRequiresTransaction().getId(), newClearStatusTimestamp);
         }
     }
 
@@ -40,7 +40,7 @@ public class TransactionInheritanceServiceImpl implements TransactionInheritance
     public void clearInheritanceStatusForGroupToOptimized(Long optimizedTransactionId) {
         optimizedTransactionRepo.updateInheritanceStatusToClearById(optimizedTransactionId);
         LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
-        optimizedTransactionRepo.updateClearStatusTimestampById(optimizedTransactionId,newClearStatusTimestamp);
+        optimizedTransactionRepo.updateClearStatusTimestampById(optimizedTransactionId, newClearStatusTimestamp);
         clearInheritanceStatusForOptimizedToRequired(optimizedTransactionId);
     }
 
@@ -49,9 +49,8 @@ public class TransactionInheritanceServiceImpl implements TransactionInheritance
     public void clearInheritanceStatusForFinalToGroup(Optional<GroupOptimizedTransactionEntity> groupOptimizedTransaction) {
         groupOptimizedTransactionRepo.updateInheritanceStatusToClearById(groupOptimizedTransaction.get().getId());
         LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
-        groupOptimizedTransactionRepo.updateClearStatusTimestampById(groupOptimizedTransaction.get().getId(),newClearStatusTimestamp);
+        groupOptimizedTransactionRepo.updateClearStatusTimestampById(groupOptimizedTransaction.get().getId(), newClearStatusTimestamp);
 
-        // group 은 바꿈 -> 다음 그 group에 연결된 optimized_id 들을 보내야함
         List<GroupOptimizedTransactionDetailsEntity> goesToGroupToOptimizedList =
                 groupOptimizedTransactionDetailRepo.findByGroupOptimizedTransactionId(groupOptimizedTransaction.get().getId());
         for (GroupOptimizedTransactionDetailsEntity goesToGroupToOptimized : goesToGroupToOptimizedList) {
@@ -65,7 +64,7 @@ public class TransactionInheritanceServiceImpl implements TransactionInheritance
     public void clearInheritanceStatusForFinalToOptimized(Optional<OptimizedTransactionEntity> optimizedTransaction) {
         optimizedTransactionRepo.updateInheritanceStatusToClearById(optimizedTransaction.get().getId());
         LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
-        optimizedTransactionRepo.updateClearStatusTimestampById(optimizedTransaction.get().getId(),newClearStatusTimestamp);
+        optimizedTransactionRepo.updateClearStatusTimestampById(optimizedTransaction.get().getId(), newClearStatusTimestamp);
         clearInheritanceStatusForOptimizedToRequired(optimizedTransaction.get().getId());
     }
 

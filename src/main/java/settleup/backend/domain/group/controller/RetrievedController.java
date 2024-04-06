@@ -28,7 +28,7 @@ public class RetrievedController {
 
         Pageable pageable = PageRequest.of(page - 1, size);
         UserInfoDto userInfo = loginService.validTokenOrNot(token);
-        GroupInfoListDto groupInfoListDtoList = retrievedService.getGroupInfoByUser(userInfo ,pageable);
+        GroupInfoListDto groupInfoListDtoList = retrievedService.getGroupInfoByUser(userInfo, pageable);
         ResponseDto responseDto = new ResponseDto<>(true, "groupList retrieved successfully ", groupInfoListDtoList);
         return ResponseEntity.ok(responseDto);
     }

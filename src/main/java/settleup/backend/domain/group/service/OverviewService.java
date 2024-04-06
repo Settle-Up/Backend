@@ -10,6 +10,7 @@ import java.util.Map;
 
 public interface OverviewService {
     GroupOverviewDto retrievedOverview(String groupUUID, UserInfoDto userInfoDto, Pageable pageable) throws CustomException;
-    GroupOverviewDto updateRetrievedExpenseList(GroupOverviewDto overviewDto,String groupUUID, UserInfoDto userInfoDto, Pageable pageable) throws CustomException;
+
+    GroupOverviewDto updateRetrievedExpenseList(GroupOverviewDto overviewDto, String groupUUID, UserInfoDto userInfoDto, Pageable pageable) throws CustomException;
 
 }

@@ -59,8 +59,8 @@ public class OverviewServiceImpl implements OverviewService {
         Optional<GroupEntity> existingGroup = Optional.ofNullable(groupRepo.findByGroupUUID(groupUUID)
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND)));
 
-        Optional<GroupUserEntity> existingUserInGroup =Optional.ofNullable(groupUserRepo.findByUserIdAndGroupId(existingUser.get().getId(),existingGroup.get().getId()))
-                        .orElseThrow(()->new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
+        Optional<GroupUserEntity> existingUserInGroup = Optional.ofNullable(groupUserRepo.findByUserIdAndGroupId(existingUser.get().getId(), existingGroup.get().getId()))
+                .orElseThrow(() -> new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
 
         overviewDto.setGroupId(existingGroup.get().getGroupUUID());
         overviewDto.setGroupName(existingGroup.get().getGroupName());
@@ -80,7 +80,6 @@ public class OverviewServiceImpl implements OverviewService {
                 .filter(netDto -> netDto.getUser().equals(existingUser.get()))
                 .findFirst()
                 .ifPresent(netDto -> overviewDto.setSettlementBalance(String.valueOf(netDto.getNetAmount())));
-
 
 
         List<GroupOverviewDto.OverviewTransactionDto> combinedTransactionList = new ArrayList<>();
@@ -151,13 +150,10 @@ public class OverviewServiceImpl implements OverviewService {
 
 
         overviewDto.setNeededTransactionList(combinedTransactionList);
-        buildExpenseList(existingGroup, existingUser, overviewDto,pageable);
+        buildExpenseList(existingGroup, existingUser, overviewDto, pageable);
         buildLastWeekSettledTransactionList(existingGroup, existingUser, overviewDto);
         return overviewDto;
     }
-
-
-
 
 
     private void buildLastWeekSettledTransactionList(Optional<GroupEntity> existingGroup, Optional<UserEntity> existingUser, GroupOverviewDto overviewDto) {
@@ -209,11 +205,11 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
 
-    private void buildExpenseList(Optional<GroupEntity> existingGroup, Optional<UserEntity> existingUser, GroupOverviewDto overviewDto ,Pageable pageable) {
+    private void buildExpenseList(Optional<GroupEntity> existingGroup, Optional<UserEntity> existingUser, GroupOverviewDto overviewDto, Pageable pageable) {
         GroupOverviewDto.ExpenseListDto expenseListDto = new GroupOverviewDto.ExpenseListDto();
         expenseListDto.setExpenses(new ArrayList<>());
 
-        Page<ReceiptEntity> pagedReceipts = receiptRepo.findReceiptByGroupId(existingGroup.get().getId(),pageable);
+        Page<ReceiptEntity> pagedReceipts = receiptRepo.findReceiptByGroupId(existingGroup.get().getId(), pageable);
         for (ReceiptEntity expense : pagedReceipts) {
             GroupOverviewDto.ExpenseDto expenseTransaction = new GroupOverviewDto.ExpenseDto();
             expenseTransaction.setReceiptId(expense.getReceiptUUID());
@@ -255,13 +251,12 @@ public class OverviewServiceImpl implements OverviewService {
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
         Optional<UserEntity> existingUser = Optional.ofNullable(userRepo.findByUserUUID(userInfoDto.getUserId()))
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        Optional.ofNullable(groupUserRepo.findByUserIdAndGroupId(existingUser.get().getId(),existingGroup.get().getId()))
-                .orElseThrow(()->new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
+        Optional.ofNullable(groupUserRepo.findByUserIdAndGroupId(existingUser.get().getId(), existingGroup.get().getId()))
+                .orElseThrow(() -> new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
 
         buildExpenseList(existingGroup, existingUser, overviewDto, pageable);
         return overviewDto;
     }
-
 
 
     private OptimizedDetailUUIDsDto mergeOptimizedAndProcessAndExtractUUIDs(GroupEntity group, UserEntity

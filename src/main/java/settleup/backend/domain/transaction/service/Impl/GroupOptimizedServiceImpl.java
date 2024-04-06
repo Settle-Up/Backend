@@ -149,7 +149,7 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
         return newTransaction;
     }
 
-    // 거래 세부 정보를 저장
+
     private void saveTransactionDetails(GroupOptimizedTransactionEntity optimizedTransaction, Long transactionId) {
         GroupOptimizedTransactionDetailsEntity details = new GroupOptimizedTransactionDetailsEntity();
         details.setGroupOptimizedTransaction(optimizedTransaction);
@@ -190,21 +190,20 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
 
 
     private List<Long> createGraphOrder(List<NetDto> net) {
-        // 정렬 조건 정의
         Collections.sort(net, (o1, o2) -> {
-            // 음수 금액을 고려한 비교
+
             if (o1.getNetAmount() < 0 && o2.getNetAmount() < 0) {
-                // 음수일 때는 큰 금액(절대값이 작은)이 앞으로 오도록, 즉 o2에서 o1을 뺀 결과를 반환
+
                 return Float.compare(o2.getNetAmount(), o1.getNetAmount());
             } else if (Float.compare(o1.getNetAmount(), o2.getNetAmount()) == 0) {
-                // 금액이 같을 때는 userId로 정렬
+
                 return Long.compare(o1.getUser().getId(), o2.getUser().getId());
             }
-            // 금액이 양수일 때는 작은 금액이 앞으로 오도록, 즉 o1에서 o2를 뺀 결과를 반환
+
             return Float.compare(o1.getNetAmount(), o2.getNetAmount());
         });
 
-        // Extracting userIds from the sorted list
+
         List<Long> orderedUserIdList = new ArrayList<>();
         for (NetDto dto : net) {
             orderedUserIdList.add(dto.getUser().getId());
@@ -237,7 +236,7 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
         if (bothSideClearTransaction.isPresent()) {
             GroupOptimizedTransactionEntity transaction = bothSideClearTransaction.get();
             if (transaction.getIsSenderStatus() == Status.CLEAR && transaction.getIsRecipientStatus() == Status.CLEAR) {
-                groupOptimizedTransactionRepo.updateClearStatusTimestampById(transaction.getId(),newClearStatusTimestamp);
+                groupOptimizedTransactionRepo.updateClearStatusTimestampById(transaction.getId(), newClearStatusTimestamp);
                 List<GroupOptimizedTransactionDetailsEntity> secondInheritanceTargetList =
                         groupOptimizedDetailRepo.findByGroupOptimizedTransactionId(transaction.getId());
                 for (GroupOptimizedTransactionDetailsEntity secondInheritanceTarget : secondInheritanceTargetList) {
@@ -248,4 +247,4 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
 
         return transactionEntity.getTransactionUUID();
     }
-    }
+}

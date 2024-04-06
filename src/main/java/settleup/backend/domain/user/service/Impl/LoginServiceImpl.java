@@ -29,10 +29,11 @@ public class LoginServiceImpl implements LoginService {
 
     /**
      * validTokenOrNot
+     *
      * @param token
-     * @process
      * @return
      * @throws CustomException
+     * @process
      */
 
     @Override
@@ -44,8 +45,8 @@ public class LoginServiceImpl implements LoginService {
             throw new CustomException(ErrorCode.TOKEN_WRONG_SUBJECT);
         }
 
-        String decryptedUserUUID = ServerCryptUtil.decrypt(claims.get("server-specified-key-01").toString(),cryptographyConfig.getEncryptionSecretKey());
-        String decryptedUserName = ServerCryptUtil.decrypt(claims.get("server-specified-key-02").toString(),cryptographyConfig.getEncryptionSecretKey());
+        String decryptedUserUUID = ServerCryptUtil.decrypt(claims.get("server-specified-key-01").toString(), cryptographyConfig.getEncryptionSecretKey());
+        String decryptedUserName = ServerCryptUtil.decrypt(claims.get("server-specified-key-02").toString(), cryptographyConfig.getEncryptionSecretKey());
         Optional<UserEntity> existingUser = userRepo.findByUserUUID(decryptedUserUUID);
 
         if (!existingUser.isPresent()) {

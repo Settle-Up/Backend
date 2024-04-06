@@ -7,9 +7,10 @@ import settleup.backend.domain.user.entity.dto.KakaoTokenDto;
 
 public interface KakaoService {
 
- KakaoTokenDto getKakaoAccessToken(String code);
- UserInfoDto getUserInfo(String accessToken) throws CustomException;
+    KakaoTokenDto getKakaoAccessToken(String code);
 
- SettleUpTokenDto registerUser(UserInfoDto userInfoDto) throws CustomException;
+    UserInfoDto getUserInfo(String accessToken) throws CustomException;
+
+    SettleUpTokenDto registerUser(UserInfoDto userInfoDto) throws CustomException;
 
 }
