@@ -70,6 +70,7 @@ public class RedisRepositoryConfig {
         return redisTemplate;
     }
 
+
     @Bean
     public CacheManager cacheManager() {
         RedisCacheManager.RedisCacheManagerBuilder builder = RedisCacheManager.RedisCacheManagerBuilder.fromConnectionFactory(redisConnectionFactory());
