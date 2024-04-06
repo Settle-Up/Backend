@@ -1,5 +1,6 @@
 package settleup.backend.domain.group.service;
 
+import org.springframework.data.domain.Pageable;
 import settleup.backend.domain.group.entity.dto.CreateGroupRequestDto;
 import settleup.backend.domain.group.entity.dto.CreateGroupResponseDto;
 import settleup.backend.domain.group.entity.dto.GroupMonthlyReportDto;
@@ -12,7 +13,7 @@ import java.util.Map;
 public interface ClusterService {
     CreateGroupResponseDto createGroup(CreateGroupRequestDto requestDto) throws CustomException;
 
-    List<UserInfoDto> getGroupUserInfo(String groupUUID) throws CustomException;
+    Map<String, Object> getGroupUserInfo(String groupUUID, Pageable pageable) throws CustomException;
 
     GroupMonthlyReportDto givenMonthlyReport(UserInfoDto userInfoDto, String groupId, GroupMonthlyReportDto groupMonthlyReportDto) throws CustomException;
 

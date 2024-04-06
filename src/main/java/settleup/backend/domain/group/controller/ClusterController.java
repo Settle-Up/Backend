@@ -1,6 +1,8 @@
 package settleup.backend.domain.group.controller;
 
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import settleup.backend.domain.group.entity.dto.CreateGroupRequestDto;
@@ -43,11 +45,14 @@ public class ClusterController {
 
     @GetMapping("/group/user/list")
     public ResponseEntity<ResponseDto> retrievedGroupUserList(
-            @RequestHeader(value = "Authorization") String token, @RequestParam("groupId") String groupUUID) throws CustomException {
+            @RequestHeader(value = "Authorization") String token,
+            @RequestParam("groupId") String groupUUID,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size ) throws CustomException {
+
+        Pageable pageable = PageRequest.of(page - 1, size);
         loginService.validTokenOrNot(token);
-        Map<String, Object> data = new HashMap<>();
-        List<UserInfoDto> memberList = clusterService.getGroupUserInfo(groupUUID);
-        data.put("memberList", memberList);
+        Map<String, Object> data = clusterService.getGroupUserInfo(groupUUID, pageable);
         ResponseDto responseDto = new ResponseDto<>(true, "retrieved successfully", data);
         return ResponseEntity.ok(responseDto);
     }

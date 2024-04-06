@@ -3,6 +3,8 @@ package settleup.backend.domain.group.service.Impl;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
@@ -114,20 +116,24 @@ public class ClusterServiceImpl implements ClusterService {
 
 
     @Override
-    public List<UserInfoDto> getGroupUserInfo(String groupUUID) throws CustomException {
+    public Map<String, Object> getGroupUserInfo(String groupUUID, Pageable pageable) throws CustomException {
         try {
-            Optional<GroupEntity> existingGroup = Optional.ofNullable(groupRepo.findByGroupUUID(groupUUID)
-                    .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND)));
-            Long groupPrimaryId = existingGroup.get().getId();
-            List<GroupUserEntity> userList = groupUserRepo.findByGroup_Id(groupPrimaryId);
-            List<UserInfoDto> userInfoDtoList = new ArrayList<>();
-            for (GroupUserEntity userEntity : userList) {
+            GroupEntity existingGroup = groupRepo.findByGroupUUID(groupUUID)
+                    .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
+
+            Page<GroupUserEntity> userPage = groupUserRepo.findByGroup_Id(existingGroup.getId(), pageable);
+            List<UserInfoDto> userInfoDtoList = userPage.getContent().stream().map(userEntity -> {
                 UserInfoDto userInfoDto = new UserInfoDto();
                 userInfoDto.setUserId(userEntity.getUser().getUserUUID());
                 userInfoDto.setUserName(userEntity.getUser().getUserName());
-                userInfoDtoList.add(userInfoDto);
-            }
-            return userInfoDtoList;
+                return userInfoDto;
+            }).collect(Collectors.toList());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("members", userInfoDtoList);
+            response.put("hasNextPage", userPage.hasNext());
+
+            return response;
         } catch (CustomException e) {
             throw e;
         }

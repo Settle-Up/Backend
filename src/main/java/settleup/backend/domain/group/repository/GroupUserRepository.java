@@ -21,6 +21,7 @@ public interface GroupUserRepository extends JpaRepository<GroupUserEntity, Long
 
     boolean existsByUser_Id(Long userId);
 
+    Page<GroupUserEntity> findByGroup_Id(Long groupId, Pageable pageable);
     @Query("SELECT gue FROM GroupUserEntity gue WHERE gue.user.id = :userId AND gue.group.id = :groupId")
     Optional<GroupUserEntity> findByUserIdAndGroupId(@Param("userId") Long userId, @Param("groupId") Long groupId);
 }
