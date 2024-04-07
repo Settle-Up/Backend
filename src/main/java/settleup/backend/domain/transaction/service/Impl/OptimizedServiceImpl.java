@@ -194,14 +194,7 @@ public class OptimizedServiceImpl implements OptimizedService {
             throw new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP);
         }
 
-//
-//        Status statusToUpdate = Status.valueOf(request.getApprovalStatus());
-//
-//        if ("sender".equals(request.getApprovalUser())) {
-//            optimizedTransactionRepo.updateIsSenderStatusByUUID(transactionId, statusToUpdate);
-//        } else {
-//            optimizedTransactionRepo.updateIsRecipientStatusByUUID(transactionId, statusToUpdate);
-//        }
+
         LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
         Optional<OptimizedTransactionEntity> bothSideClearTransaction = optimizedTransactionRepo.findByTransactionUUID(transactionId);
         if (bothSideClearTransaction.isPresent()) {

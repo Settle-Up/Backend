@@ -71,6 +71,7 @@ public class FinalOptimizedTransactionEntity implements TransactionalEntity {
     public GroupEntity getGroup() {
         return this.group;
     }
+
     @Override
     public UserEntity getRecipientUser() {
         return this.recipientUser;
