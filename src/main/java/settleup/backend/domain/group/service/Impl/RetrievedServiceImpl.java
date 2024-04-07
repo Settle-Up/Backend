@@ -37,7 +37,7 @@ public class RetrievedServiceImpl implements RetrievedService {
         UserEntity existingUser = userRepo.findByUserUUID(userInfoDto.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        Page<GroupUserEntity> userGroupPage = groupUserRepo.findByUserIdWithLatestReceipt(existingUser.getId(), pageable);
+        Page<GroupUserEntity> userGroupPage = groupUserRepo.findByUserIdWithLatestReceiptOrCreatedAt(existingUser.getId(), pageable);
         List<GroupInfoListDto.UserGroupListDto> groupList = new ArrayList<>();
 
         for (GroupUserEntity groupUser : userGroupPage.getContent()) {

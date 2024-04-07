@@ -16,8 +16,14 @@ public interface GroupUserRepository extends JpaRepository<GroupUserEntity, Long
 
     List<GroupUserEntity> findByUser_Id(Long userId);
 
-    @Query("SELECT gue FROM GroupUserEntity gue JOIN FETCH gue.group g LEFT JOIN ReceiptEntity r ON g.id = r.group.id WHERE gue.user.id = :userId GROUP BY gue.id ORDER BY MAX(r.createdAt) DESC")
-    Page<GroupUserEntity> findByUserIdWithLatestReceipt(Long userId, Pageable pageable);
+
+    @Query(value = "SELECT gue.* FROM settle_group_user gue " +
+            "JOIN settle_group g ON gue.group_id = g.id " +
+            "LEFT JOIN (SELECT group_id, MAX(created_at) AS last_active FROM receipt GROUP BY group_id) r ON g.id = r.group_id " +
+            "WHERE gue.user_id = :userId " +
+            "ORDER BY CASE WHEN r.last_active IS NULL THEN 1 ELSE 0 END, COALESCE(r.last_active, g.created_at) DESC",
+            nativeQuery = true)
+    Page<GroupUserEntity> findByUserIdWithLatestReceiptOrCreatedAt(@Param("userId") Long userId, Pageable pageable);
 
     boolean existsByUser_Id(Long userId);
 
