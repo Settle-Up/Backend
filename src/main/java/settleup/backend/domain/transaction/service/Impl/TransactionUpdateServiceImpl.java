@@ -105,7 +105,8 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
             transactionListDto.setTransactionDirection(String.valueOf(transactionDirection));
             transactionListDto.setHasSentOrReceived(hasSentOrReceived);
             transactionListDto.setIsRejected(isRejected);
-            transactionListDto.setTransactionAmount(String.valueOf(result.getTransactionAmount()));
+            String formattedTransactionAmount =String.format("%.2f",result.getTransactionAmount());
+            transactionListDto.setTransactionAmount(formattedTransactionAmount);
 
             transactionUpdateDto.getTransactionUpdateList().add(transactionListDto);
             return transactionUpdateDto;
@@ -179,7 +180,8 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
         transactionListDto.setTransactionDirection(String.valueOf(transactionDirection));
         transactionListDto.setHasSentOrReceived(hasSentOrReceived);
         transactionListDto.setIsRejected(isRejected);
-        transactionListDto.setTransactionAmount(String.valueOf(transaction.getTransactionAmount()));
+        String formattedTransactionAmount =String.format("%.2f",transaction.getTransactionAmount());
+        transactionListDto.setTransactionAmount(formattedTransactionAmount);
 
         return transactionListDto;
     }

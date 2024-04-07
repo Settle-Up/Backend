@@ -79,7 +79,10 @@ public class OverviewServiceImpl implements OverviewService {
         netDtoList.stream()
                 .filter(netDto -> netDto.getUser().equals(existingUser.get()))
                 .findFirst()
-                .ifPresent(netDto -> overviewDto.setSettlementBalance(String.valueOf(netDto.getNetAmount())));
+                .ifPresent(netDto -> {
+                    String formattedNetAmount = String.format("%.2f", netDto.getNetAmount());
+                    overviewDto.setSettlementBalance(formattedNetAmount);
+                });
 
 
         List<GroupOverviewDto.OverviewTransactionDto> combinedTransactionList = new ArrayList<>();
@@ -186,7 +189,8 @@ public class OverviewServiceImpl implements OverviewService {
     private GroupOverviewDto.OverviewTransactionDto convertToOverviewTransactionDto(TransactionalEntity transaction, Optional<UserEntity> existingUser) {
         GroupOverviewDto.OverviewTransactionDto dto = new GroupOverviewDto.OverviewTransactionDto();
         dto.setTransactionId(transaction.getTransactionUUID());
-        dto.setTransactionAmount(String.valueOf(transaction.getTransactionAmount()));
+        String formattedTransactionAmount =String.format("%.2f",transaction.getTransactionAmount());
+        dto.setTransactionAmount(formattedTransactionAmount);
         LocalDateTime clearedAt = transaction.getClearStatusTimeStamp();
         dto.setClearedAt(clearedAt == null ? null : clearedAt.toString());
         dto.setHasSentOrReceived(true);
@@ -219,24 +223,20 @@ public class OverviewServiceImpl implements OverviewService {
             expenseTransaction.setCreatedAt(String.valueOf(expense.getCreatedAt()));
             expenseTransaction.setPayerUserId(expense.getPayerUser().getUserUUID());
             expenseTransaction.setPayerUserName(expense.getPayerUser().getUserName());
-            expenseTransaction.setTotalPrice(String.valueOf(expense.getActualPaidPrice()));
+            expenseTransaction.setTotalPrice(String.format("%.2f", expense.getActualPaidPrice()));
             List<RequiresTransactionEntity> requireExpenseList = requireTransactionRepo.findByReceiptId(expense.getId());
             if (existingUser.get().getId() == expense.getPayerUser().getId()) {
                 Double totalAmountForRecipient = requireExpenseList.stream()
                         .filter(transaction -> transaction.getRecipientUser().getId().equals(existingUser.get().getId()))
                         .mapToDouble(RequiresTransactionEntity::getTransactionAmount)
                         .sum();
-                expenseTransaction.setUserOwedAmount(String.valueOf(totalAmountForRecipient));
+                expenseTransaction.setUserOwedAmount(String.format("%.2f", totalAmountForRecipient));
             } else {
                 Double totalAmountForSender = requireExpenseList.stream()
                         .filter(transaction -> transaction.getSenderUser().getId().equals(existingUser.get().getId()))
                         .mapToDouble(RequiresTransactionEntity::getTransactionAmount)
                         .sum();
-                if (totalAmountForSender != 0) {
-                    expenseTransaction.setUserOwedAmount(String.valueOf(-totalAmountForSender));
-                } else {
-                    expenseTransaction.setUserOwedAmount(String.valueOf(totalAmountForSender));
-                }
+                expenseTransaction.setUserOwedAmount(totalAmountForSender != 0 ? String.format("%.2f", -totalAmountForSender) : String.format("%.2f", totalAmountForSender));
             }
 
             expenseListDto.getExpenses().add(expenseTransaction);
@@ -312,7 +312,8 @@ public class OverviewServiceImpl implements OverviewService {
             overviewTransaction.setTransactionId(transaction.getTransactionUUID());
             overviewTransaction.setCounterPartyId(userRepo.findById(counterPartyId).orElseThrow().getUserUUID());
             overviewTransaction.setCounterPartyName(userRepo.findById(counterPartyId).orElseThrow().getUserName());
-            overviewTransaction.setTransactionAmount(String.valueOf(transaction.getTransactionAmount()));
+            String formattedTransactionAmount = String.format("%.2f", transaction.getTransactionAmount());
+            overviewTransaction.setTransactionAmount(formattedTransactionAmount);
             overviewTransaction.setTransactionDirection(transactionDirection);
             overviewTransaction.setHasSentOrReceived(false);
             overviewTransaction.setIsRejected(null);
