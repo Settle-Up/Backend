@@ -11,6 +11,7 @@ import settleup.backend.domain.user.repository.UserRepository;
 import settleup.backend.domain.user.service.SearchService;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -18,11 +19,13 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class SearchServiceImpl implements SearchService {
 
-    private final UserRepository userRepository;
+    private final UserRepository userRepo;
 
     @Override
-    public Page<UserInfoDto> getUserList(String partOfEmail, Pageable pageable) {
-        Page<UserEntity> userEntities = userRepository.findByUserEmailContaining(partOfEmail, pageable);
+    public Page<UserInfoDto> getUserList(String partOfEmail, Pageable pageable, UserInfoDto userInfoDto) {
+        Optional<UserEntity> loginUser =userRepo.findByUserUUID(userInfoDto.getUserId());
+        String notContainUserEmail =loginUser.get().getUserEmail();
+        Page<UserEntity> userEntities = userRepo.findByUserEmailContainingAndUserEmailNot(partOfEmail, notContainUserEmail, pageable);
         return userEntities.map(this::toUserInfo);
     }
 

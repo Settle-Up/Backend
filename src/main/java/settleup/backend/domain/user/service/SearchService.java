@@ -7,5 +7,5 @@ import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import java.util.List;
 
 public interface SearchService {
-    Page<UserInfoDto> getUserList(String partOfEmail, Pageable pageable);
+    Page<UserInfoDto> getUserList(String partOfEmail, Pageable pageable,UserInfoDto userInfoDto);
 }
