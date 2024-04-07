@@ -189,6 +189,8 @@ public class OverviewServiceImpl implements OverviewService {
         dto.setTransactionAmount(String.valueOf(transaction.getTransactionAmount()));
         LocalDateTime clearedAt = transaction.getClearStatusTimeStamp();
         dto.setClearedAt(clearedAt == null ? null : clearedAt.toString());
+        dto.setHasSentOrReceived(true);
+        dto.setIsRejected(null);
 
         Long userId = existingUser.get().getId();
         if (transaction.getSenderUser().getId().equals(userId)) {
@@ -313,7 +315,7 @@ public class OverviewServiceImpl implements OverviewService {
             overviewTransaction.setTransactionAmount(String.valueOf(transaction.getTransactionAmount()));
             overviewTransaction.setTransactionDirection(transactionDirection);
             overviewTransaction.setHasSentOrReceived(false);
-            overviewTransaction.setIsRejected(Status.PENDING);
+            overviewTransaction.setIsRejected(null);
 
             overviewTransactionList.add(overviewTransaction);
         }

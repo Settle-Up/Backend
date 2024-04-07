@@ -30,8 +30,8 @@ public class GroupOverviewDto {
         private String transactionAmount;
         private String transactionId;
         private Status transactionDirection;
-        private boolean hasSentOrReceived;
-        private Status isRejected;
+        private Boolean hasSentOrReceived;
+        private Boolean isRejected;
         private String clearedAt;
     }
 

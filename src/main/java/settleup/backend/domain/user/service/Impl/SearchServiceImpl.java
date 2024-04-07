@@ -28,7 +28,6 @@ public class SearchServiceImpl implements SearchService {
         Page<UserEntity> userEntities = userRepo.findByUserEmailContainingAndUserEmailNot(partOfEmail, notContainUserEmail, pageable);
         return userEntities.map(this::toUserInfo);
     }
-
     private UserInfoDto toUserInfo(UserEntity userEntity) {
         UserInfoDto userInfo = new UserInfoDto();
         userInfo.setUserId(userEntity.getUserUUID());
