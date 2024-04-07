@@ -1,5 +1,7 @@
 package settleup.backend.domain.transaction.service.Impl;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.AllArgsConstructor;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
@@ -14,6 +16,7 @@ import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionDetai
 import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionEntity;
 import settleup.backend.domain.transaction.entity.OptimizedTransactionEntity;
 
+import settleup.backend.domain.transaction.entity.TransactionalEntity;
 import settleup.backend.domain.transaction.entity.dto.*;
 import settleup.backend.domain.transaction.repository.GroupOptimizedTransactionDetailRepository;
 import settleup.backend.domain.transaction.repository.GroupOptimizedTransactionRepository;
@@ -33,6 +36,7 @@ import java.util.*;
 
 @Service
 @AllArgsConstructor
+@Transactional
 public class GroupOptimizedServiceImpl implements GroupOptimizedService {
 
     private final OptimizedTransactionRepository optimizedTransactionRepo;
@@ -41,6 +45,8 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
     private final UserRepository userRepo;
     private final UUID_Helper uuidHelper;
     private final TransactionInheritanceService transactionInheritanceService;
+    @PersistenceContext
+    private EntityManager entityManager;
 
 
     // p2pList 41,42,43 p2pList 방금 만들어진 1차 최적화 id 값 ,
@@ -214,7 +220,8 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
 
     @Override
     @Transactional
-    public String processTransaction(String transactionId, TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
+    public TransactionalEntity processTransaction(String transactionId, TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
+        logger.info("Processing transaction with ID: {}", transactionId);
         GroupOptimizedTransactionEntity transactionEntity = groupOptimizedTransactionRepo.findByTransactionUUID(transactionId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP));
 
@@ -222,29 +229,29 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
             throw new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP);
         }
 
-        Status statusToUpdate = Status.valueOf(request.getApprovalStatus());
 
-        if ("sender".equals(request.getApprovalUser())) {
-            groupOptimizedTransactionRepo.updateIsSenderStatusByUUID(transactionId, statusToUpdate);
-
-        } else {
-            groupOptimizedTransactionRepo.updateIsRecipientStatusByUUID(transactionId, statusToUpdate);
-
-        }
         LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
         Optional<GroupOptimizedTransactionEntity> bothSideClearTransaction = groupOptimizedTransactionRepo.findByTransactionUUID(transactionId);
         if (bothSideClearTransaction.isPresent()) {
+            logger.info("bothSideClearTransaction found for transaction ID: {}", transactionId);
             GroupOptimizedTransactionEntity transaction = bothSideClearTransaction.get();
+            logger.info("Checking if both sides are clear for transaction ID: {}", transaction.getId());
+            logger.info("Sender Status: {}", transaction.getIsSenderStatus());
+            logger.info("Recipient Status: {}", transaction.getIsRecipientStatus());
+
             if (transaction.getIsSenderStatus() == Status.CLEAR && transaction.getIsRecipientStatus() == Status.CLEAR) {
+                logger.info("Both sides are clear. Updating clear status timestamp for transaction ID: {},{}", transaction.getId(),newClearStatusTimestamp);
                 groupOptimizedTransactionRepo.updateClearStatusTimestampById(transaction.getId(), newClearStatusTimestamp);
+                logger.info("Updated clear status timestamp for transaction ID: {}", transaction.getId());
                 List<GroupOptimizedTransactionDetailsEntity> secondInheritanceTargetList =
                         groupOptimizedDetailRepo.findByGroupOptimizedTransactionId(transaction.getId());
                 for (GroupOptimizedTransactionDetailsEntity secondInheritanceTarget : secondInheritanceTargetList) {
-                    transactionInheritanceService.clearInheritanceStatusForOptimizedToRequired(secondInheritanceTarget.getOptimizedTransaction().getId());
+                    transactionInheritanceService.clearInheritanceStatusForGroupToOptimized(secondInheritanceTarget.getOptimizedTransaction().getId());
+                    logger.info("Cleared inheritance status for optimized transaction ID: {}", secondInheritanceTarget.getOptimizedTransaction().getId());
                 }
             }
         }
 
-        return transactionEntity.getTransactionUUID();
+        return transactionEntity;
     }
 }

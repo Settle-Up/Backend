@@ -1,5 +1,6 @@
 package settleup.backend.domain.transaction.entity;
 
+import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.global.common.Status;
 
@@ -11,6 +12,8 @@ public interface TransactionalEntity {
     UserEntity getSenderUser();
 
     UserEntity getRecipientUser();
+
+    GroupEntity getGroup();
 
     double getTransactionAmount();
 

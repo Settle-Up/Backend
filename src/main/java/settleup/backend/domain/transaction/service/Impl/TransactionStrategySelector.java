@@ -1,5 +1,7 @@
 package settleup.backend.domain.transaction.service.Impl;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -8,11 +10,13 @@ import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionEntity;
 import settleup.backend.domain.transaction.entity.OptimizedTransactionEntity;
 import settleup.backend.domain.transaction.entity.TransactionalEntity;
+import settleup.backend.domain.transaction.entity.dto.TransactionUpdateRequestDto;
 import settleup.backend.domain.transaction.repository.FinalOptimizedTransactionRepository;
 import settleup.backend.domain.transaction.repository.GroupOptimizedTransactionDetailRepository;
 import settleup.backend.domain.transaction.repository.GroupOptimizedTransactionRepository;
 import settleup.backend.domain.transaction.repository.OptimizedTransactionRepository;
 import settleup.backend.domain.transaction.service.*;
+import settleup.backend.global.common.Status;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
@@ -28,8 +32,11 @@ public class TransactionStrategySelector {
     private final GroupOptimizedTransactionRepository groupOptimizedTransactionRepo;
     private final OptimizedTransactionRepository optimizedTransactionRepo;
     private final FinalOptimizedTransactionRepository mergeOptimizedRepo;
+    @PersistenceContext
+    private EntityManager entityManager;
 
 
+    @Transactional
     public TransactionProcessingService selectService(String transactionId) throws CustomException {
         if (transactionId.startsWith("FPT")) {
             return finalOptimizedService;
@@ -42,19 +49,32 @@ public class TransactionStrategySelector {
         }
     }
 
-    public TransactionalEntity selectRepository(String transactionId) throws CustomException {
-        Optional<? extends TransactionalEntity> result;
+    @Transactional
+    public String selectRepository(String transactionId, TransactionUpdateRequestDto request) throws CustomException {
+        Status statusToUpdate = Status.valueOf(request.getApprovalStatus());
         if (transactionId.startsWith("FPT")) {
-            result = mergeOptimizedRepo.findByTransactionUUID(transactionId);
+            if ("sender".equals(request.getApprovalUser())) {
+                mergeOptimizedRepo.updateIsSenderStatusByUUID(transactionId, statusToUpdate);
+            } else {
+                mergeOptimizedRepo.updateIsRecipientStatusByUUID(transactionId, statusToUpdate);
+            }
         } else if (transactionId.startsWith("GPT")) {
-            result = groupOptimizedTransactionRepo.findByTransactionUUID(transactionId);
+            if ("sender".equals(request.getApprovalUser())) {
+                groupOptimizedTransactionRepo.updateIsSenderStatusByUUID(transactionId, statusToUpdate);
+            } else {
+                groupOptimizedTransactionRepo.updateIsRecipientStatusByUUID(transactionId, statusToUpdate);
+            }
         } else if (transactionId.startsWith("OPT")) {
-            result = optimizedTransactionRepo.findByTransactionUUID(transactionId);
+            if ("sender".equals(request.getApprovalUser())) {
+                optimizedTransactionRepo.updateIsSenderStatusByUUID(transactionId, statusToUpdate);
+            } else {
+                optimizedTransactionRepo.updateIsRecipientStatusByUUID(transactionId, statusToUpdate);
+            }
         } else {
             throw new CustomException(ErrorCode.TRANSACTION_TYPE_NOT_SUPPORTED);
         }
-
-        return result.orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP));
+        entityManager.flush();
+        return "save-success";
     }
 
 }

@@ -1,5 +1,7 @@
 package settleup.backend.domain.transaction.service.Impl;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import settleup.backend.domain.group.entity.GroupUserEntity;
@@ -47,7 +49,9 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
 
     private static final Logger log = LoggerFactory.getLogger(TransactionUpdateServiceImpl.class);
 
+
     @Override
+    @Transactional
     public TransactionUpdateDto transactionUpdate(UserInfoDto userInfoDto, String groupId, TransactionUpdateRequestDto request) throws CustomException {
         UserEntity existingUser = userRepo.findByUserUUID(userInfoDto.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
@@ -58,47 +62,55 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
 
         String transactionIdentity = request.getTransactionId();
 
-        TransactionProcessingService processingService = strategySelector.selectService(transactionIdentity);
-        String afterApprovalTransactionId = processingService.processTransaction(transactionIdentity, request, existingGroup);
+        String goesNextOrNot = strategySelector.selectRepository(transactionIdentity,request);
 
-        TransactionalEntity result = strategySelector.selectRepository(afterApprovalTransactionId);
-        TransactionUpdateDto transactionUpdateDto = new TransactionUpdateDto();
-        transactionUpdateDto.setUserId(existingUser.getUserUUID());
-        transactionUpdateDto.setUserName(existingUser.getUserName());
+        if("save-success".equals(goesNextOrNot)) {
+            TransactionProcessingService processingService = strategySelector.selectService(transactionIdentity);
+            TransactionalEntity result = processingService.processTransaction(transactionIdentity, request, existingGroup);
+
+            TransactionUpdateDto transactionUpdateDto = new TransactionUpdateDto();
+            transactionUpdateDto.setUserId(existingUser.getUserUUID());
+            transactionUpdateDto.setUserName(existingUser.getUserName());
+
+            UserEntity counterParty;
+            Status transactionDirection;
+            Boolean isRejected = null;
+            Boolean hasSentOrReceived = "CLEAR".equals(request.getApprovalStatus());
+
+            if ("sender".equals(request.getApprovalUser())) {
+                transactionDirection = Status.OWE;
+                counterParty = result.getRecipientUser();
+                if (Status.REJECT.equals(result.getIsRecipientStatus())) {
+                    isRejected = true;
+                }
+            } else {
+                transactionDirection = Status.OWED;
+                counterParty = result.getSenderUser();
+                if (Status.REJECT.equals(result.getIsSenderStatus())) {
+                    isRejected = true;
+                }
+            }
+
+            if (transactionUpdateDto.getTransactionUpdateList() == null) {
+                transactionUpdateDto.setTransactionUpdateList(new ArrayList<>());
+            }
 
 
-        UserEntity counterParty;
-        Status transactionDirection;
-        Status isRejected;
+            TransactionUpdateDto.TransactionListDto transactionListDto = new TransactionUpdateDto.TransactionListDto();
+            transactionListDto.setGroupId(existingGroup.getGroupUUID());
+            transactionListDto.setGroupName(existingGroup.getGroupName());
+            transactionListDto.setTransactionId(result.getTransactionUUID());
+            transactionListDto.setCounterPartyId(counterParty.getUserUUID());
+            transactionListDto.setCounterPartyName(counterParty.getUserName());
+            transactionListDto.setTransactionDirection(String.valueOf(transactionDirection));
+            transactionListDto.setHasSentOrReceived(hasSentOrReceived);
+            transactionListDto.setIsRejected(isRejected);
+            transactionListDto.setTransactionAmount(String.valueOf(result.getTransactionAmount()));
 
-        if ("sender".equals(request.getApprovalUser())) {
-            transactionDirection = Status.OWE;
-            counterParty = result.getRecipientUser();
-            isRejected = result.getIsRecipientStatus();
-        } else {
-            transactionDirection = Status.OWED;
-            counterParty = result.getSenderUser();
-            isRejected = result.getIsSenderStatus();
+            transactionUpdateDto.getTransactionUpdateList().add(transactionListDto);
+            return transactionUpdateDto;
         }
-
-        if (transactionUpdateDto.getTransactionUpdateList() == null) {
-            transactionUpdateDto.setTransactionUpdateList(new ArrayList<>());
-        }
-
-
-        TransactionUpdateDto.TransactionListDto transactionListDto = new TransactionUpdateDto.TransactionListDto();
-        transactionListDto.setGroupId(existingGroup.getGroupUUID());
-        transactionListDto.setGroupName(existingGroup.getGroupName());
-        transactionListDto.setTransactionId(result.getTransactionUUID());
-        transactionListDto.setCounterPartyId(counterParty.getUserUUID());
-        transactionListDto.setCounterPartyName(counterParty.getUserName());
-        transactionListDto.setTransactionDirection(String.valueOf(transactionDirection));
-        transactionListDto.setHasSentOrReceived(request.getApprovalStatus());
-        transactionListDto.setIsRejected(String.valueOf(isRejected));
-        transactionListDto.setTransactionAmount(String.valueOf(result.getTransactionAmount()));
-
-        transactionUpdateDto.getTransactionUpdateList().add(transactionListDto);
-        return transactionUpdateDto;
+        throw  new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP);
     }
 
     @Override
@@ -136,7 +148,7 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
 
 
             for (TransactionalEntity transaction : combinateList) {
-                TransactionUpdateDto.TransactionListDto transactionListDto = createTransactionListDto(transaction, existingUser, existingGroup);
+                TransactionUpdateDto.TransactionListDto transactionListDto = createTransactionListDto(transaction, existingUser);
                 transactionUpdateDto.getTransactionUpdateList().add(transactionListDto);
 
             }
@@ -145,23 +157,28 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
 
     }
 
-    private TransactionUpdateDto.TransactionListDto createTransactionListDto(TransactionalEntity transaction, UserEntity user, GroupEntity group) {
-
+    private TransactionUpdateDto.TransactionListDto createTransactionListDto(TransactionalEntity transaction, UserEntity user) {
         UserEntity counterParty = transaction.getSenderUser().equals(user) ? transaction.getRecipientUser() : transaction.getSenderUser();
         Status transactionDirection = transaction.getSenderUser().equals(user) ? Status.OWE : Status.OWED;
-        Status hasSentOrReceived = transaction.getSenderUser().equals(user) ? transaction.getIsSenderStatus() : transaction.getIsRecipientStatus();
-        Status isRejected = transaction.getSenderUser().equals(user) ? transaction.getIsRecipientStatus() : transaction.getIsSenderStatus();
 
+
+        Boolean hasSentOrReceived = Status.CLEAR.equals(transaction.getSenderUser().equals(user) ? transaction.getIsSenderStatus() : transaction.getIsRecipientStatus());
+
+
+        Boolean isRejected = null;
+        if (Status.REJECT.equals(transaction.getSenderUser().equals(user) ? transaction.getIsRecipientStatus() : transaction.getIsSenderStatus())) {
+            isRejected = Boolean.TRUE;
+        }
 
         TransactionUpdateDto.TransactionListDto transactionListDto = new TransactionUpdateDto.TransactionListDto();
         transactionListDto.setTransactionId(transaction.getTransactionUUID());
-        transactionListDto.setGroupId(group.getGroupUUID());
-        transactionListDto.setGroupName(group.getGroupName());
+        transactionListDto.setGroupId(transaction.getGroup().getGroupUUID());
+        transactionListDto.setGroupName(transaction.getGroup().getGroupName());
         transactionListDto.setCounterPartyId(counterParty.getUserUUID());
         transactionListDto.setCounterPartyName(counterParty.getUserName());
         transactionListDto.setTransactionDirection(String.valueOf(transactionDirection));
-        transactionListDto.setHasSentOrReceived(String.valueOf(hasSentOrReceived));
-        transactionListDto.setIsRejected(String.valueOf(isRejected));
+        transactionListDto.setHasSentOrReceived(hasSentOrReceived);
+        transactionListDto.setIsRejected(isRejected);
         transactionListDto.setTransactionAmount(String.valueOf(transaction.getTransactionAmount()));
 
         return transactionListDto;

@@ -186,7 +186,7 @@ public class OptimizedServiceImpl implements OptimizedService {
 
     @Override
     @Transactional
-    public String processTransaction(String transactionId, TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
+    public TransactionalEntity processTransaction(String transactionId, TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
         OptimizedTransactionEntity transactionEntity = optimizedTransactionRepo.findByTransactionUUID(transactionId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP));
 
@@ -194,14 +194,14 @@ public class OptimizedServiceImpl implements OptimizedService {
             throw new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP);
         }
 
-
-        Status statusToUpdate = Status.valueOf(request.getApprovalStatus());
-
-        if ("sender".equals(request.getApprovalUser())) {
-            optimizedTransactionRepo.updateIsSenderStatusByUUID(transactionId, statusToUpdate);
-        } else {
-            optimizedTransactionRepo.updateIsRecipientStatusByUUID(transactionId, statusToUpdate);
-        }
+//
+//        Status statusToUpdate = Status.valueOf(request.getApprovalStatus());
+//
+//        if ("sender".equals(request.getApprovalUser())) {
+//            optimizedTransactionRepo.updateIsSenderStatusByUUID(transactionId, statusToUpdate);
+//        } else {
+//            optimizedTransactionRepo.updateIsRecipientStatusByUUID(transactionId, statusToUpdate);
+//        }
         LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
         Optional<OptimizedTransactionEntity> bothSideClearTransaction = optimizedTransactionRepo.findByTransactionUUID(transactionId);
         if (bothSideClearTransaction.isPresent()) {
@@ -212,7 +212,7 @@ public class OptimizedServiceImpl implements OptimizedService {
             }
         }
 
-        return transactionEntity.getTransactionUUID();
+        return transactionEntity;
     }
 }
 

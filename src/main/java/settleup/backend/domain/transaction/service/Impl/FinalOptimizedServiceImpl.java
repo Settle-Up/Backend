@@ -180,7 +180,7 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
 
     @Override
     @Transactional
-    public String processTransaction(String transactionId, TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
+    public TransactionalEntity processTransaction(String transactionId, TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
         FinalOptimizedTransactionEntity transactionEntity = mergeTransactionRepo.findByTransactionUUID(transactionId)
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP));
 
@@ -188,14 +188,6 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
             throw new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP);
         }
 
-        Status statusToUpdate = Status.valueOf(request.getApprovalStatus());
-
-        if ("sender".equals(request.getApprovalUser())) {
-            mergeTransactionRepo.updateIsSenderStatusByUUID(transactionId, statusToUpdate);
-
-        } else {
-            mergeTransactionRepo.updateIsRecipientStatusByUUID(transactionId, statusToUpdate);
-        }
         LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
 
         Optional<FinalOptimizedTransactionEntity> searchTransaction = mergeTransactionRepo.findByTransactionUUID(transactionId);
@@ -212,7 +204,7 @@ public class FinalOptimizedServiceImpl implements FinalOptimizedService {
             }
         }
 
-        return transactionEntity.getTransactionUUID();
+        return transactionEntity;
     }
 
     private void selectServiceForUpdateInheritance(String transactionId) {
