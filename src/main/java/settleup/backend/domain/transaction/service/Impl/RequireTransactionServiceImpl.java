@@ -28,6 +28,7 @@ import java.util.concurrent.CompletableFuture;
 
 @Service
 @AllArgsConstructor
+@Transactional
 public class RequireTransactionServiceImpl implements RequireTransactionService {
 
     private final UUID_Helper uuidHelper;
@@ -46,7 +47,6 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
 
 
     @Override
-    @Transactional
     public TransactionDto createExpense(TransactionDto requestDto) {
         processTransactionItems(requestDto);
         return requestDto;
