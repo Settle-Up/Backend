@@ -1,5 +1,7 @@
 package settleup.backend.domain.group.service.Impl;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +23,7 @@ import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.domain.user.entity.dto.UserGroupDto;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.repository.UserRepository;
-import settleup.backend.domain.user.service.EmailSenderService;
+
 import settleup.backend.domain.user.service.KakaoService;
 import settleup.backend.global.Util.UrlProvider;
 import settleup.backend.global.common.UUID_Helper;
@@ -43,8 +45,8 @@ public class ClusterServiceImpl implements ClusterService {
     private UUID_Helper uuidHelper;
     private UrlProvider urlProvider;
     private RequireTransactionRepository requireTransactionRepo;
-    private EmailSenderService emailSenderService;
-
+    @PersistenceContext
+    private EntityManager entityManager;
 
 
     /**
@@ -205,19 +207,18 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     @Override
-    public CreateGroupResponseDto inviteGroupFundamental(CreateGroupRequestDto requestDto,String groupId) throws CustomException {
-       UserGroupDto existingTarget = isValidIdentity(requestDto,groupId);
-       Map<String,String> noticeMap = inviteGroup(existingTarget);
-       emailSenderService.sendEmailToNewGroupUser(noticeMap);
+    public CreateGroupResponseDto inviteGroupFundamental(CreateGroupRequestDto requestDto, String groupId) throws CustomException {
+        UserGroupDto existingTarget = isValidIdentity(requestDto, groupId);
 
-       return null;
+
+        return inviteGroup(existingTarget);
     }
 
 
     private UserGroupDto isValidIdentity(CreateGroupRequestDto requestDto, String groupUUID) {
-        UserGroupDto userGroupDto =new UserGroupDto();
+        UserGroupDto userGroupDto = new UserGroupDto();
         GroupEntity existingGroup = groupRepo.findByGroupUUID(groupUUID).
-                orElseThrow(()-> new CustomException(ErrorCode.GROUP_NOT_FOUND));
+                orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
 
         List<UserEntity> userEntityList = new ArrayList<>();
 
@@ -233,18 +234,31 @@ public class ClusterServiceImpl implements ClusterService {
         return userGroupDto;
     }
 
-    private Map<String,String> inviteGroup(UserGroupDto existingTarget) {
+    private CreateGroupResponseDto inviteGroup(UserGroupDto existingTarget) {
         List<UserEntity> userEntities = existingTarget.getUserEntityList();
-        Map<String,String> mapForInviteNotice= new HashMap<>();
-        for(UserEntity user :userEntities){
+        List<UserInfoDto> userInfoDtos = new ArrayList<>();
+
+        for (UserEntity user : userEntities) {
             GroupUserEntity groupUser = new GroupUserEntity();
             groupUser.setGroup(existingTarget.getGroup());
             groupUser.setUser(user);
             groupUser.setIsMonthlyReportUpdateOn(false);
             groupUserRepo.save(groupUser);
-            mapForInviteNotice.put(user.getUserName(), user.getUserEmail());
-        }
-        return mapForInviteNotice;
-    }
 
+            UserInfoDto userInfoDto = new UserInfoDto(user.getUserUUID(), user.getUserName(), user.getUserEmail(), user.getUserPhone());
+            userInfoDtos.add(userInfoDto);
+        }
+        entityManager.flush();
+
+        // Assuming you want the group details from the existingTarget directly
+        CreateGroupResponseDto responseDto = new CreateGroupResponseDto();
+        responseDto.setGroupId(existingTarget.getGroup().getGroupUUID());
+        responseDto.setGroupName(existingTarget.getGroup().getGroupName());
+        responseDto.setGroupUrl(existingTarget.getGroup().getGroupUrl());
+        responseDto.setGroupMemberCount(String.valueOf(userInfoDtos.size()));
+        responseDto.setUserList(userInfoDtos);
+
+        return responseDto;
+    }
 }
+

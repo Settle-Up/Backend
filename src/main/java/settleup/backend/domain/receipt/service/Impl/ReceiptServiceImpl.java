@@ -189,6 +189,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         receiptDto.setTotalPrice(String.format("%.2f", existingReceipt.getTotalPrice()));
         receiptDto.setDiscountApplied(String.format("%.2f", existingReceipt.getDiscountApplied()));
         receiptDto.setActualPaidPrice(String.format("%.2f", existingReceipt.getActualPaidPrice()));
+        receiptDto.setCreatedAt(String.valueOf(existingReceipt.getCreatedAt()));
 
         List<ReceiptItemEntity> receiptItems = receiptRepo.findItemsByReceiptUUID(receiptUUID);
 

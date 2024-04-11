@@ -22,6 +22,7 @@ public class ReceiptDto {
     private String totalPrice;
     private String discountApplied;
     private String actualPaidPrice;
+    private String createdAt;
     private List<ReceiptItemDto> receiptItemList;
 
     @Data
