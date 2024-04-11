@@ -18,4 +18,6 @@ public interface ClusterService {
     GroupMonthlyReportDto givenMonthlyReport(UserInfoDto userInfoDto, String groupId, GroupMonthlyReportDto groupMonthlyReportDto) throws CustomException;
 
     Map<String, String> deleteGroupUserInfo(UserInfoDto userInfoDto, String groupId) throws CustomException;
+
+    CreateGroupResponseDto inviteGroupFundamental(CreateGroupRequestDto requestDto,String groupId)throws CustomException;
 }

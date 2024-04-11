@@ -18,8 +18,11 @@ import settleup.backend.domain.group.service.ClusterService;
 import settleup.backend.domain.transaction.entity.RequiresTransactionEntity;
 import settleup.backend.domain.transaction.repository.RequireTransactionRepository;
 import settleup.backend.domain.user.entity.UserEntity;
+import settleup.backend.domain.user.entity.dto.UserGroupDto;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.repository.UserRepository;
+import settleup.backend.domain.user.service.EmailSenderService;
+import settleup.backend.domain.user.service.KakaoService;
 import settleup.backend.global.Util.UrlProvider;
 import settleup.backend.global.common.UUID_Helper;
 import settleup.backend.global.exception.CustomException;
@@ -40,6 +43,8 @@ public class ClusterServiceImpl implements ClusterService {
     private UUID_Helper uuidHelper;
     private UrlProvider urlProvider;
     private RequireTransactionRepository requireTransactionRepo;
+    private EmailSenderService emailSenderService;
+
 
 
     /**
@@ -198,4 +203,48 @@ public class ClusterServiceImpl implements ClusterService {
             throw new CustomException(ErrorCode.GROUP_USER_NOT_FOUND);
         }
     }
+
+    @Override
+    public CreateGroupResponseDto inviteGroupFundamental(CreateGroupRequestDto requestDto,String groupId) throws CustomException {
+       UserGroupDto existingTarget = isValidIdentity(requestDto,groupId);
+       Map<String,String> noticeMap = inviteGroup(existingTarget);
+       emailSenderService.sendEmailToNewGroupUser(noticeMap);
+
+       return null;
+    }
+
+
+    private UserGroupDto isValidIdentity(CreateGroupRequestDto requestDto, String groupUUID) {
+        UserGroupDto userGroupDto =new UserGroupDto();
+        GroupEntity existingGroup = groupRepo.findByGroupUUID(groupUUID).
+                orElseThrow(()-> new CustomException(ErrorCode.GROUP_NOT_FOUND));
+
+        List<UserEntity> userEntityList = new ArrayList<>();
+
+        for (String validUser : requestDto.getGroupUserList()) {
+            UserEntity existingUser = userRepo.findByUserUUID(validUser)
+                    .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+            userEntityList.add(existingUser);
+        }
+
+        userGroupDto.setGroup(existingGroup);
+        userGroupDto.setUserEntityList(userEntityList);
+
+        return userGroupDto;
+    }
+
+    private Map<String,String> inviteGroup(UserGroupDto existingTarget) {
+        List<UserEntity> userEntities = existingTarget.getUserEntityList();
+        Map<String,String> mapForInviteNotice= new HashMap<>();
+        for(UserEntity user :userEntities){
+            GroupUserEntity groupUser = new GroupUserEntity();
+            groupUser.setGroup(existingTarget.getGroup());
+            groupUser.setUser(user);
+            groupUser.setIsMonthlyReportUpdateOn(false);
+            groupUserRepo.save(groupUser);
+            mapForInviteNotice.put(user.getUserName(), user.getUserEmail());
+        }
+        return mapForInviteNotice;
+    }
+
 }

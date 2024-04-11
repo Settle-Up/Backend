@@ -71,6 +71,21 @@ public class ClusterController {
         ResponseDto responseDto = new ResponseDto<>(true, "user Group Exit Completed", data);
         return ResponseEntity.ok(responseDto);
     }
+
+    @PostMapping("/group/invite/fundamental")
+    public ResponseEntity<ResponseDto> inviteFromOurSite(
+            @RequestHeader(value = "Authorization") String token, @RequestBody CreateGroupRequestDto requestDto,@RequestParam("groupId")String groupId) throws CustomException {
+
+        loginService.validTokenOrNot(token);
+        int groupMemberCount = Integer.parseInt(requestDto.getGroupMemberCount());
+        if (requestDto.getGroupUserList().size() != groupMemberCount) {
+            throw new CustomException(ErrorCode.INVALID_INPUT);
+        }
+
+        CreateGroupResponseDto responseDto = clusterService.inviteGroupFundamental(requestDto, groupId);
+        ResponseDto<CreateGroupResponseDto> responseDtoForClient = new ResponseDto<>(true, "User has been invited successfully", responseDto);
+        return ResponseEntity.ok(responseDtoForClient);
+    }
 }
 
 

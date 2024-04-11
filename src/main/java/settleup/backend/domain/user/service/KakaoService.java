@@ -13,4 +13,6 @@ public interface KakaoService {
 
     SettleUpTokenDto registerUser(UserInfoDto userInfoDto) throws CustomException;
 
+
+
 }
