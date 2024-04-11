@@ -13,7 +13,7 @@ import java.util.Map;
 public interface ClusterService {
     CreateGroupResponseDto createGroup(CreateGroupRequestDto requestDto) throws CustomException;
 
-    Map<String, Object> getGroupUserInfo(String groupUUID, Pageable pageable) throws CustomException;
+    List<UserInfoDto> getGroupUserInfo(String groupUUID) throws  CustomException;
 
     GroupMonthlyReportDto givenMonthlyReport(UserInfoDto userInfoDto, String groupId, GroupMonthlyReportDto groupMonthlyReportDto) throws CustomException;
 

@@ -116,24 +116,20 @@ public class ClusterServiceImpl implements ClusterService {
 
 
     @Override
-    public Map<String, Object> getGroupUserInfo(String groupUUID, Pageable pageable) throws CustomException {
+    public List<UserInfoDto> getGroupUserInfo(String groupUUID) throws CustomException {
         try {
-            GroupEntity existingGroup = groupRepo.findByGroupUUID(groupUUID)
-                    .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
-
-            Page<GroupUserEntity> userPage = groupUserRepo.findByGroup_Id(existingGroup.getId(), pageable);
-            List<UserInfoDto> userInfoDtoList = userPage.getContent().stream().map(userEntity -> {
+            Optional<GroupEntity> existingGroup = Optional.ofNullable(groupRepo.findByGroupUUID(groupUUID)
+                    .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND)));
+            Long groupPrimaryId = existingGroup.get().getId();
+            List<GroupUserEntity> userList = groupUserRepo.findByGroup_Id(groupPrimaryId);
+            List<UserInfoDto> userInfoDtoList = new ArrayList<>();
+            for (GroupUserEntity userEntity : userList) {
                 UserInfoDto userInfoDto = new UserInfoDto();
                 userInfoDto.setUserId(userEntity.getUser().getUserUUID());
                 userInfoDto.setUserName(userEntity.getUser().getUserName());
-                return userInfoDto;
-            }).collect(Collectors.toList());
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("members", userInfoDtoList);
-            response.put("hasNextPage", userPage.hasNext());
-
-            return response;
+                userInfoDtoList.add(userInfoDto);
+            }
+            return userInfoDtoList;
         } catch (CustomException e) {
             throw e;
         }

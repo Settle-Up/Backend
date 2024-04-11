@@ -45,15 +45,12 @@ public class ClusterController {
 
     @GetMapping("/group/user/list")
     public ResponseEntity<ResponseDto> retrievedGroupUserList(
-            @RequestHeader(value = "Authorization") String token,
-            @RequestParam("groupId") String groupUUID,
-            @RequestParam(value = "page", defaultValue = "1") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size ) throws CustomException {
-
-        Pageable pageable = PageRequest.of(page - 1, size);
+            @RequestHeader(value = "Authorization") String token, @RequestParam("groupId") String groupUUID) throws CustomException {
         loginService.validTokenOrNot(token);
-        Map<String, Object> data = clusterService.getGroupUserInfo(groupUUID, pageable);
-        ResponseDto responseDto = new ResponseDto<>(true, "retrieved successfully", data);
+        Map<String, Object> data = new HashMap<>();
+        List<UserInfoDto> memberList = clusterService.getGroupUserInfo(groupUUID);
+        data.put("memberList", memberList);
+        ResponseDto responseDto = new ResponseDto<>(true,"retrieved successfully",data);
         return ResponseEntity.ok(responseDto);
     }
 
