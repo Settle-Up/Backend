@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.group.entity.GroupUserEntity;
 import settleup.backend.domain.group.entity.dto.GroupOverviewDto;
+import settleup.backend.domain.group.entity.dto.GroupOverviewExpenseDto;
 import settleup.backend.domain.group.entity.dto.OptimizedDetailUUIDsDto;
 import settleup.backend.domain.group.repository.GroupRepository;
 import settleup.backend.domain.group.repository.GroupUserRepository;
@@ -48,7 +49,7 @@ public class OverviewServiceImpl implements OverviewService {
     private final RequireTransactionRepository requireTransactionRepo;
 
     @Override
-    public GroupOverviewDto retrievedOverview(String groupUUID, UserInfoDto userInfoDto, Pageable pageable) throws CustomException {
+    public GroupOverviewDto retrievedOverview(String groupUUID, UserInfoDto userInfoDto) throws CustomException {
         GroupOverviewDto overviewDto = new GroupOverviewDto();
 
         Optional<UserEntity> existingUser = Optional.ofNullable(userRepo.findByUserUUID(userInfoDto.getUserId()))
@@ -153,7 +154,6 @@ public class OverviewServiceImpl implements OverviewService {
 
 
         overviewDto.setNeededTransactionList(combinedTransactionList);
-        buildExpenseList(existingGroup, existingUser, overviewDto, pageable);
         buildLastWeekSettledTransactionList(existingGroup, existingUser, overviewDto);
         return overviewDto;
     }
@@ -189,7 +189,7 @@ public class OverviewServiceImpl implements OverviewService {
     private GroupOverviewDto.OverviewTransactionDto convertToOverviewTransactionDto(TransactionalEntity transaction, Optional<UserEntity> existingUser) {
         GroupOverviewDto.OverviewTransactionDto dto = new GroupOverviewDto.OverviewTransactionDto();
         dto.setTransactionId(transaction.getTransactionUUID());
-        String formattedTransactionAmount =String.format("%.2f",transaction.getTransactionAmount());
+        String formattedTransactionAmount = String.format("%.2f", transaction.getTransactionAmount());
         dto.setTransactionAmount(formattedTransactionAmount);
         LocalDateTime clearedAt = transaction.getClearStatusTimeStamp();
         dto.setClearedAt(clearedAt == null ? null : clearedAt.toString());
@@ -211,54 +211,46 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
 
-    private void buildExpenseList(Optional<GroupEntity> existingGroup, Optional<UserEntity> existingUser, GroupOverviewDto overviewDto, Pageable pageable) {
-        GroupOverviewDto.ExpenseListDto expenseListDto = new GroupOverviewDto.ExpenseListDto();
-        expenseListDto.setExpenses(new ArrayList<>());
+    private GroupOverviewExpenseDto buildExpenseList(Optional<GroupEntity> existingGroup, Optional<UserEntity> existingUser, GroupOverviewExpenseDto groupOverviewExpenseDto, Pageable pageable) {
+
+        GroupOverviewExpenseDto.ExpenseDto expenseListDto = new GroupOverviewExpenseDto.ExpenseDto();
+        groupOverviewExpenseDto.setExpenses(new ArrayList<>());
 
         Page<ReceiptEntity> pagedReceipts = receiptRepo.findReceiptByGroupId(existingGroup.get().getId(), pageable);
         for (ReceiptEntity expense : pagedReceipts) {
-            GroupOverviewDto.ExpenseDto expenseTransaction = new GroupOverviewDto.ExpenseDto();
+            GroupOverviewExpenseDto.ExpenseDto expenseTransaction = new GroupOverviewExpenseDto.ExpenseDto();
             expenseTransaction.setReceiptId(expense.getReceiptUUID());
             expenseTransaction.setReceiptName(expense.getReceiptName());
             expenseTransaction.setCreatedAt(String.valueOf(expense.getCreatedAt()));
             expenseTransaction.setPayerUserId(expense.getPayerUser().getUserUUID());
             expenseTransaction.setPayerUserName(expense.getPayerUser().getUserName());
             expenseTransaction.setTotalPrice(String.format("%.2f", expense.getActualPaidPrice()));
-            List<RequiresTransactionEntity> requireExpenseList = requireTransactionRepo.findByReceiptId(expense.getId());
-            if (existingUser.get().getId() == expense.getPayerUser().getId()) {
-                Double totalAmountForRecipient = requireExpenseList.stream()
-                        .filter(transaction -> transaction.getRecipientUser().getId().equals(existingUser.get().getId()))
-                        .mapToDouble(RequiresTransactionEntity::getTransactionAmount)
-                        .sum();
-                expenseTransaction.setUserOwedAmount(String.format("%.2f", totalAmountForRecipient));
-            } else {
-                Double totalAmountForSender = requireExpenseList.stream()
-                        .filter(transaction -> transaction.getSenderUser().getId().equals(existingUser.get().getId()))
-                        .mapToDouble(RequiresTransactionEntity::getTransactionAmount)
-                        .sum();
-                expenseTransaction.setUserOwedAmount(totalAmountForSender != 0 ? String.format("%.2f", -totalAmountForSender) : String.format("%.2f", totalAmountForSender));
-            }
 
-            expenseListDto.getExpenses().add(expenseTransaction);
+            List<RequiresTransactionEntity> requireExpenseList = requireTransactionRepo.findByReceiptId(expense.getId());
+            Double totalAmountForCurrentUser = requireExpenseList.stream()
+                    .filter(transaction -> transaction.getRecipientUser().getId().equals(existingUser.get().getId()) || transaction.getSenderUser().getId().equals(existingUser.get().getId()))
+                    .mapToDouble(transaction -> transaction.getRecipientUser().getId().equals(existingUser.get().getId()) ? transaction.getTransactionAmount() : -transaction.getTransactionAmount())
+                    .sum();
+            expenseTransaction.setUserOwedAmount(String.format("%.2f", totalAmountForCurrentUser));
+
+            groupOverviewExpenseDto.getExpenses().add(expenseTransaction);
         }
 
-        expenseListDto.setHasNextPage(pagedReceipts.hasNext());
-
-        overviewDto.setExpenseList(expenseListDto);
+        groupOverviewExpenseDto.setHasNextPage(pagedReceipts.hasNext());
+        return groupOverviewExpenseDto;
     }
 
     @Override
-    public GroupOverviewDto updateRetrievedExpenseList(GroupOverviewDto overviewDto, String groupUUID, UserInfoDto userInfoDto, Pageable pageable) throws CustomException {
-        Optional<GroupEntity> existingGroup = Optional.ofNullable(groupRepo.findByGroupUUID(groupUUID))
-                .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
-        Optional<UserEntity> existingUser = Optional.ofNullable(userRepo.findByUserUUID(userInfoDto.getUserId()))
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        Optional.ofNullable(groupUserRepo.findByUserIdAndGroupId(existingUser.get().getId(), existingGroup.get().getId()))
-                .orElseThrow(() -> new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
+        public GroupOverviewExpenseDto updateRetrievedExpenseList(GroupOverviewExpenseDto groupOverviewExpenseDto, String groupUUID, UserInfoDto userInfoDto, Pageable pageable) throws CustomException {
+            Optional<GroupEntity> existingGroup = Optional.ofNullable(groupRepo.findByGroupUUID(groupUUID))
+                    .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
+            Optional<UserEntity> existingUser = Optional.ofNullable(userRepo.findByUserUUID(userInfoDto.getUserId()))
+                    .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+            Optional.ofNullable(groupUserRepo.findByUserIdAndGroupId(existingUser.get().getId(), existingGroup.get().getId()))
+                    .orElseThrow(() -> new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
 
-        buildExpenseList(existingGroup, existingUser, overviewDto, pageable);
-        return overviewDto;
-    }
+            return buildExpenseList(existingGroup, existingUser, groupOverviewExpenseDto, pageable);
+        }
 
 
     private OptimizedDetailUUIDsDto mergeOptimizedAndProcessAndExtractUUIDs(GroupEntity group, UserEntity
