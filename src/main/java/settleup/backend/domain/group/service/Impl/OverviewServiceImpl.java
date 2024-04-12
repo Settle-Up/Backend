@@ -241,16 +241,16 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     @Override
-        public GroupOverviewExpenseDto updateRetrievedExpenseList(GroupOverviewExpenseDto groupOverviewExpenseDto, String groupUUID, UserInfoDto userInfoDto, Pageable pageable) throws CustomException {
-            Optional<GroupEntity> existingGroup = Optional.ofNullable(groupRepo.findByGroupUUID(groupUUID))
-                    .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
-            Optional<UserEntity> existingUser = Optional.ofNullable(userRepo.findByUserUUID(userInfoDto.getUserId()))
-                    .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-            Optional.ofNullable(groupUserRepo.findByUserIdAndGroupId(existingUser.get().getId(), existingGroup.get().getId()))
-                    .orElseThrow(() -> new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
+    public GroupOverviewExpenseDto updateRetrievedExpenseList(GroupOverviewExpenseDto groupOverviewExpenseDto, String groupUUID, UserInfoDto userInfoDto, Pageable pageable) throws CustomException {
+        Optional<GroupEntity> existingGroup = Optional.ofNullable(groupRepo.findByGroupUUID(groupUUID))
+                .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
+        Optional<UserEntity> existingUser = Optional.ofNullable(userRepo.findByUserUUID(userInfoDto.getUserId()))
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        Optional.ofNullable(groupUserRepo.findByUserIdAndGroupId(existingUser.get().getId(), existingGroup.get().getId()))
+                .orElseThrow(() -> new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
 
-            return buildExpenseList(existingGroup, existingUser, groupOverviewExpenseDto, pageable);
-        }
+        return buildExpenseList(existingGroup, existingUser, groupOverviewExpenseDto, pageable);
+    }
 
 
     private OptimizedDetailUUIDsDto mergeOptimizedAndProcessAndExtractUUIDs(GroupEntity group, UserEntity
@@ -292,28 +292,52 @@ public class OverviewServiceImpl implements OverviewService {
         for (TransactionalEntity transaction : transactions) {
             Long counterPartyId = null;
             Status transactionDirection = null;
+            Boolean hasSentOrReceived = null;
+            Boolean isReject = null;
             if (transaction.getSenderUser().getId().equals(userId)) {
                 counterPartyId = transaction.getRecipientUser().getId();
                 transactionDirection = Status.OWE;
-            } else if (!transaction.getSenderUser().getId().equals(userId) && transaction.getRecipientUser().getId().equals(userId)) {
-                counterPartyId = transaction.getSenderUser().getId();
-                transactionDirection = Status.OWED;
+                if (transaction.getIsSenderStatus() ==Status.CLEAR){
+                    hasSentOrReceived =true;
+                } else {
+                    hasSentOrReceived =false;
+                }
+                if (transaction.getIsRecipientStatus() == Status.REJECT) {
+                    isReject = true;
+                } else {
+                    isReject = null;
+                }
+
+                } else if (!transaction.getSenderUser().getId().equals(userId) && transaction.getRecipientUser().getId().equals(userId)) {
+                    counterPartyId = transaction.getSenderUser().getId();
+                    transactionDirection = Status.OWED;
+                if (transaction.getIsRecipientStatus() ==Status.CLEAR){
+                    hasSentOrReceived =true;
+                } else {
+                    hasSentOrReceived =false;
+                }
+                if (transaction.getIsSenderStatus() == Status.REJECT) {
+                    isReject = true;
+                } else {
+                    isReject = null;
+                }
+
+                }
+
+                GroupOverviewDto.OverviewTransactionDto overviewTransaction = new GroupOverviewDto.OverviewTransactionDto();
+                overviewTransaction.setTransactionId(transaction.getTransactionUUID());
+                overviewTransaction.setCounterPartyId(userRepo.findById(counterPartyId).orElseThrow().getUserUUID());
+                overviewTransaction.setCounterPartyName(userRepo.findById(counterPartyId).orElseThrow().getUserName());
+                String formattedTransactionAmount = String.format("%.2f", transaction.getTransactionAmount());
+                overviewTransaction.setTransactionAmount(formattedTransactionAmount);
+                overviewTransaction.setTransactionDirection(transactionDirection);
+                overviewTransaction.setHasSentOrReceived(hasSentOrReceived);
+                overviewTransaction.setIsRejected(isReject);
+
+                overviewTransactionList.add(overviewTransaction);
             }
 
-            GroupOverviewDto.OverviewTransactionDto overviewTransaction = new GroupOverviewDto.OverviewTransactionDto();
-            overviewTransaction.setTransactionId(transaction.getTransactionUUID());
-            overviewTransaction.setCounterPartyId(userRepo.findById(counterPartyId).orElseThrow().getUserUUID());
-            overviewTransaction.setCounterPartyName(userRepo.findById(counterPartyId).orElseThrow().getUserName());
-            String formattedTransactionAmount = String.format("%.2f", transaction.getTransactionAmount());
-            overviewTransaction.setTransactionAmount(formattedTransactionAmount);
-            overviewTransaction.setTransactionDirection(transactionDirection);
-            overviewTransaction.setHasSentOrReceived(false);
-            overviewTransaction.setIsRejected(null);
-
-            overviewTransactionList.add(overviewTransaction);
+            return overviewTransactionList;
         }
 
-        return overviewTransactionList;
     }
-
-}

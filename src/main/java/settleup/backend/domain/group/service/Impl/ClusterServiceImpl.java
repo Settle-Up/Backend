@@ -135,6 +135,7 @@ public class ClusterServiceImpl implements ClusterService {
             for (GroupUserEntity userEntity : userList) {
                 UserInfoDto userInfoDto = new UserInfoDto();
                 userInfoDto.setUserId(userEntity.getUser().getUserUUID());
+                userInfoDto.setUserEmail(userEntity.getUser().getUserEmail());
                 userInfoDto.setUserName(userEntity.getUser().getUserName());
                 userInfoDtoList.add(userInfoDto);
             }
