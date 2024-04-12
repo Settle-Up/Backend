@@ -4,24 +4,48 @@ import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import lombok.Getter;
+
 @Component
 @Getter
 public class EmailSendConfig {
-    @Value("${google.mail.user_name}")
+    @Value("${mail.username}")
     private String userName;
 
-    @Value("${google.mail.password}")
+    @Value("${mail.password}")
     private String password;
 
-    @Value("${google.mail.smtp.host}")
+    @Value("${mail.host}")
     private String host;
 
-    @Value("${google.mail.smtp.port}")
+    @Value("${mail.port}")
     private String port;
 
-    @Value("${google.mail.smtp.auth}")
-    private String auth;
+    @Value("${mail.default-encoding}")
+    private String defaultEncoding;
 
-    @Value("${google.mail.smtp.starttls_enable}")
-    private String starttls_enable;
+    @Value("${mail.properties.mail.smtp.auth}")
+    private Boolean auth;
+
+    @Value("${mail.properties.mail.smtp.starttls.enable}")
+    private Boolean starttlsEnable;
+
+    @Value("${mail.properties.mail.smtp.starttls.required}")
+    private Boolean starttlsRequired;
+
+    @Value("${mail.properties.mail.smtp.connectiontimeout}")
+    private String connectionTimeout;
+
+    @Value("${mail.properties.mail.smtp.timeout}")
+    private String timeout;
+
+    @Value("${mail.properties.mail.smtp.writetimeout}")
+    private String writeTimeout;
+
+    @Value("${mail.auth-code-expiration-millis}")
+    private long authCodeExpirationMillis;
 }
+
+

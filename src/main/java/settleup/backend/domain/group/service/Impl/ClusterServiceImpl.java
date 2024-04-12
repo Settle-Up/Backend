@@ -24,6 +24,7 @@ import settleup.backend.domain.user.entity.dto.UserGroupDto;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.repository.UserRepository;
 
+import settleup.backend.domain.user.service.EmailSenderService;
 import settleup.backend.domain.user.service.KakaoService;
 import settleup.backend.global.Util.UrlProvider;
 import settleup.backend.global.common.UUID_Helper;
@@ -45,6 +46,7 @@ public class ClusterServiceImpl implements ClusterService {
     private UUID_Helper uuidHelper;
     private UrlProvider urlProvider;
     private RequireTransactionRepository requireTransactionRepo;
+    private EmailSenderService emailService;
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -209,9 +211,9 @@ public class ClusterServiceImpl implements ClusterService {
     @Override
     public CreateGroupResponseDto inviteGroupFundamental(CreateGroupRequestDto requestDto, String groupId) throws CustomException {
         UserGroupDto existingTarget = isValidIdentity(requestDto, groupId);
-
-
-        return inviteGroup(existingTarget);
+        CreateGroupResponseDto responseDto =inviteGroup(existingTarget);
+        emailService.sendEmailToNewGroupUser(responseDto);
+        return responseDto;
     }
 
 
@@ -245,12 +247,14 @@ public class ClusterServiceImpl implements ClusterService {
             groupUser.setIsMonthlyReportUpdateOn(false);
             groupUserRepo.save(groupUser);
 
-            UserInfoDto userInfoDto = new UserInfoDto(user.getUserUUID(), user.getUserName(), user.getUserEmail(), user.getUserPhone());
+            UserInfoDto userInfoDto = new UserInfoDto();
+            userInfoDto.setUserEmail(user.getUserEmail());
+            userInfoDto.setUserName(user.getUserName());
+            userInfoDto.setUserId(user.getUserUUID());
             userInfoDtos.add(userInfoDto);
         }
         entityManager.flush();
 
-        // Assuming you want the group details from the existingTarget directly
         CreateGroupResponseDto responseDto = new CreateGroupResponseDto();
         responseDto.setGroupId(existingTarget.getGroup().getGroupUUID());
         responseDto.setGroupName(existingTarget.getGroup().getGroupName());
