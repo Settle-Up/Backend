@@ -2,6 +2,7 @@ package settleup.backend.domain.user.service.Impl;
 
 
 
+import io.sentry.Sentry;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
@@ -18,6 +19,8 @@ import settleup.backend.global.exception.ErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.CompletableFuture;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -28,15 +31,19 @@ public class EmailSenderServiceImpl implements EmailSenderService {
     private static final Logger log = LoggerFactory.getLogger(EmailSenderServiceImpl.class);
 
     @Override
-    public void sendEmailToNewGroupUser(CreateGroupResponseDto newUserGroupInfo) throws CustomException {
-        for (UserInfoDto recipient : newUserGroupInfo.getUserList()) {
-            try {
-                sendEmail(recipient, newUserGroupInfo.getGroupName());
-            } catch (MessagingException e) {
-                log.error("Failed to send email to {}: {}", recipient.getUserEmail(), e.getMessage());
-                throw new CustomException(ErrorCode.FAILED_TO_SEND_EMAIL);
+    public CompletableFuture<Void> sendEmailToNewGroupUser(CreateGroupResponseDto newUserGroupInfo) {
+        return CompletableFuture.runAsync(() -> {
+            for (UserInfoDto recipient : newUserGroupInfo.getUserList()) {
+                try {
+                    sendEmail(recipient, newUserGroupInfo.getGroupName());
+                } catch (MessagingException e) {
+                    throw new RuntimeException(e);
+                }
             }
-        }
+        }).exceptionally(ex -> {
+            Sentry.captureException(ex);
+            return null;
+        });
     }
 
     private void sendEmail(UserInfoDto recipient, String groupName) throws MessagingException {

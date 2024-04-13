@@ -18,15 +18,15 @@ public class MailConfig {
     public JavaMailSender javaMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(emailConfig.getHost());
-        mailSender.setPort(Integer.parseInt(emailConfig.getPort())); // 이미 int로 처리되어야 함
+        mailSender.setPort(Integer.parseInt(emailConfig.getPort()));
         mailSender.setUsername(emailConfig.getUserName());
         mailSender.setPassword(emailConfig.getPassword());
         mailSender.setDefaultEncoding("UTF-8");
         mailSender.setProtocol("smtp");
 
         Properties props = new Properties();
-        props.put("mail.smtp.auth", emailConfig.getAuth());  // boolean 처리
-        props.put("mail.smtp.starttls.enable", emailConfig.getStarttlsEnable());  // boolean 처리
+        props.put("mail.smtp.auth", emailConfig.getAuth());
+        props.put("mail.smtp.starttls.enable", emailConfig.getStarttlsEnable());
         mailSender.setJavaMailProperties(props);
 
         return mailSender;

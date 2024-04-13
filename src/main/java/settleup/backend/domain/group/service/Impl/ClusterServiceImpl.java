@@ -5,6 +5,7 @@ import jakarta.persistence.PersistenceContext;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import settleup.backend.domain.user.service.EmailSenderService;
 import settleup.backend.domain.user.service.KakaoService;
 import settleup.backend.global.Util.UrlProvider;
 import settleup.backend.global.common.UUID_Helper;
+import settleup.backend.global.event.InviteGroupEvent;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
@@ -47,6 +49,8 @@ public class ClusterServiceImpl implements ClusterService {
     private UrlProvider urlProvider;
     private RequireTransactionRepository requireTransactionRepo;
     private EmailSenderService emailService;
+
+    private final ApplicationEventPublisher eventPublisher;
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -212,8 +216,7 @@ public class ClusterServiceImpl implements ClusterService {
     @Override
     public CreateGroupResponseDto inviteGroupFundamental(CreateGroupRequestDto requestDto, String groupId) throws CustomException {
         UserGroupDto existingTarget = isValidIdentity(requestDto, groupId);
-        CreateGroupResponseDto responseDto =inviteGroup(existingTarget);
-        emailService.sendEmailToNewGroupUser(responseDto);
+        CreateGroupResponseDto responseDto = inviteGroup(existingTarget);
         return responseDto;
     }
 
@@ -262,6 +265,7 @@ public class ClusterServiceImpl implements ClusterService {
         responseDto.setGroupUrl(existingTarget.getGroup().getGroupUrl());
         responseDto.setGroupMemberCount(String.valueOf(userInfoDtos.size()));
         responseDto.setUserList(userInfoDtos);
+        eventPublisher.publishEvent(new InviteGroupEvent(this, responseDto));
 
         return responseDto;
     }
