@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.Query;
 import settleup.backend.domain.user.entity.UserEntity;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -20,5 +21,11 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     @Query("SELECT u FROM UserEntity u WHERE u.userEmail LIKE CONCAT('%', :partOfEmail, '%') AND u.userEmail != :notContainUserEmail")
     Page<UserEntity> findByUserEmailContainingAndUserEmailNot(@Param("partOfEmail") String partOfEmail, @Param("notContainUserEmail") String notContainUserEmail, Pageable pageable);
 
+
+    @Query("SELECT u FROM UserEntity u WHERE u.userEmail LIKE %:email% AND u.id NOT IN :excludedUserIds")
+    Page<UserEntity> findByEmailExcludingUsers(
+            @Param("email") String email,
+            @Param("excludedUserIds") List<Long> excludedUserIds,
+            Pageable pageable);
 }
 

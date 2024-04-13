@@ -33,12 +33,19 @@ public class SearchController {
     public ResponseEntity<ResponseDto<Map<String, Object>>> findUserEmail(
             @RequestHeader(value = "Authorization") String token,
             @RequestParam("search") String partOfEmail,
+            @RequestParam(value = "groupId", required = false) String groupId,
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
 
         UserInfoDto userInfoDto = loginService.validTokenOrNot(token);
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("userEmail").ascending());
-        Page<UserInfoDto> userInfoPage = searchService.getUserList(partOfEmail, pageable, userInfoDto);
+
+        Page<UserInfoDto> userInfoPage;
+        if (groupId == null || groupId.isEmpty()) {
+            userInfoPage = searchService.getUserList(partOfEmail, pageable, userInfoDto);
+        } else {
+            userInfoPage = searchService.getUserListNotIncludeGroupUser(partOfEmail, pageable, userInfoDto, groupId);
+        }
 
         Map<String, Object> responseData = new HashMap<>();
         responseData.put("hasNextPage", userInfoPage.hasNext());
@@ -47,10 +54,7 @@ public class SearchController {
         ResponseDto<Map<String, Object>> responseDto = new ResponseDto<>(
                 true,
                 "retrieved successfully",
-                responseData
-        );
-
+                responseData);
         return ResponseEntity.ok(responseDto);
     }
-
 }
