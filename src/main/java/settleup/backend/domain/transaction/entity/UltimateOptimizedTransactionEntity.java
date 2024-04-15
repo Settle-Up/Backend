@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import settleup.backend.domain.group.entity.GroupEntity;
-import settleup.backend.domain.receipt.entity.ReceiptEntity;
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.global.common.Status;
 
@@ -13,8 +12,8 @@ import java.time.LocalDateTime;
 @Entity
 @Setter
 @Getter
-@Table(name = "final_optimized_transaction")
-public class FinalOptimizedTransactionEntity implements TransactionalEntity {
+@Table(name = "ultimate_optimized_transaction")
+public class UltimateOptimizedTransactionEntity implements TransactionalEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,7 +22,7 @@ public class FinalOptimizedTransactionEntity implements TransactionalEntity {
     private String transactionUUID;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "groupId")
+    @JoinColumn(name = "group_Id")
     private GroupEntity group;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -37,20 +36,24 @@ public class FinalOptimizedTransactionEntity implements TransactionalEntity {
     @Column(name = "transaction_amount", nullable = false)
     private double transactionAmount;
 
-    @Column(nullable = false)
+    @Column(name = "optimization_status",nullable = false)
     @Enumerated(EnumType.STRING)
-    private Status isUsed;
+    private Status optimizationStatus;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "is_sender_status", nullable = false)
-    private Status isSenderStatus;
+    @Column(name = "has_been_sent_status", nullable = false)
+    private Boolean hasBeenSent;
+
+
+    @Column(name = "has_been_check_status", nullable = false)
+    private Boolean hasBeenChecked;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "is_recipient_status", nullable = false)
-    private Status isRecipientStatus;
+    @Column(name = "require_reflection", nullable = false)
+    private Status requiredReflection;
+
 
     @Column(name = "clear_status_timestamp")
     @Setter
@@ -88,19 +91,27 @@ public class FinalOptimizedTransactionEntity implements TransactionalEntity {
     }
 
     @Override
-    public Status getIsSenderStatus() {
-        return this.isSenderStatus;
+    public Boolean getHasBeenSent() {
+        return this.hasBeenSent;
     }
 
     @Override
-    public Status getIsRecipientStatus() {
-        return this.isRecipientStatus;
+    public Boolean getHasBeenChecked() {
+        return this.hasBeenChecked;
     }
+
+    @Override
+    public Status getRequiredReflection() {
+        return this.requiredReflection;
+    }
+
+    @Override
+    public LocalDateTime getCreatedAt(){return this.createdAt;}
 
     @Override
     public LocalDateTime getClearStatusTimeStamp() {
         return this.clearStatusTimestamp;
     }
+
+
 }
-
-

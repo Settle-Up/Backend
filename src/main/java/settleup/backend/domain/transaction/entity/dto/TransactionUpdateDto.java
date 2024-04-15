@@ -24,8 +24,8 @@ public class TransactionUpdateDto {
         private String counterPartyId;
         private String counterPartyName;
         private String transactionDirection;
-        private Boolean hasSentOrReceived;
-        private Boolean isRejected;
+//        private Boolean hasSentOrReceived;
+//        private Boolean isRejected;
         private String transactionAmount;
     }
 }

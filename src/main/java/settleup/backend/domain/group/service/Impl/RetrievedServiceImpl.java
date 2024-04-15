@@ -16,6 +16,7 @@ import settleup.backend.domain.transaction.entity.dto.NetDto;
 import settleup.backend.domain.transaction.entity.dto.TransactionDto;
 import settleup.backend.domain.transaction.service.NetService;
 import settleup.backend.domain.user.entity.UserEntity;
+import settleup.backend.domain.user.entity.dto.UserGroupDto;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.repository.UserRepository;
 import settleup.backend.global.exception.CustomException;
@@ -54,9 +55,9 @@ public class RetrievedServiceImpl implements RetrievedService {
             groupInfoDto.setLastActive(lastActive);
 
             // Net 계산
-            TransactionDto transactionDto = new TransactionDto();
-            transactionDto.setGroup(group);
-            List<NetDto> groupAllNetList = netService.calculateNet(transactionDto);
+            UserGroupDto groupDto =new UserGroupDto();
+            groupDto.setGroup(group);
+            List<NetDto> groupAllNetList = netService.calculateNet(groupDto);
 
             for (NetDto netDto : groupAllNetList) {
                 if (netDto.getUser().equals(existingUser)) {

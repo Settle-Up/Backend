@@ -7,6 +7,6 @@ import settleup.backend.global.exception.CustomException;
 
 
 public interface TransactionProcessingService {
-    TransactionalEntity processTransaction(String transactionId, TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException;
+    TransactionalEntity processTransaction(TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException;
 
 }

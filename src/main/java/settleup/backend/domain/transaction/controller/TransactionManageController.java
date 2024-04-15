@@ -13,26 +13,26 @@ import settleup.backend.global.exception.CustomException;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/transaction")
-public class TransactionUpdateController {
+@RequestMapping("")
+public class TransactionManageController {
     private final LoginService loginService;
     private final TransactionUpdateService transactionUpdateService;
 
-    @PatchMapping("/approval")
+    @PatchMapping("/transaction/manage")
     public ResponseEntity<ResponseDto> updateTransaction(
             @RequestHeader(value = "Authorization") String token,
             @RequestParam("groupId") String groupId,
             @RequestBody TransactionUpdateRequestDto requestDto) throws CustomException {
         UserInfoDto userInfoDto = loginService.validTokenOrNot(token);
-        TransactionUpdateDto data = transactionUpdateService.transactionUpdate(userInfoDto, groupId, requestDto);
+        TransactionUpdateDto data = transactionUpdateService.transactionManage(userInfoDto, groupId, requestDto);
         ResponseDto responseDto = new ResponseDto<>(true, "update retrieved successfully", data);
         return ResponseEntity.ok(responseDto);
     }
 
-    @GetMapping("/history")
+    @GetMapping("/notifications/transactions/received")
     public ResponseEntity<ResponseDto> retrievedUpdateData(@RequestHeader(value = "Authorization") String token) throws CustomException {
         UserInfoDto userInfoDto = loginService.validTokenOrNot(token);
-        TransactionUpdateDto data = transactionUpdateService.retrievedUpdateListInGroup(userInfoDto);
+        TransactionUpdateDto data = transactionUpdateService.retrievedReceivedListInGroup(userInfoDto);
         ResponseDto responseDto = new ResponseDto<>(true, "update list retrieved successfully", data);
         return ResponseEntity.ok(responseDto);
     }

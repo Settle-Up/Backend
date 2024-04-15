@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.transaction.entity.RequiresTransactionEntity;
+import settleup.backend.domain.transaction.entity.TransactionalEntity;
 import settleup.backend.domain.user.entity.UserEntity;
 
 import java.util.List;
@@ -18,6 +19,6 @@ public class IntermediateCalcDto {
     private UserEntity recipientUser;
     private double transactionAmount;
     private List<RequiresTransactionEntity> duringOptimizationUsed;
-    private List<CombinedListDto> duringFinalOptimizationUsed;
+    private List<TransactionalEntity> duringFinalOptimizationUsed;
 }
 

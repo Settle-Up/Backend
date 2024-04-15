@@ -45,29 +45,19 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
     private final UserRepository userRepo;
     private final UUID_Helper uuidHelper;
     private final TransactionInheritanceService transactionInheritanceService;
-    @PersistenceContext
-    private EntityManager entityManager;
 
-
-    // p2pList 41,42,43 p2pList 방금 만들어진 1차 최적화 id 값 ,
-    // 2차 최적화는 왜 ? status 를 고려하지 않는가 ?
-    // -> 방금만들어진 영수증을 기반 하는거라 status 무의미 하다고 생각 (새로 영수증이 만들어지는 시기 = 1차 최적화 = 2차 최적화 )
-    // 3차는 1차 2차 기반 status 고려 할 필요 없는가 .? => 같은 시기에 이루어지기 때문에 필요 없다고 생각이 된다
-    // 1차에서 status 고려하면 충분하다고 생각
-    // 2차 최적화만 따로 진행된다면 status를 고려해야함 , 단 1차와 2차가 연쇄적으로 이루어지기 때문에 2차의 대상이 되는 1차를 불러올때 고려할 필요없다
-    // 무조건적으로 status 는 pending 이기 때문에
     private static final Logger logger = LoggerFactory.getLogger(GroupOptimizedServiceImpl.class);
 
     @Override
-    public void optimizationInGroup(TransactionP2PResultDto resultDto, List<NetDto> net) {
-        logger.debug("Starting optimizationInGroup with p2pList: {}, netList size: {}", resultDto.getP2pList(), net.size());
-        GraphResult graphResult = createGraphFromTransactions(resultDto.getP2pList());
+    public boolean optimizationInGroup(TransactionP2PResultDto resultDto, List<NetDto> net) {
+        GraphResult graphResult = createGraphFromTransactions(resultDto.getOptimiziationByPeerToPeerList());
         List<Long> orderedUserIdList = createGraphOrder(net);
-        GroupEntity group = getGroup(resultDto.getP2pList());
+        GroupEntity group = getGroup(resultDto.getOptimiziationByPeerToPeerList());
         logger.debug("Graph created. Starting group optimization for group: {}", group.getId());
-        startGroupOptimization(graphResult, orderedUserIdList, group);
-        logger.debug("Group optimization completed for group: {}", group.getId());
 
+        boolean transactionCreated = startGroupOptimization(graphResult, orderedUserIdList, group);
+        logger.debug("Group optimization completed for group: {}", group.getId());
+        return transactionCreated;
     }
 
     private GroupEntity getGroup(List<Long> p2pList) {
@@ -76,62 +66,62 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
     }
 
 
-    private void startGroupOptimization(GraphResult graphResult,
-                                        List<Long> orderedUserIdList,
-                                        GroupEntity group) {
+    private boolean startGroupOptimization(GraphResult graphResult,
+                                           List<Long> orderedUserIdList,
+                                           GroupEntity group) {
         logger.debug("Starting group optimization. User list size: {}", orderedUserIdList.size());
-        groupOptimizedTransactionRepo.updateIsUsedStatusByGroup(group, Status.USED);
+        groupOptimizedTransactionRepo.updateOptimizationStatusByGroup(group, Status.PREVIOUS);
         Graph<Long, DefaultWeightedEdge> graph = graphResult.getGraph();
         Map<DefaultWeightedEdge, Long> edgeTransactionIdMap = graphResult.getEdgeTransactionIdMap();
         Set<DefaultWeightedEdge> visitedEdges = new HashSet<>();
+        boolean transactionCreated = false;
 
-        // orderedUserIdList에 따라 각 사용자 ID로부터 DFS 시작
         for (Long userId : orderedUserIdList) {
-            //  DFS 탐색 시작
-            if (!visitedEdges.contains(userId)) {
-                dfs(graph, userId, visitedEdges, edgeTransactionIdMap, group);
-            }
-        }
-    }
-
-    private void dfs(Graph<Long, DefaultWeightedEdge> graph,
-                     Long currentNode,
-                     Set<DefaultWeightedEdge> visitedEdges,
-                     Map<DefaultWeightedEdge, Long> edgeTransactionIdMap,
-                     GroupEntity group) {
-        // dfs 로직 변경
-        // 에지를 끝까지 돌고 가중치가 같은 에지를 기록 해서 첫 번째랑 마지막을 이어야함
-        logger.debug("DFS started for node: {}", currentNode);
-        // 현재 노드에서 출발하는 모든 에지에 대해서 반복
-        for (DefaultWeightedEdge edge : graph.outgoingEdgesOf(currentNode)) {
-            if (visitedEdges.contains(edge)) continue; // 이미 방문한 에지는 패스
-
-            Long targetNode = graph.getEdgeTarget(edge);
-            double weight = graph.getEdgeWeight(edge);
-
-            // 방문 에지를 방문 처리
-            visitedEdges.add(edge);
-
-            // 다음 노드에서 출발하는 에지를 탐색, 조건에 맞는 경로를 찾음
-            for (DefaultWeightedEdge nextEdge : graph.outgoingEdgesOf(targetNode)) {
-                if (visitedEdges.contains(nextEdge)) continue; // 이미 방문한 에지는 패스
-
-                double nextWeight = graph.getEdgeWeight(nextEdge);
-                Long nextTarget = graph.getEdgeTarget(nextEdge);
-
-                // 앞뒤 에지의 가중치가 같은 경우, 새로운 최적화된 트랜잭션을 생성
-                if (weight == nextWeight) {
-                    GroupOptimizedTransactionEntity newTransaction =
-                            createOptimizedTransaction(currentNode, nextTarget, weight, group);
-                    saveTransactionDetails(newTransaction, edgeTransactionIdMap.get(edge));
-                    saveTransactionDetails(newTransaction, edgeTransactionIdMap.get(nextEdge));
-
-                    // 다음 타겟 노드에서 DFS 계속 진행
-                    dfs(graph, nextTarget, visitedEdges, edgeTransactionIdMap, group);
-
+            if (!visitedEdges.containsAll(graph.outgoingEdgesOf(userId))) {
+                for (DefaultWeightedEdge edge : graph.outgoingEdgesOf(userId)) {
+                    if (!visitedEdges.contains(edge)) {
+                        double initialWeight = graph.getEdgeWeight(edge);
+                        Long targetNode = graph.getEdgeTarget(edge);
+                        if (dfs(graph, targetNode, visitedEdges, edgeTransactionIdMap, group, userId, initialWeight)) {
+                            transactionCreated = true;
+                        }
+                    }
                 }
             }
         }
+        return transactionCreated;
+    }
+
+    private boolean dfs(Graph<Long, DefaultWeightedEdge> graph,
+                        Long currentNode,
+                        Set<DefaultWeightedEdge> visitedEdges,
+                        Map<DefaultWeightedEdge, Long> edgeTransactionIdMap,
+                        GroupEntity group,
+                        Long startNode,
+                        double lastWeight) {
+        logger.debug("DFS started for node: {}", currentNode);
+        boolean transactionCreated = false;
+        for (DefaultWeightedEdge edge : graph.outgoingEdgesOf(currentNode)) {
+            if (visitedEdges.contains(edge)) continue;  // 이미 방문한 간선은 건너뜁니다.
+
+            visitedEdges.add(edge);  // 방문한 간선에 추가
+            Long targetNode = graph.getEdgeTarget(edge);
+            double currentWeight = graph.getEdgeWeight(edge);
+
+            // 가중치가 같을 때만 계속 같은 경로를 따라갑니다
+            if (currentWeight == lastWeight && !targetNode.equals(startNode)) {
+                transactionCreated |= dfs(graph, targetNode, visitedEdges, edgeTransactionIdMap, group, startNode, lastWeight);
+            } else {
+                // 다른 가중치를 만날 경우 새로운 거래를 생성하고, 새 경로를 시작합니다.
+                if (startNode != null && startNode != currentNode) {
+                    GroupOptimizedTransactionEntity newTransaction = createOptimizedTransaction(startNode, currentNode, lastWeight, group);
+                    saveTransactionDetails(newTransaction, edgeTransactionIdMap, startNode, currentNode, graph);
+                    transactionCreated = true;
+                }
+                transactionCreated |= dfs(graph, targetNode, new HashSet<>(visitedEdges), edgeTransactionIdMap, group, currentNode, currentWeight);  // 새로운 visitedEdges 세트와 함께 호출
+            }
+        }
+        return transactionCreated;
     }
 
 
@@ -143,11 +133,11 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
         newTransaction.setRecipientUser(userRepo.findById(recipientId).get());
         newTransaction.setGroup(group);
         newTransaction.setTransactionAmount(amount);
-        newTransaction.setIsSenderStatus(Status.PENDING);
-        newTransaction.setIsRecipientStatus(Status.PENDING);
-        newTransaction.setIsInheritanceStatus(Status.PENDING);
+        newTransaction.setHasBeenSent(false);
+        newTransaction.setHasBeenChecked(false);
+        newTransaction.setRequiredReflection(Status.REQUIRE_REFLECT);
         newTransaction.setCreatedAt(LocalDateTime.now());
-        newTransaction.setIsUsed(Status.NOT_USED);
+        newTransaction.setOptimizationStatus(Status.CURRENT);
         groupOptimizedTransactionRepo.save(newTransaction);
         logger.debug("Created and saved new optimized transaction: {}, Sender ID: {}, Recipient ID: {}, Amount: {}",
                 newTransaction.getTransactionUUID(), senderId, recipientId, amount);
@@ -156,17 +146,26 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
     }
 
 
-    private void saveTransactionDetails(GroupOptimizedTransactionEntity optimizedTransaction, Long transactionId) {
-        GroupOptimizedTransactionDetailsEntity details = new GroupOptimizedTransactionDetailsEntity();
-        details.setGroupOptimizedTransaction(optimizedTransaction);
-        details.setTransactionDetailUUID(uuidHelper.UUIDForGroupOptimizedDetail());
-        details.setOptimizedTransaction(optimizedTransactionRepo.findById(transactionId).get());
-        logger.debug("Saved transaction detail: {}, for optimized transaction UUID: {}, based on original transaction ID: {}",
-                details.getTransactionDetailUUID(), optimizedTransaction.getTransactionUUID(), transactionId);
-
-        groupOptimizedDetailRepo.save(details);
+    private void saveTransactionDetails(GroupOptimizedTransactionEntity optimizedTransaction, Map<DefaultWeightedEdge, Long> edgeTransactionIdMap, Long startNode, Long endNode, Graph<Long, DefaultWeightedEdge> graph) {
+        DefaultWeightedEdge edge = graph.getEdge(startNode, endNode);
+        while (startNode != endNode) {
+            Long transactionId = edgeTransactionIdMap.get(edge);
+            GroupOptimizedTransactionDetailsEntity details = new GroupOptimizedTransactionDetailsEntity();
+            details.setGroupOptimizedTransaction(optimizedTransaction);
+            details.setTransactionDetailUUID(uuidHelper.UUIDForGroupOptimizedDetail());
+            details.setOptimizedTransaction(optimizedTransactionRepo.findById(transactionId).orElseThrow());
+            updateReflection(optimizedTransactionRepo.findById(transactionId).orElseThrow());
+            groupOptimizedDetailRepo.save(details);
+            logger.debug("Saved transaction detail: {}, for optimized transaction UUID: {}, based on original transaction ID: {}",
+                    details.getTransactionDetailUUID(), optimizedTransaction.getTransactionUUID(), transactionId);
+            startNode = graph.getEdgeTarget(edge);
+            edge = graph.getEdge(startNode, endNode);
+        }
     }
 
+    private void updateReflection(OptimizedTransactionEntity optimizedTransactionEntity) {
+        optimizedTransactionRepo.updateRequiredReflectionByTransactionUUID(optimizedTransactionEntity.getTransactionUUID(), Status.INHERITED);
+    }
 
     public GraphResult createGraphFromTransactions(List<Long> p2pList) {
         Graph<Long, DefaultWeightedEdge> graph = new DefaultDirectedWeightedGraph<>(DefaultWeightedEdge.class);
@@ -220,36 +219,19 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
 
     @Override
     @Transactional
-    public TransactionalEntity processTransaction(String transactionId, TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
-        logger.info("Processing transaction with ID: {}", transactionId);
-        GroupOptimizedTransactionEntity transactionEntity = groupOptimizedTransactionRepo.findByTransactionUUID(transactionId)
+    public TransactionalEntity processTransaction(TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
+        logger.info("Processing transaction with ID: {}", request.getTransactionId());
+        GroupOptimizedTransactionEntity transactionEntity = groupOptimizedTransactionRepo.findByTransactionUUID(request.getTransactionId())
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP));
 
         if (!transactionEntity.getGroup().getId().equals(existingGroup.getId())) {
             throw new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP);
         }
 
-
-        LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
-        Optional<GroupOptimizedTransactionEntity> bothSideClearTransaction = groupOptimizedTransactionRepo.findByTransactionUUID(transactionId);
-        if (bothSideClearTransaction.isPresent()) {
-            logger.info("bothSideClearTransaction found for transaction ID: {}", transactionId);
-            GroupOptimizedTransactionEntity transaction = bothSideClearTransaction.get();
-            logger.info("Checking if both sides are clear for transaction ID: {}", transaction.getId());
-            logger.info("Sender Status: {}", transaction.getIsSenderStatus());
-            logger.info("Recipient Status: {}", transaction.getIsRecipientStatus());
-
-            if (transaction.getIsSenderStatus() == Status.CLEAR && transaction.getIsRecipientStatus() == Status.CLEAR) {
-                logger.info("Both sides are clear. Updating clear status timestamp for transaction ID: {},{}", transaction.getId(),newClearStatusTimestamp);
-                groupOptimizedTransactionRepo.updateClearStatusTimestampById(transaction.getId(), newClearStatusTimestamp);
-                logger.info("Updated clear status timestamp for transaction ID: {}", transaction.getId());
-                List<GroupOptimizedTransactionDetailsEntity> secondInheritanceTargetList =
-                        groupOptimizedDetailRepo.findByGroupOptimizedTransactionId(transaction.getId());
-                for (GroupOptimizedTransactionDetailsEntity secondInheritanceTarget : secondInheritanceTargetList) {
-                    transactionInheritanceService.clearInheritanceStatusForGroupToOptimized(secondInheritanceTarget.getOptimizedTransaction().getId());
-                    logger.info("Cleared inheritance status for optimized transaction ID: {}", secondInheritanceTarget.getOptimizedTransaction().getId());
-                }
-            }
+        List<GroupOptimizedTransactionDetailsEntity> requireInheritanceList=
+                groupOptimizedDetailRepo.findByGroupOptimizedTransactionId(groupOptimizedTransactionRepo.findByTransactionUUID(transactionEntity.getTransactionUUID()).get().getId());
+        for(GroupOptimizedTransactionDetailsEntity requireInheritanceTransaction:requireInheritanceList){
+            transactionInheritanceService.clearInheritanceStatusFromGroupToOptimized(requireInheritanceTransaction.getId());
         }
 
         return transactionEntity;

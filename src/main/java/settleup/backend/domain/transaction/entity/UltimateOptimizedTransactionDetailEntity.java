@@ -8,8 +8,8 @@ import lombok.Setter;
 @Entity
 @Setter
 @Getter
-@Table(name = "final_optimized_transaction_details")
-public class FinalOptimizedTransactionDetailEntity {
+@Table(name = "ultimate_optimized_transaction_details")
+public class UltimateOptimizedTransactionDetailEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,7 +23,7 @@ public class FinalOptimizedTransactionDetailEntity {
     private String usedOptimizedTransaction;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "final_Transaction_id")
-    private FinalOptimizedTransactionEntity finalOptimizedTransaction;
+    @JoinColumn(name = "ultimate_transaction_id")
+    private UltimateOptimizedTransactionEntity ultimateOptimizedTransaction;
 
 }

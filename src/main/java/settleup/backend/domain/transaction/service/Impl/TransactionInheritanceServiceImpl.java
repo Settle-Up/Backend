@@ -9,6 +9,7 @@ import settleup.backend.domain.transaction.entity.OptimizedTransactionDetailsEnt
 import settleup.backend.domain.transaction.entity.OptimizedTransactionEntity;
 import settleup.backend.domain.transaction.repository.*;
 import settleup.backend.domain.transaction.service.TransactionInheritanceService;
+import settleup.backend.global.common.Status;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
@@ -20,52 +21,51 @@ import java.util.Optional;
 @Service
 @AllArgsConstructor
 public class TransactionInheritanceServiceImpl implements TransactionInheritanceService {
-    private final OptimizedTransactionDetailsRepository optimizedTransactionDetailsRepo;
     private final RequireTransactionRepository requireTransactionRepo;
     private final OptimizedTransactionRepository optimizedTransactionRepo;
+    private final OptimizedTransactionDetailsRepository optimizedTransactionDetailsRepo;
     private final GroupOptimizedTransactionRepository groupOptimizedTransactionRepo;
     private final GroupOptimizedTransactionDetailRepository groupOptimizedTransactionDetailRepo;
 
     @Transactional
-    public void clearInheritanceStatusForOptimizedToRequired(Long optimizedTransactionId) {
+    public void clearInheritanceStatusFromOptimizedToRequired(Long optimizedTransactionId) {
         List<OptimizedTransactionDetailsEntity> inheritedTargetList = optimizedTransactionDetailsRepo.findByOptimizedTransactionId(optimizedTransactionId);
         for (OptimizedTransactionDetailsEntity inheritedTarget : inheritedTargetList) {
-            requireTransactionRepo.updateInheritanceStatusToClearById(inheritedTarget.getRequiresTransaction().getId());
+            requireTransactionRepo.updateRequiredReflectionStatusById(inheritedTarget.getRequiresTransaction().getId(), Status.INHERITED_CLEAR);
             LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
             requireTransactionRepo.updateClearStatusTimestampById(inheritedTarget.getRequiresTransaction().getId(), newClearStatusTimestamp);
         }
     }
 
+
     @Transactional
-    public void clearInheritanceStatusForGroupToOptimized(Long optimizedTransactionId) {
-        optimizedTransactionRepo.updateInheritanceStatusToClearById(optimizedTransactionId);
+    public void clearInheritanceStatusFromGroupToOptimized(Long optimizedTransactionId) {
+        optimizedTransactionRepo.updateRequiredReflectionStatusById(optimizedTransactionId, Status.INHERITED_CLEAR);
         LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
         optimizedTransactionRepo.updateClearStatusTimestampById(optimizedTransactionId, newClearStatusTimestamp);
-        clearInheritanceStatusForOptimizedToRequired(optimizedTransactionId);
+        clearInheritanceStatusFromOptimizedToRequired(optimizedTransactionId);
     }
 
 
     @Transactional
-    public void clearInheritanceStatusForFinalToGroup(Optional<GroupOptimizedTransactionEntity> groupOptimizedTransaction) {
-        groupOptimizedTransactionRepo.updateInheritanceStatusToClearById(groupOptimizedTransaction.get().getId());
+    public void clearInheritanceStatusFromUltimateToGroup(Optional<GroupOptimizedTransactionEntity> groupOptimizedTransaction) {
+        groupOptimizedTransactionRepo.updateRequiredReflectionStatusById(groupOptimizedTransaction.get().getId(),Status.INHERITED_CLEAR);
         LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
         groupOptimizedTransactionRepo.updateClearStatusTimestampById(groupOptimizedTransaction.get().getId(), newClearStatusTimestamp);
 
-        List<GroupOptimizedTransactionDetailsEntity> goesToGroupToOptimizedList =
+        List<GroupOptimizedTransactionDetailsEntity> goesFromGroupToOptimizedList =
                 groupOptimizedTransactionDetailRepo.findByGroupOptimizedTransactionId(groupOptimizedTransaction.get().getId());
-        for (GroupOptimizedTransactionDetailsEntity goesToGroupToOptimized : goesToGroupToOptimizedList) {
-            clearInheritanceStatusForGroupToOptimized(goesToGroupToOptimized.getOptimizedTransaction().getId());
+        for (GroupOptimizedTransactionDetailsEntity goesToGroupToOptimized : goesFromGroupToOptimizedList) {
+            clearInheritanceStatusFromGroupToOptimized(goesToGroupToOptimized.getOptimizedTransaction().getId());
         }
-
     }
 
     @Override
     @Transactional
-    public void clearInheritanceStatusForFinalToOptimized(Optional<OptimizedTransactionEntity> optimizedTransaction) {
-        optimizedTransactionRepo.updateInheritanceStatusToClearById(optimizedTransaction.get().getId());
+    public void clearInheritanceStatusFromUltimateToOptimized(Optional<OptimizedTransactionEntity> optimizedTransaction) {
+        optimizedTransactionRepo.updateRequiredReflectionStatusById(optimizedTransaction.get().getId(),Status.INHERITED_CLEAR);
         LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
         optimizedTransactionRepo.updateClearStatusTimestampById(optimizedTransaction.get().getId(), newClearStatusTimestamp);
-        clearInheritanceStatusForOptimizedToRequired(optimizedTransaction.get().getId());
+        clearInheritanceStatusFromOptimizedToRequired(optimizedTransaction.get().getId());
     }
-
 }

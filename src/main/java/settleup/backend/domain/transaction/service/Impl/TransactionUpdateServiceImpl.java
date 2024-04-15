@@ -1,15 +1,12 @@
 package settleup.backend.domain.transaction.service.Impl;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import settleup.backend.domain.group.entity.GroupUserEntity;
-import settleup.backend.domain.transaction.entity.FinalOptimizedTransactionEntity;
+import settleup.backend.domain.transaction.entity.UltimateOptimizedTransactionEntity;
 import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionEntity;
-import settleup.backend.domain.transaction.entity.OptimizedTransactionEntity;
 import settleup.backend.domain.transaction.entity.TransactionalEntity;
-import settleup.backend.domain.transaction.repository.FinalOptimizedTransactionRepository;
+import settleup.backend.domain.transaction.repository.UltimateOptimizedTransactionRepository;
 import settleup.backend.domain.transaction.repository.GroupOptimizedTransactionRepository;
 import settleup.backend.domain.transaction.repository.OptimizedTransactionRepository;
 import settleup.backend.domain.transaction.service.TransactionProcessingService;
@@ -31,7 +28,6 @@ import settleup.backend.global.exception.ErrorCode;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -45,14 +41,18 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
     private final TransactionStrategySelector strategySelector;
     private final OptimizedTransactionRepository optimizedTransactionRepo;
     private final GroupOptimizedTransactionRepository groupOptimizedTransactionRepo;
-    private final FinalOptimizedTransactionRepository mergeOptimizedTransactionRepo;
+    private final UltimateOptimizedTransactionRepository ultimateOptimizedTransactionRepo;
 
     private static final Logger log = LoggerFactory.getLogger(TransactionUpdateServiceImpl.class);
 
+    /**
+     * if / sender 가 들어오면 => repository 의 hassentStatus를 true 로 바꿈
+     * if / receiptent 가 들어오면 => repository 의 hascheckstatus 를 true 로 바꿈
+     */
 
     @Override
     @Transactional
-    public TransactionUpdateDto transactionUpdate(UserInfoDto userInfoDto, String groupId, TransactionUpdateRequestDto request) throws CustomException {
+    public TransactionUpdateDto transactionManage(UserInfoDto userInfoDto, String groupId, TransactionUpdateRequestDto request) throws CustomException {
         UserEntity existingUser = userRepo.findByUserUUID(userInfoDto.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         GroupEntity existingGroup = groupRepo.findByGroupUUID(groupId)
@@ -60,13 +60,12 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
         groupUserRepo.findByUserIdAndGroupId(existingUser.getId(), existingGroup.getId())
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
 
-        String transactionIdentity = request.getTransactionId();
 
-        String goesNextOrNot = strategySelector.selectRepository(transactionIdentity,request);
+        String goesNextOrNot = strategySelector.selectRepository(request);
 
-        if("save-success".equals(goesNextOrNot)) {
-            TransactionProcessingService processingService = strategySelector.selectService(transactionIdentity);
-            TransactionalEntity result = processingService.processTransaction(transactionIdentity, request, existingGroup);
+        if ("save-success".equals(goesNextOrNot)) {
+            TransactionProcessingService processingService = strategySelector.selectService(request.getTransactionId());
+            TransactionalEntity result = processingService.processTransaction(request, existingGroup);
 
             TransactionUpdateDto transactionUpdateDto = new TransactionUpdateDto();
             transactionUpdateDto.setUserId(existingUser.getUserUUID());
@@ -74,21 +73,14 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
 
             UserEntity counterParty;
             Status transactionDirection;
-            Boolean isRejected = null;
-            Boolean hasSentOrReceived = "CLEAR".equals(request.getApprovalStatus());
 
             if ("sender".equals(request.getApprovalUser())) {
                 transactionDirection = Status.OWE;
                 counterParty = result.getRecipientUser();
-                if (Status.REJECT.equals(result.getIsRecipientStatus())) {
-                    isRejected = true;
-                }
             } else {
                 transactionDirection = Status.OWED;
                 counterParty = result.getSenderUser();
-                if (Status.REJECT.equals(result.getIsSenderStatus())) {
-                    isRejected = true;
-                }
+
             }
 
             if (transactionUpdateDto.getTransactionUpdateList() == null) {
@@ -103,19 +95,17 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
             transactionListDto.setCounterPartyId(counterParty.getUserUUID());
             transactionListDto.setCounterPartyName(counterParty.getUserName());
             transactionListDto.setTransactionDirection(String.valueOf(transactionDirection));
-            transactionListDto.setHasSentOrReceived(hasSentOrReceived);
-            transactionListDto.setIsRejected(isRejected);
-            String formattedTransactionAmount =String.format("%.2f",result.getTransactionAmount());
+            String formattedTransactionAmount = String.format("%.2f", result.getTransactionAmount());
             transactionListDto.setTransactionAmount(formattedTransactionAmount);
 
             transactionUpdateDto.getTransactionUpdateList().add(transactionListDto);
             return transactionUpdateDto;
         }
-        throw  new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP);
+        throw new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP);
     }
 
     @Override
-    public TransactionUpdateDto retrievedUpdateListInGroup(UserInfoDto userInfoDto) throws CustomException {
+    public TransactionUpdateDto retrievedReceivedListInGroup(UserInfoDto userInfoDto) throws CustomException {
         UserEntity existingUser = userRepo.findByUserUUID(userInfoDto.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         List<GroupUserEntity> userInGroupList =
@@ -138,7 +128,7 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
             log.info("Filtered list size for optimized transactions: {}", filterOneSideClearInGroupOptimizedTransactionList.size());
             combinateList.addAll(filterOneSideClearInGroupOptimizedTransactionList);
             List<TransactionalEntity> filterOneSideClearInFinalOptimizedTransactionList =
-                    filterOneSideClearInFinalOptimizedTransaction(existingGroup, existingUser);
+                    filterOneSideClearInUltimateOptimizedTransaction(existingGroup, existingUser);
             log.info("Filtered list size for optimized transactions: {}", filterOneSideClearInFinalOptimizedTransactionList.size());
             combinateList.addAll(filterOneSideClearInFinalOptimizedTransactionList);
 
@@ -163,14 +153,6 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
         Status transactionDirection = transaction.getSenderUser().equals(user) ? Status.OWE : Status.OWED;
 
 
-        Boolean hasSentOrReceived = Status.CLEAR.equals(transaction.getSenderUser().equals(user) ? transaction.getIsSenderStatus() : transaction.getIsRecipientStatus());
-
-
-        Boolean isRejected = null;
-        if (Status.REJECT.equals(transaction.getSenderUser().equals(user) ? transaction.getIsRecipientStatus() : transaction.getIsSenderStatus())) {
-            isRejected = Boolean.TRUE;
-        }
-
         TransactionUpdateDto.TransactionListDto transactionListDto = new TransactionUpdateDto.TransactionListDto();
         transactionListDto.setTransactionId(transaction.getTransactionUUID());
         transactionListDto.setGroupId(transaction.getGroup().getGroupUUID());
@@ -178,52 +160,24 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
         transactionListDto.setCounterPartyId(counterParty.getUserUUID());
         transactionListDto.setCounterPartyName(counterParty.getUserName());
         transactionListDto.setTransactionDirection(String.valueOf(transactionDirection));
-        transactionListDto.setHasSentOrReceived(hasSentOrReceived);
-        transactionListDto.setIsRejected(isRejected);
-        String formattedTransactionAmount =String.format("%.2f",transaction.getTransactionAmount());
+        String formattedTransactionAmount = String.format("%.2f", transaction.getTransactionAmount());
         transactionListDto.setTransactionAmount(formattedTransactionAmount);
 
         return transactionListDto;
     }
 
-    private List<TransactionalEntity> filterOneSideClearInFinalOptimizedTransaction(GroupEntity existingGroup, UserEntity existingUser) {
-        List<OptimizedTransactionEntity> transactions = optimizedTransactionRepo.findTransactionsWithOneSideClearAndNotInheritedClear(existingGroup);
-
-        return transactions.stream()
-                .filter(transaction -> {
-                    if (transaction.getSenderUser().equals(existingUser) && transaction.getIsSenderStatus() == Status.PENDING) {
-                        return true;
-                    } else
-                        return transaction.getRecipientUser().equals(existingUser) && transaction.getIsRecipientStatus() == Status.PENDING;
-                })
-                .collect(Collectors.toList());
+    private List<TransactionalEntity> filterOneSideClearInUltimateOptimizedTransaction(GroupEntity existingGroup, UserEntity existingUser) {
+        return ultimateOptimizedTransactionRepo.findTransactionsForRecipientUserWithSentNotChecked(existingUser.getId(), existingGroup.getId());
     }
 
-    private List<TransactionalEntity> filterOneSideClearInGroupOptimizedTransaction(GroupEntity existingGroup, UserEntity existingUser) {
-        List<GroupOptimizedTransactionEntity> transactions = groupOptimizedTransactionRepo.findTransactionsWithOneSideClearAndNotInheritedClear(existingGroup);
 
-        return transactions.stream()
-                .filter(transaction -> {
-                    if (transaction.getSenderUser().equals(existingUser) && transaction.getIsSenderStatus() == Status.PENDING) {
-                        return true;
-                    } else
-                        return transaction.getRecipientUser().equals(existingUser) && transaction.getIsRecipientStatus() == Status.PENDING;
-                })
-                .collect(Collectors.toList());
+    private List<TransactionalEntity> filterOneSideClearInGroupOptimizedTransaction(GroupEntity existingGroup, UserEntity existingUser) {
+        return groupOptimizedTransactionRepo.findTransactionsForRecipientUserWithSentNotChecked(existingUser.getId(), existingGroup.getId());
     }
 
     private List<TransactionalEntity> filterOneSideClearInOptimizedTransaction(GroupEntity existingGroup, UserEntity existingUser) {
-        List<FinalOptimizedTransactionEntity> transactions = mergeOptimizedTransactionRepo.findTransactionsWithOneSideClear(existingGroup);
-
-        return transactions.stream()
-                .filter(transaction -> {
-                    if (transaction.getSenderUser().equals(existingUser) && transaction.getIsSenderStatus() == Status.PENDING) {
-                        return true;
-                    } else
-                        return transaction.getRecipientUser().equals(existingUser) && transaction.getIsRecipientStatus() == Status.PENDING;
-                })
-                .collect(Collectors.toList());
+        return optimizedTransactionRepo.findTransactionsForRecipientUserWithSentNotChecked(existingUser.getId(), existingGroup.getId());
     }
-}
 
+}
 

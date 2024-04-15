@@ -1,6 +1,7 @@
 package settleup.backend.domain.receipt.controller;
 
 import lombok.AllArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import settleup.backend.domain.receipt.entity.dto.ReceiptDto;
@@ -10,6 +11,7 @@ import settleup.backend.domain.transaction.entity.dto.TransactionDto;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.service.LoginService;
 import settleup.backend.global.common.ResponseDto;
+import settleup.backend.global.event.ReceiptCreatedEvent;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
@@ -23,6 +25,7 @@ public class ReceiptController {
 
     private final LoginService loginService;
     private final ReceiptService receiptService;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     @PostMapping("/expense/create")
@@ -37,10 +40,13 @@ public class ReceiptController {
 
         TransactionDto transactionDto = receiptService.createReceipt(requestDto);
 
+
         Map<String, Object> receiptInfo = new HashMap<>();
         receiptInfo.put("receiptId", transactionDto.getReceipt().getReceiptUUID());
         receiptInfo.put("receiptName", transactionDto.getReceipt().getReceiptName());
         receiptInfo.put("createdAt", transactionDto.getReceipt().getCreatedAt().toString());
+
+        eventPublisher.publishEvent(new ReceiptCreatedEvent(this, transactionDto));
 
         return ResponseEntity.ok(new ResponseDto(true, "Receipt creation process started.", receiptInfo));
 

@@ -11,6 +11,7 @@ import settleup.backend.domain.transaction.entity.dto.TransactionDto;
 import settleup.backend.domain.transaction.repository.RequireTransactionRepository;
 import settleup.backend.domain.transaction.service.NetService;
 import settleup.backend.domain.user.entity.UserEntity;
+import settleup.backend.domain.user.entity.dto.UserGroupDto;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,14 +26,14 @@ public class NetServiceImpl implements NetService {
     private final GroupUserRepository groupUserRepo;
 
     @Override
-    public List<NetDto> calculateNet(TransactionDto transactionDto) {
+    public List<NetDto> calculateNet(UserGroupDto group) {
 
         List<GroupUserEntity> groupUsers =
-                groupUserRepo.findByGroup_Id(transactionDto.getGroup().getId());
+                groupUserRepo.findByGroup_Id(group.getGroup().getId());
 
 
         List<RequiresTransactionEntity> netTargetList =
-                transactionRepo.findByGroupIdAndStatusNotClearAndNotInherited(transactionDto.getGroup().getId());
+                transactionRepo.findByGroupIdAndRequiredReflection(group.getGroup().getId());
 
         Map<UserEntity, Float> userNetAmountMap = new HashMap<>();
 
@@ -55,7 +56,7 @@ public class NetServiceImpl implements NetService {
 
         List<NetDto> netDtoList = new ArrayList<>();
         for (Map.Entry<UserEntity, Float> entry : userNetAmountMap.entrySet()) {
-            netDtoList.add(new NetDto(entry.getKey(), transactionDto.getGroup(), entry.getValue()));
+            netDtoList.add(new NetDto(entry.getKey(), group.getGroup(), entry.getValue()));
         }
         return netDtoList;
     }

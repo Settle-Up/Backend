@@ -10,5 +10,4 @@ import lombok.NoArgsConstructor;
 public class TransactionUpdateRequestDto {
     private String transactionId;
     private String approvalUser;
-    private String approvalStatus;
 }

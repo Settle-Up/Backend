@@ -37,29 +37,26 @@ public class GroupOptimizedTransactionEntity implements TransactionalEntity {
     private double transactionAmount;
 
 
-    @Column(nullable = false)
+    @Column(name = "optimization_status",nullable = false)
     @Enumerated(EnumType.STRING)
-    private Status isUsed;
+    private Status optimizationStatus;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "is_sender_status", nullable = false)
-    private Status isSenderStatus;
+    @Column(name = "has_been_sent_status", nullable = false)
+    private Boolean hasBeenSent;
+
+    @Column(name = "has_been_check_status", nullable = false)
+    private Boolean hasBeenChecked;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "is_recipient_status", nullable = false)
-    private Status isRecipientStatus;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "is_inheritances_status", nullable = false)
-    private Status isInheritanceStatus;
+    @Column(name = "require_reflection", nullable = false)
+    private Status requiredReflection;
 
     @Column(name = "clear_status_timestamp")
     @Setter
     private LocalDateTime clearStatusTimestamp;
-
 
 
     @Override
@@ -82,14 +79,20 @@ public class GroupOptimizedTransactionEntity implements TransactionalEntity {
 
 
     @Override
-    public Status getIsSenderStatus() {
-        return this.isSenderStatus;
+    public Boolean getHasBeenSent() {
+        return this.hasBeenSent;
     }
 
     @Override
-    public Status getIsRecipientStatus() {
-        return this.isRecipientStatus;
+    public Boolean getHasBeenChecked() {
+        return this.hasBeenChecked;
     }
+
+    @Override
+    public Status getRequiredReflection(){return this.requiredReflection;}
+
+    @Override
+    public LocalDateTime getCreatedAt(){return this.createdAt;}
 
     @Override
     public LocalDateTime getClearStatusTimeStamp() {

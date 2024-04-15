@@ -8,31 +8,28 @@ import settleup.backend.domain.transaction.entity.dto.NetDto;
 import settleup.backend.domain.transaction.entity.dto.TransactionDto;
 import settleup.backend.domain.transaction.entity.dto.TransactionP2PResultDto;
 import settleup.backend.domain.transaction.service.*;
+import settleup.backend.domain.user.entity.dto.UserGroupDto;
 
 import java.util.List;
 
 @AllArgsConstructor
 @Service
-@Transactional
-public class TransactionSagaServiceImpl implements TransactionSagaService {
-    private final RequireTransactionService requireService;
+public class OptimizedDirectionServiceImpl implements OptimizedDirectionService {
     private final GroupOptimizedService groupOptimizedService;
     private final OptimizedService optimizedService;
     private final NetService netService;
-    private final FinalOptimizedService mergeTransaction;
+    private final UltimateOptimizedService ultimateOptimizedService;
 
     @Override
-    public void performOptimizationOperations(TransactionDto transactionDto) {
+    @Transactional
+    public void performOptimizationOperations(UserGroupDto userGroupDto) {
         try {
+            List<NetDto> netList = netService.calculateNet(userGroupDto);
+            TransactionP2PResultDto resultDto = optimizedService.optimizationOfp2p(userGroupDto);
 
-            TransactionDto transactionDto1 = requireService.createExpense(transactionDto);
-
-            List<NetDto> netList = netService.calculateNet(transactionDto1);
-
-            TransactionP2PResultDto resultDto = optimizedService.optimizationOfp2p(transactionDto1);
-
-            groupOptimizedService.optimizationInGroup(resultDto, netList);
-            mergeTransaction.lastMergeTransaction(resultDto);
+            if (groupOptimizedService.optimizationInGroup(resultDto, netList)) {
+                ultimateOptimizedService.ultimateOptimizedTransaction(resultDto);
+            }
 
         } catch (Exception e) {
             Sentry.captureException(e);

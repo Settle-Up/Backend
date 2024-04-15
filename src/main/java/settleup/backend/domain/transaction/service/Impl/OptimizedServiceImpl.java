@@ -16,6 +16,7 @@ import settleup.backend.domain.transaction.repository.RequireTransactionReposito
 import settleup.backend.domain.transaction.service.OptimizedService;
 import settleup.backend.domain.transaction.service.TransactionInheritanceService;
 import settleup.backend.domain.user.entity.UserEntity;
+import settleup.backend.domain.user.entity.dto.UserGroupDto;
 import settleup.backend.domain.user.repository.UserRepository;
 import settleup.backend.global.common.Status;
 import settleup.backend.global.common.UUID_Helper;
@@ -37,10 +38,9 @@ import java.util.stream.Collectors;
 @Transactional
 public class OptimizedServiceImpl implements OptimizedService {
     private GroupUserRepository groupUserRepo;
-    private RequireTransactionRepository transactionRepo;
+    private RequireTransactionRepository requireTransactionRepo;
     private OptimizedTransactionRepository optimizedTransactionRepo;
     private OptimizedTransactionDetailsRepository optimizedTransactionDetailsRepo;
-    private RequireTransactionRepository requireTransactionRepo;
     private UserRepository userRepo;
     private UUID_Helper uuidHelper;
     private final TransactionInheritanceService transactionInheritanceService;
@@ -49,7 +49,6 @@ public class OptimizedServiceImpl implements OptimizedService {
     /**
      * optimizationOfp2p
      *
-     * @param targetDto (receipt , group, allocationType , payerUser)
      * @throws CustomException
      * @process 1. optimizationOfp2p
      * 2. createCombinationList
@@ -62,18 +61,21 @@ public class OptimizedServiceImpl implements OptimizedService {
      * }else{sender=(1), recipient=(0), |totalAmount| }
      */
     @Override
-    public TransactionP2PResultDto optimizationOfp2p(TransactionDto targetDto) throws CustomException {
-        optimizedTransactionRepo.updateIsUsedStatusByGroup(targetDto.getGroup(), Status.USED);
-        List<List<Long>> nodeList = createCombinationList(targetDto.getGroup());
+    public TransactionP2PResultDto optimizationOfp2p(UserGroupDto groupDto) throws CustomException {
+        optimizedTransactionRepo.updateOptimizationStatusByGroup(groupDto.getGroup(), Status.PREVIOUS);
+        List<List<Long>> nodeList = createCombinationList(groupDto.getGroup());
         System.out.println("heyNode:" + nodeList);
-        return optimizationTargetList(targetDto.getGroup(), nodeList);
+        return optimizationTargetList(groupDto.getGroup(), nodeList);
     }
 
     private TransactionP2PResultDto optimizationTargetList(GroupEntity group, List<List<Long>> nodeList) {
         TransactionP2PResultDto resultDto = new TransactionP2PResultDto();
         resultDto.setNodeList(nodeList);
+        resultDto.setGroup(group);
+
         List<Long> savedOptimizedTransactionIds = new ArrayList<>();
-        List<RequiresTransactionEntity> targetGroupList = requireTransactionRepo.findByGroupIdAndStatusNotClearAndNotInherited(group.getId());
+        List<RequiresTransactionEntity> targetGroupList = requireTransactionRepo.findActiveTransactionsByGroup(group.getId());
+
         System.out.println("here's List size:" + targetGroupList.size());
         System.out.println("Total node pairs to process: " + nodeList.size());
 
@@ -126,15 +128,15 @@ public class OptimizedServiceImpl implements OptimizedService {
                     optimizedTransaction.setSenderUser(intermediateCalcDto.getSenderUser());
                     optimizedTransaction.setRecipientUser(intermediateCalcDto.getRecipientUser());
                     optimizedTransaction.setTransactionAmount(intermediateCalcDto.getTransactionAmount());
-                    optimizedTransaction.setIsSenderStatus(Status.PENDING);
-                    optimizedTransaction.setIsRecipientStatus(Status.PENDING);
-                    optimizedTransaction.setIsInheritanceStatus(Status.PENDING);
-                    optimizedTransaction.setIsUsed(Status.NOT_USED);
+                    optimizedTransaction.setHasBeenSent(false);
+                    optimizedTransaction.setHasBeenChecked(false);
+                    optimizedTransaction.setRequiredReflection(Status.REQUIRE_REFLECT);
+                    optimizedTransaction.setOptimizationStatus(Status.CURRENT);
                     optimizedTransaction.setCreatedAt(LocalDateTime.now());
                     OptimizedTransactionEntity savedOptimizedTransaction =
                             optimizedTransactionRepo.save(optimizedTransaction);
                     savedOptimizedTransactionIds.add(savedOptimizedTransaction.getId());
-                    resultDto.setP2pList(savedOptimizedTransactionIds);
+                    resultDto.setOptimiziationByPeerToPeerList(savedOptimizedTransactionIds);
 
                     for (RequiresTransactionEntity transaction : intermediateCalcDto.getDuringOptimizationUsed()) {
                         OptimizedTransactionDetailsEntity details = new OptimizedTransactionDetailsEntity();
@@ -142,13 +144,20 @@ public class OptimizedServiceImpl implements OptimizedService {
                         details.setOptimizedTransaction(optimizedTransaction);
                         details.setRequiresTransaction(transaction);
                         optimizedTransactionDetailsRepo.save(details);
+                        // requireTransaction 은 최초 최적화에 쓰였다고 해도 , hasBeenSent 나 , 합계가 0 이 발생하지 않는한 reflection 건들지 않는다
                     }
                 } else {
-                    // totalAmount가 0인 경우, 모든 거래의 상태를 CLEAR로 설정이 아니라 상속에 의한 clear 만 설정한다
-                    // sender, recipent clear 를 set 하면 유저가 정산한 것 처럼 나오기 때문에
+                    /**
+                     * totalAmount가 0인 경우, 모든 거래의 상태를 true로 설정이 아니라 상속에 의한 clear 만  true로 설정한다
+                     * hasBeenSentStatus 를 true로 설정하면 실제유저가 정산한 것 처럼 나오기 때문에
+                     * 추가적으로 clearStatusTimeStamp 수동으로 설정
+                     */
+
+                    LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
                     for (RequiresTransactionEntity transactionForClear : filteredTransactions) {
-                        transactionForClear.setIsInheritanceStatus(Status.INHERITED_CLEAR);
-                        transactionRepo.save(transactionForClear);
+                        transactionForClear.setRequiredReflection(Status.INHERITED_CLEAR);
+                        requireTransactionRepo.save(transactionForClear);
+                        requireTransactionRepo.updateClearStatusTimestampById(transactionForClear.getId(), newClearStatusTimestamp);
                     }
                 }
             }
@@ -186,27 +195,23 @@ public class OptimizedServiceImpl implements OptimizedService {
 
     @Override
     @Transactional
-    public TransactionalEntity processTransaction(String transactionId, TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
-        OptimizedTransactionEntity transactionEntity = optimizedTransactionRepo.findByTransactionUUID(transactionId)
+    public TransactionalEntity processTransaction(TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
+        OptimizedTransactionEntity transactionEntity = optimizedTransactionRepo.findByTransactionUUID(request.getTransactionId())
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP));
 
         if (!transactionEntity.getGroup().getId().equals(existingGroup.getId())) {
             throw new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP);
         }
+        List<OptimizedTransactionDetailsEntity> optimizedTransactionId =
+                optimizedTransactionDetailsRepo.findByOptimizedTransactionId(transactionEntity.getId());
 
-
-        LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
-        Optional<OptimizedTransactionEntity> bothSideClearTransaction = optimizedTransactionRepo.findByTransactionUUID(transactionId);
-        if (bothSideClearTransaction.isPresent()) {
-            OptimizedTransactionEntity transaction = bothSideClearTransaction.get();
-            if (transaction.getIsSenderStatus() == Status.CLEAR && transaction.getIsRecipientStatus() == Status.CLEAR) {
-                optimizedTransactionRepo.updateClearStatusTimestampById(transaction.getId(), newClearStatusTimestamp);
-                transactionInheritanceService.clearInheritanceStatusForOptimizedToRequired(transaction.getId());
-            }
+        for(OptimizedTransactionDetailsEntity inheritanceTransaction :optimizedTransactionId){
+            transactionInheritanceService.clearInheritanceStatusFromOptimizedToRequired(inheritanceTransaction.getId());
         }
 
         return transactionEntity;
     }
+
 }
 
 

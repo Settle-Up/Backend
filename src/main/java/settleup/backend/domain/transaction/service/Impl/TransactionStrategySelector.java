@@ -3,16 +3,10 @@ package settleup.backend.domain.transaction.service.Impl;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionEntity;
-import settleup.backend.domain.transaction.entity.OptimizedTransactionEntity;
-import settleup.backend.domain.transaction.entity.TransactionalEntity;
 import settleup.backend.domain.transaction.entity.dto.TransactionUpdateRequestDto;
-import settleup.backend.domain.transaction.repository.FinalOptimizedTransactionRepository;
-import settleup.backend.domain.transaction.repository.GroupOptimizedTransactionDetailRepository;
+import settleup.backend.domain.transaction.repository.UltimateOptimizedTransactionRepository;
 import settleup.backend.domain.transaction.repository.GroupOptimizedTransactionRepository;
 import settleup.backend.domain.transaction.repository.OptimizedTransactionRepository;
 import settleup.backend.domain.transaction.service.*;
@@ -20,7 +14,7 @@ import settleup.backend.global.common.Status;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
-import java.util.Optional;
+import java.time.LocalDateTime;
 
 @Service
 @AllArgsConstructor
@@ -28,10 +22,10 @@ import java.util.Optional;
 public class TransactionStrategySelector {
     private final GroupOptimizedService groupOptimizedService;
     private final OptimizedService optimizedService;
-    private final FinalOptimizedService finalOptimizedService;
+    private final UltimateOptimizedService ultimateOptimizedService;
     private final GroupOptimizedTransactionRepository groupOptimizedTransactionRepo;
     private final OptimizedTransactionRepository optimizedTransactionRepo;
-    private final FinalOptimizedTransactionRepository mergeOptimizedRepo;
+    private final UltimateOptimizedTransactionRepository ultimateOptimizedRepo;
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -39,7 +33,7 @@ public class TransactionStrategySelector {
     @Transactional
     public TransactionProcessingService selectService(String transactionId) throws CustomException {
         if (transactionId.startsWith("FPT")) {
-            return finalOptimizedService;
+            return ultimateOptimizedService;
         } else if (transactionId.startsWith("GPT")) {
             return groupOptimizedService;
         } else if (transactionId.startsWith("OPT")) {
@@ -49,26 +43,37 @@ public class TransactionStrategySelector {
         }
     }
 
+    /**
+     * request 안에 든거 => transactionId , approvalUser(sender or recipient)
+     */
+
     @Transactional
-    public String selectRepository(String transactionId, TransactionUpdateRequestDto request) throws CustomException {
-        Status statusToUpdate = Status.valueOf(request.getApprovalStatus());
+    public String selectRepository(TransactionUpdateRequestDto request) throws CustomException {
+        String transactionId = request.getTransactionId();
+        LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
         if (transactionId.startsWith("FPT")) {
             if ("sender".equals(request.getApprovalUser())) {
-                mergeOptimizedRepo.updateIsSenderStatusByUUID(transactionId, statusToUpdate);
+                ultimateOptimizedRepo.markHasBeenSentByUUID(transactionId);
+                ultimateOptimizedRepo.updateClearStatusTimestampById
+                        (ultimateOptimizedRepo.findByTransactionUUID(transactionId).get().getId(), newClearStatusTimestamp);
             } else {
-                mergeOptimizedRepo.updateIsRecipientStatusByUUID(transactionId, statusToUpdate);
+                ultimateOptimizedRepo.markHasBeenCheckByUUID(transactionId);
             }
         } else if (transactionId.startsWith("GPT")) {
             if ("sender".equals(request.getApprovalUser())) {
-                groupOptimizedTransactionRepo.updateIsSenderStatusByUUID(transactionId, statusToUpdate);
+                groupOptimizedTransactionRepo.markHasBeenSentByUUID(transactionId);
+                groupOptimizedTransactionRepo.updateClearStatusTimestampById
+                        (groupOptimizedTransactionRepo.findByTransactionUUID(transactionId).get().getId(), newClearStatusTimestamp);
             } else {
-                groupOptimizedTransactionRepo.updateIsRecipientStatusByUUID(transactionId, statusToUpdate);
+                groupOptimizedTransactionRepo.markHasBeenCheckByUUID(transactionId);
             }
         } else if (transactionId.startsWith("OPT")) {
             if ("sender".equals(request.getApprovalUser())) {
-                optimizedTransactionRepo.updateIsSenderStatusByUUID(transactionId, statusToUpdate);
+                optimizedTransactionRepo.markHasBeenSentByUUID(transactionId);
+                optimizedTransactionRepo.updateClearStatusTimestampById
+                        (optimizedTransactionRepo.findByTransactionUUID(transactionId).get().getId(), newClearStatusTimestamp);
             } else {
-                optimizedTransactionRepo.updateIsRecipientStatusByUUID(transactionId, statusToUpdate);
+                optimizedTransactionRepo.markHasBeenCheckByUUID(transactionId);
             }
         } else {
             throw new CustomException(ErrorCode.TRANSACTION_TYPE_NOT_SUPPORTED);

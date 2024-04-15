@@ -44,16 +44,8 @@ public class RequiresTransactionEntity {
     private Double transactionAmount;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "is_sender_status", nullable = false)
-    private Status isSenderStatus;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "is_recipient_status", nullable = false)
-    private Status isRecipientStatus;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "is_inheritances_status", nullable = false)
-    private Status isInheritanceStatus;
+    @Column(name = "require_reflection", nullable = false)
+    private Status requiredReflection;
 
     @Column(name = "clear_status_timestamp")
     @Setter

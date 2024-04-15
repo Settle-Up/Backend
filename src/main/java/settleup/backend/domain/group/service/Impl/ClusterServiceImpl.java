@@ -191,7 +191,7 @@ public class ClusterServiceImpl implements ClusterService {
         GroupEntity existingGroup = groupRepo.findByGroupUUID(groupId)
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
 
-        List<RequiresTransactionEntity> unSettledList = requireTransactionRepo.findByGroupAndUserAndStatusNotClearAndNotInherited(existingGroup.getId(), existingUser.getId());
+        List<RequiresTransactionEntity> unSettledList = requireTransactionRepo.findActiveTransactionsByGroupAndUser(existingGroup.getId(), existingUser.getId());
         if (!unSettledList.isEmpty()) {
             throw new CustomException(ErrorCode.SETTLED_REQUIRED);
         }

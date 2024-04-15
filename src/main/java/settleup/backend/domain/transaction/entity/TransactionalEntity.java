@@ -1,5 +1,8 @@
 package settleup.backend.domain.transaction.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.global.common.Status;
@@ -19,9 +22,14 @@ public interface TransactionalEntity {
 
     String getTransactionUUID();
 
-    Status getIsSenderStatus();
+    Boolean getHasBeenSent();
 
-    Status getIsRecipientStatus();
+    Boolean getHasBeenChecked();
+
+    Status getRequiredReflection();
+
+    LocalDateTime getCreatedAt();
+
 
     LocalDateTime getClearStatusTimeStamp();
 

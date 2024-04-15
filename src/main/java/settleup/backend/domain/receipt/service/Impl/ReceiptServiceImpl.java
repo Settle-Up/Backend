@@ -51,6 +51,7 @@ public class ReceiptServiceImpl implements ReceiptService {
      */
 
     @Override
+    @Transactional
     public TransactionDto createReceipt(ReceiptDto requestDto) {
 
         GroupEntity groupEntity = groupRepo.findByGroupUUID(requestDto.getGroupId())
@@ -122,7 +123,6 @@ public class ReceiptServiceImpl implements ReceiptService {
         transactionDto.setAllocationType(requestDto.getAllocationType());
         transactionDto.setPayerUser(receiptEntity.getPayerUser());
         transactionDto.setOwedUser(new ArrayList<>(owedUsers));
-        eventPublisher.publishEvent(new ReceiptCreatedEvent(this, transactionDto));
         return transactionDto;
     }
 

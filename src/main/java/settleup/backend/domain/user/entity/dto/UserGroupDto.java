@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import settleup.backend.domain.group.entity.GroupEntity;
+import settleup.backend.domain.group.entity.GroupUserEntity;
 import settleup.backend.domain.user.entity.UserEntity;
 
 import java.util.List;
@@ -14,4 +15,6 @@ import java.util.List;
 public class UserGroupDto {
     GroupEntity group;
     List<UserEntity> userEntityList;
+    GroupUserEntity groupUser;
+    UserEntity singleUser;
 }

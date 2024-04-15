@@ -2,6 +2,8 @@ package settleup.backend.domain.transaction.service.Impl;
 
 import lombok.AllArgsConstructor;
 import org.hibernate.exception.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,8 +16,10 @@ import settleup.backend.domain.transaction.entity.RequiresTransactionEntity;
 import settleup.backend.domain.transaction.repository.OptimizedTransactionDetailsRepository;
 import settleup.backend.domain.transaction.repository.OptimizedTransactionRepository;
 import settleup.backend.domain.transaction.repository.RequireTransactionRepository;
+import settleup.backend.domain.transaction.service.OptimizedDirectionService;
 import settleup.backend.domain.transaction.service.OptimizedService;
 import settleup.backend.domain.transaction.service.RequireTransactionService;
+import settleup.backend.domain.user.entity.dto.UserGroupDto;
 import settleup.backend.domain.user.repository.UserRepository;
 import settleup.backend.global.common.Status;
 import settleup.backend.global.common.UUID_Helper;
@@ -32,10 +36,11 @@ import java.util.concurrent.CompletableFuture;
 public class RequireTransactionServiceImpl implements RequireTransactionService {
 
     private final UUID_Helper uuidHelper;
+    private final OptimizedDirectionService optimizedDirectionService;
     private final ReceiptItemRepository itemRepository;
     private final ReceiptItemUserRepository itemUserRepository;
-
     private final RequireTransactionRepository transactionRepository;
+    private static final Logger logger = LoggerFactory.getLogger(RequireTransactionService.class);
 
     /**
      * createExpense
@@ -47,44 +52,72 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
 
 
     @Override
-    public TransactionDto createExpense(TransactionDto requestDto) {
+    @Transactional
+    public void createExpense(TransactionDto requestDto) {
         processTransactionItems(requestDto);
-        return requestDto;
+
     }
 
 
     private void processTransactionItems(TransactionDto requestDto) {
         List<ReceiptItemEntity> itemList = itemRepository.findByReceiptId(requestDto.getReceipt().getId());
+        boolean allTransactionsSaved = true;
 
-        itemList.forEach(item -> {
+        for (ReceiptItemEntity item : itemList) {
             List<ReceiptItemUserEntity> itemUserList = itemUserRepository.findByReceiptItemId(item.getId());
-            itemUserList.forEach(itemUser -> processEachTransaction(item, itemUser, requestDto));
-        });
-    }
+            for (ReceiptItemUserEntity itemUser : itemUserList) {
+                double saveAmount = calculateSaveAmount(item, itemUser);
+                if (isTransactionRequired(itemUser, requestDto) && !saveTransaction(itemUser, requestDto, saveAmount)) {
+                    allTransactionsSaved = false;
+                }
+            }
+        }
 
-    private void processEachTransaction(ReceiptItemEntity item, ReceiptItemUserEntity itemUser, TransactionDto requestDto) {
-        double saveAmount = calculateSaveAmount(item, itemUser);
-        if (isTransactionRequired(itemUser, requestDto)) {
-            saveTransaction(itemUser, requestDto, saveAmount);
+        if (allTransactionsSaved) {
+            UserGroupDto userGroupDto = new UserGroupDto();
+            userGroupDto.setGroup(requestDto.getGroup());
+            optimizedDirectionService.performOptimizationOperations(userGroupDto);
         }
     }
 
-    private double calculateSaveAmount(ReceiptItemEntity item, ReceiptItemUserEntity itemUser) {
-        double targetDividedValue = (float) (item.getUnitPrice() * item.getItemQuantity());
-        return Optional.ofNullable(itemUser.getPurchasedQuantity())
-                .map(purchasedQuantity -> targetDividedValue * purchasedQuantity / item.getItemQuantity())
-                .orElseGet(() -> targetDividedValue / item.getJointPurchaserCount());
+
+    private void processEachTransaction(ReceiptItemEntity item, ReceiptItemUserEntity itemUser, TransactionDto requestDto) {
+        double saveAmount = calculateSaveAmount(item, itemUser);
+        logger.debug("Processed transaction item with amount: {}, for user: {}", saveAmount, itemUser.getUser().getId());
+        if (isTransactionRequired(itemUser, requestDto)) {
+            saveTransaction(itemUser, requestDto, saveAmount);
+        } else {
+            logger.debug("Transaction not required for user: {}", itemUser.getUser().getId());
+        }
     }
 
+
+    private double calculateSaveAmount(ReceiptItemEntity item, ReceiptItemUserEntity itemUser) {
+        double targetDividedValue = item.getUnitPrice() * item.getItemQuantity();
+        return Optional.ofNullable(itemUser.getPurchasedQuantity())
+                .map(purchasedQuantity -> targetDividedValue * purchasedQuantity / item.getItemQuantity())
+                .orElseGet(() -> targetDividedValue);
+    }
+
+
     private boolean isTransactionRequired(ReceiptItemUserEntity itemUser, TransactionDto requestDto) {
+
         return !itemUser.getUser().getId().equals(requestDto.getReceipt().getPayerUser().getId());
     }
 
-    private void saveTransaction(ReceiptItemUserEntity itemUser, TransactionDto requestDto, double saveAmount) {
-        RequiresTransactionEntity transaction = createTransactionEntity(itemUser, requestDto, saveAmount);
-        transactionRepository.save(transaction);
 
+    private boolean saveTransaction(ReceiptItemUserEntity itemUser, TransactionDto requestDto, double saveAmount) {
+        try {
+            RequiresTransactionEntity transaction = createTransactionEntity(itemUser, requestDto, saveAmount);
+            transactionRepository.save(transaction);
+            logger.debug("Transaction saved successfully for user: {}", itemUser.getUser().getId());
+            return true;
+        } catch (DataAccessException ex) {
+            logger.error("Error saving transaction for user: {}", itemUser.getUser().getId(), ex);
+            return false;
+        }
     }
+
 
 
     private RequiresTransactionEntity createTransactionEntity(ReceiptItemUserEntity itemUser, TransactionDto requestDto, double saveAmount) {
@@ -93,11 +126,10 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
         transaction.setReceipt(requestDto.getReceipt());
         transaction.setGroup(requestDto.getGroup());
         transaction.setRecipientUser(requestDto.getPayerUser());
-        transaction.setIsRecipientStatus(Status.PENDING);
-        transaction.setIsSenderStatus(Status.PENDING);
-        transaction.setIsInheritanceStatus(Status.PENDING);
+        transaction.setRequiredReflection(Status.REQUIRE_OPTIMIZED);
         transaction.setSenderUser(itemUser.getUser());
         transaction.setTransactionAmount(saveAmount);
         return transaction;
     }
+
 }

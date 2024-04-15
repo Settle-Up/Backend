@@ -1,5 +1,6 @@
 package settleup.backend.domain.group.entity.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,8 +30,7 @@ public class GroupOverviewDto {
         private String transactionAmount;
         private String transactionId;
         private Status transactionDirection;
-        private Boolean hasSentOrReceived;
-        private Boolean isRejected;
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         private String clearedAt;
     }
 
