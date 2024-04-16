@@ -74,7 +74,6 @@ public class OverviewServiceImpl implements OverviewService {
         validUserGroupDto.setSingleUser(existingUser);
         return validUserGroupDto;
 
-
     }
 
     private GroupOverviewDto buildInitiateResponseDto(UserGroupDto userGroupDto) {
