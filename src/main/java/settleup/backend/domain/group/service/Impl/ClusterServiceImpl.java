@@ -115,6 +115,7 @@ public class ClusterServiceImpl implements ClusterService {
                 groupUser.getUser().getUserUUID(),
                 groupUser.getUser().getUserName(),
                 null,
+                null,
                 null
         )).collect(Collectors.toList());
 

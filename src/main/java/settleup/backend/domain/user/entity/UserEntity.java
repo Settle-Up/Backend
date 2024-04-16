@@ -23,4 +23,6 @@ public class UserEntity {
     private String userPhone;
     @Column(nullable = false)
     private String userEmail;
+    @Column(nullable = true)
+    private Boolean isDecimalInputOption;
 }

@@ -6,7 +6,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import settleup.backend.global.common.UUID_Helper;
-import settleup.backend.domain.user.entity.dto.SettleUpTokenDto;
+import settleup.backend.domain.user.entity.dto.LoginDto;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.repository.UserRepository;
 import settleup.backend.global.Util.JwtProvider;
@@ -45,12 +45,12 @@ class KaKaoServiceImplTest {
         when(userRepo.findByUserEmail(anyString())).thenReturn(Optional.empty());
 
 
-        SettleUpTokenDto mockSettleUpTokenDto = new SettleUpTokenDto();
-        mockSettleUpTokenDto.setAccessToken("mockAccessToken");
+        LoginDto mockLoginDto = new LoginDto();
+        mockLoginDto.setAccessToken("mockAccessToken");
         when(tokenProvider.createToken(any(UserInfoDto.class))).thenReturn("mockAccessToken");
 
 
-        SettleUpTokenDto result = kaKaoService.registerUser(userInfoDto);
+        LoginDto result = kaKaoService.registerUser(userInfoDto);
 
 
         assertNotNull(result);

@@ -20,6 +20,8 @@ public class UserInfoDto {
     private String userEmail;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String userPhone;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Boolean isDecimalInputOption;
 }
 
 

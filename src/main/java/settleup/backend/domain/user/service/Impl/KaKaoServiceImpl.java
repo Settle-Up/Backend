@@ -9,7 +9,7 @@ import org.springframework.util.MultiValueMap;
 import settleup.backend.global.common.ApiCallHelper;
 import settleup.backend.global.common.UUID_Helper;
 import settleup.backend.domain.user.entity.UserEntity;
-import settleup.backend.domain.user.entity.dto.SettleUpTokenDto;
+import settleup.backend.domain.user.entity.dto.LoginDto;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
@@ -120,7 +120,7 @@ public class KaKaoServiceImpl implements KakaoService {
      */
 
     @Override
-    public SettleUpTokenDto registerUser(UserInfoDto userInfoDto) throws CustomException {
+    public LoginDto registerUser(UserInfoDto userInfoDto) throws CustomException {
         try {
             Optional<UserEntity> existingUser = userRepo.findByUserEmail(userInfoDto.getUserEmail());
             if (existingUser.isPresent()) {
@@ -128,7 +128,8 @@ public class KaKaoServiceImpl implements KakaoService {
                 newUserInfoDto.setUserName(existingUser.get().getUserName());
                 newUserInfoDto.setUserEmail(existingUser.get().getUserEmail());
                 newUserInfoDto.setUserId(existingUser.get().getUserUUID());
-                return createSettleUpLoginTokenInfo(newUserInfoDto);
+                newUserInfoDto.setIsDecimalInputOption(existingUser.get().getIsDecimalInputOption());
+                return createSettleUpLoginInfo(newUserInfoDto);
 
             }
             String userUUID = uuidHelper.UUIDFromEmail(userInfoDto.getUserEmail());
@@ -139,24 +140,26 @@ public class KaKaoServiceImpl implements KakaoService {
             newUser.setUserName(userInfoDto.getUserName());
             newUser.setUserPhone(userInfoDto.getUserPhone());
             newUser.setUserUUID(userUUID);
+            newUser.setIsDecimalInputOption(false);
             userRepo.save(newUser);
-            return createSettleUpLoginTokenInfo(userInfoDto);
+            return createSettleUpLoginInfo(userInfoDto);
         } catch (Exception e) {
             throw new CustomException(ErrorCode.REGISTRATION_FAILED);
         }
 
     }
 
-    private SettleUpTokenDto createSettleUpLoginTokenInfo(UserInfoDto userInfoDto) {
+    private LoginDto createSettleUpLoginInfo(UserInfoDto userInfoDto) {
         try {
-            SettleUpTokenDto settleUpTokenDto = new SettleUpTokenDto();
-            settleUpTokenDto.setAccessToken(tokenProvider.createToken(userInfoDto));
-            settleUpTokenDto.setSubject("ForSettleUpLogin");
-            settleUpTokenDto.setExpiresIn("1 day");
-            settleUpTokenDto.setIssuedTime(new Date().toString());
-            settleUpTokenDto.setUserName(userInfoDto.getUserName());
-            settleUpTokenDto.setUserId(userInfoDto.getUserId());
-            return settleUpTokenDto;
+            LoginDto loginDto = new LoginDto();
+            loginDto.setAccessToken(tokenProvider.createToken(userInfoDto));
+            loginDto.setSubject("ForSettleUpLogin");
+            loginDto.setExpiresIn("1 day");
+            loginDto.setIssuedTime(new Date().toString());
+            loginDto.setUserId(userInfoDto.getUserId());
+            loginDto.setUserName(userInfoDto.getUserName());
+            loginDto.setIsDecimalInputOption(userInfoDto.getIsDecimalInputOption());
+            return loginDto;
         } catch (Exception e) {
             throw new CustomException(ErrorCode.TOKEN_CREATION_FAILED);
         }
