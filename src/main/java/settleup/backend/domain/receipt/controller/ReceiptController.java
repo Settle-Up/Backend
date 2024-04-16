@@ -48,7 +48,9 @@ public class ReceiptController {
 
         eventPublisher.publishEvent(new ReceiptCreatedEvent(this, transactionDto));
 
-        return ResponseEntity.ok(new ResponseDto(true, "Receipt creation process started.", receiptInfo));
+        ResponseDto responseDto = new ResponseDto<>(true, "Receipt creation process started.", receiptInfo);
+
+        return ResponseEntity.ok(responseDto);
 
     }
 

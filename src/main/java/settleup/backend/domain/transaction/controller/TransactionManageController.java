@@ -13,7 +13,6 @@ import settleup.backend.global.exception.CustomException;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("")
 public class TransactionManageController {
     private final LoginService loginService;
     private final TransactionUpdateService transactionUpdateService;
@@ -36,5 +35,4 @@ public class TransactionManageController {
         ResponseDto responseDto = new ResponseDto<>(true, "update list retrieved successfully", data);
         return ResponseEntity.ok(responseDto);
     }
-
 }

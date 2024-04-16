@@ -30,7 +30,7 @@ public class UserController {
         UserInfoDto userInfo = kakaoService.getUserInfo(tokenInfo.getAccess_token());
         SettleUpTokenDto settleUpLogin = kakaoService.registerUser(userInfo);
         ResponseDto responseDto = new ResponseDto(true, "successfully login", settleUpLogin);
-        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
+        return ResponseEntity.ok(responseDto);
 
     }
 
@@ -41,7 +41,7 @@ public class UserController {
         userInfo.put("userId", userInfoDto.getUserId());
         userInfo.put("userName", userInfoDto.getUserName());
         ResponseDto<Map<String, Object>> responseDto = new ResponseDto<>(true, "Token is valid, Login success", userInfo, null);
-        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
+        return ResponseEntity.ok(responseDto);
     }
 }
 
