@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.group.entity.GroupUserEntity;
 import settleup.backend.domain.group.entity.dto.GroupInfoListDto;
+import settleup.backend.domain.group.repository.GroupRepository;
 import settleup.backend.domain.group.repository.GroupUserRepository;
 import settleup.backend.domain.group.service.RetrievedService;
 import settleup.backend.domain.receipt.entity.ReceiptEntity;
@@ -30,6 +31,7 @@ import java.util.*;
 public class RetrievedServiceImpl implements RetrievedService {
     private final UserRepository userRepo;
     private final GroupUserRepository groupUserRepo;
+    private final GroupRepository groupRepo;
     private final NetService netService;
     private final ReceiptRepository receiptRepo;
 
@@ -79,5 +81,26 @@ public class RetrievedServiceImpl implements RetrievedService {
 
 
         return new GroupInfoListDto(existingUser.getUserUUID(), existingUser.getUserName(), hasNextPage, groupList);
+    }
+
+    @Override
+    public List<UserInfoDto> getGroupUserInfo(String groupUUID) throws CustomException {
+        try {
+            Optional<GroupEntity> existingGroup = Optional.ofNullable(groupRepo.findByGroupUUID(groupUUID)
+                    .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND)));
+            Long groupPrimaryId = existingGroup.get().getId();
+            List<GroupUserEntity> userList = groupUserRepo.findByGroup_Id(groupPrimaryId);
+            List<UserInfoDto> userInfoDtoList = new ArrayList<>();
+            for (GroupUserEntity userEntity : userList) {
+                UserInfoDto userInfoDto = new UserInfoDto();
+                userInfoDto.setUserId(userEntity.getUser().getUserUUID());
+                userInfoDto.setUserEmail(userEntity.getUser().getUserEmail());
+                userInfoDto.setUserName(userEntity.getUser().getUserName());
+                userInfoDtoList.add(userInfoDto);
+            }
+            return userInfoDtoList;
+        } catch (CustomException e) {
+            throw e;
+        }
     }
 }

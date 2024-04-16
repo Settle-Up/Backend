@@ -11,6 +11,11 @@ import settleup.backend.domain.group.service.RetrievedService;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.service.LoginService;
 import settleup.backend.global.common.ResponseDto;
+import settleup.backend.global.exception.CustomException;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 
 @RestController
@@ -30,6 +35,16 @@ public class RetrievedController {
         UserInfoDto userInfo = loginService.validTokenOrNot(token);
         GroupInfoListDto groupInfoListDtoList = retrievedService.getGroupInfoByUser(userInfo, pageable);
         ResponseDto responseDto = new ResponseDto<>(true, "groupList retrieved successfully ", groupInfoListDtoList);
+        return ResponseEntity.ok(responseDto);
+    }
+    @GetMapping("/user/list")
+    public ResponseEntity<ResponseDto> retrievedGroupUserList(
+            @RequestHeader(value = "Authorization") String token, @RequestParam("groupId") String groupUUID) throws CustomException {
+        loginService.validTokenOrNot(token);
+        Map<String, Object> data = new HashMap<>();
+        List<UserInfoDto> memberList = retrievedService.getGroupUserInfo(groupUUID);
+        data.put("memberList", memberList);
+        ResponseDto responseDto = new ResponseDto<>(true,"retrieved successfully",data);
         return ResponseEntity.ok(responseDto);
     }
 }

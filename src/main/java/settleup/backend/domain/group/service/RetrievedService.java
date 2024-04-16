@@ -9,4 +9,6 @@ import java.util.List;
 
 public interface RetrievedService {
     GroupInfoListDto getGroupInfoByUser(UserInfoDto userInfo, Pageable pageable) throws CustomException;
+
+    List<UserInfoDto> getGroupUserInfo(String groupUUID) throws  CustomException;
 }

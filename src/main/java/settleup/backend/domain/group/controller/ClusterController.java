@@ -22,13 +22,13 @@ import java.util.Map;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("")
+@RequestMapping("/group")
 public class ClusterController {
 
     private LoginService loginService;
     private ClusterService clusterService;
 
-    @PostMapping("/group/create")
+    @PostMapping("/create")
     public ResponseEntity<ResponseDto> makeGroup(
             @RequestHeader(value = "Authorization") String token, @RequestBody CreateGroupRequestDto requestDto) throws CustomException {
         loginService.validTokenOrNot(token);
@@ -43,16 +43,6 @@ public class ClusterController {
         return ResponseEntity.ok(responseDtoForClient);
     }
 
-    @GetMapping("/group/user/list")
-    public ResponseEntity<ResponseDto> retrievedGroupUserList(
-            @RequestHeader(value = "Authorization") String token, @RequestParam("groupId") String groupUUID) throws CustomException {
-        loginService.validTokenOrNot(token);
-        Map<String, Object> data = new HashMap<>();
-        List<UserInfoDto> memberList = clusterService.getGroupUserInfo(groupUUID);
-        data.put("memberList", memberList);
-        ResponseDto responseDto = new ResponseDto<>(true,"retrieved successfully",data);
-        return ResponseEntity.ok(responseDto);
-    }
 
     @PatchMapping("/group/alarm")
     public ResponseEntity<ResponseDto> groupMonthlyReport(
@@ -63,7 +53,7 @@ public class ClusterController {
         return ResponseEntity.ok(responseDto);
     }
 
-    @DeleteMapping("/group/remove")
+    @DeleteMapping("/remove")
     public ResponseEntity<ResponseDto> withdrawalGroup(
             @RequestHeader(value = "Authorization") String token, @RequestParam("groupId") String groupUUID) {
         UserInfoDto userInfoDto = loginService.validTokenOrNot(token);
@@ -72,7 +62,7 @@ public class ClusterController {
         return ResponseEntity.ok(responseDto);
     }
 
-    @PostMapping("/group/invite/fundamental")
+    @PostMapping("/invite/fundamental")
     public ResponseEntity<ResponseDto> inviteFromOurSite(
             @RequestHeader(value = "Authorization") String token, @RequestBody CreateGroupRequestDto requestDto,@RequestParam("groupId")String groupId) throws CustomException {
 
