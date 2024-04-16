@@ -102,17 +102,16 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
         logger.debug("DFS started for node: {}", currentNode);
         boolean transactionCreated = false;
         for (DefaultWeightedEdge edge : graph.outgoingEdgesOf(currentNode)) {
-            if (visitedEdges.contains(edge)) continue;  // 이미 방문한 간선은 건너뜁니다.
+            if (visitedEdges.contains(edge)) continue;
 
-            visitedEdges.add(edge);  // 방문한 간선에 추가
+            visitedEdges.add(edge);
             Long targetNode = graph.getEdgeTarget(edge);
             double currentWeight = graph.getEdgeWeight(edge);
 
-            // 가중치가 같을 때만 계속 같은 경로를 따라갑니다
+
             if (currentWeight == lastWeight && !targetNode.equals(startNode)) {
                 transactionCreated |= dfs(graph, targetNode, visitedEdges, edgeTransactionIdMap, group, startNode, lastWeight);
             } else {
-                // 다른 가중치를 만날 경우 새로운 거래를 생성하고, 새 경로를 시작합니다.
                 if (startNode != null && startNode != currentNode) {
                     GroupOptimizedTransactionEntity newTransaction = createOptimizedTransaction(startNode, currentNode, lastWeight, group);
                     saveTransactionDetails(newTransaction, edgeTransactionIdMap, startNode, currentNode, graph);
@@ -125,7 +124,7 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
     }
 
 
-    // 최적화 거래를 생성하고 저장
+
     private GroupOptimizedTransactionEntity createOptimizedTransaction(Long senderId, Long recipientId, double amount, GroupEntity group) {
         GroupOptimizedTransactionEntity newTransaction = new GroupOptimizedTransactionEntity();
         newTransaction.setTransactionUUID(uuidHelper.UUIDForGroupOptimizedTransactions());
@@ -184,7 +183,6 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
                 DefaultWeightedEdge edge = graph.addEdge(senderId, recipientId);
                 if (edge != null) {
                     graph.setEdgeWeight(edge, amount);
-                    // 에지와 transactionId를 매핑
                     edgeTransactionIdMap.put(edge, transactionId);
                 }
             });
