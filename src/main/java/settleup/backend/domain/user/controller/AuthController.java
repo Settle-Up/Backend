@@ -42,6 +42,11 @@ public class AuthController {
         ResponseDto<Map<String, Object>> responseDto = new ResponseDto<>(true, "Token is valid, Login success", userInfo, null);
         return ResponseEntity.ok(responseDto);
     }
+
+    @GetMapping("/check/connection")
+    public ResponseEntity<String> getCheckConnection() {
+        return ResponseEntity.ok("Server is up and running!");
+    }
 }
 
 
