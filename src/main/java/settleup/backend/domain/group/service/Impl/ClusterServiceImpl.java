@@ -48,7 +48,7 @@ public class ClusterServiceImpl implements ClusterService {
     private UUID_Helper uuidHelper;
     private UrlProvider urlProvider;
     private RequireTransactionRepository requireTransactionRepo;
-    private EmailSenderService emailService;
+
 
     private final ApplicationEventPublisher eventPublisher;
     @PersistenceContext
