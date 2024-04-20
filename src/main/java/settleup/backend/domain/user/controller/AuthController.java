@@ -30,7 +30,6 @@ public class AuthController {
         LoginDto loginDto = kakaoService.registerUser(userInfo);
         ResponseDto responseDto = new ResponseDto(true, "successfully login", loginDto);
         return ResponseEntity.ok(responseDto);
-
     }
 
     @GetMapping("/checkToken")
@@ -47,6 +46,7 @@ public class AuthController {
     public ResponseEntity<String> getCheckConnection() {
         return ResponseEntity.ok("Server is up and running!");
     }
+
 }
 
 

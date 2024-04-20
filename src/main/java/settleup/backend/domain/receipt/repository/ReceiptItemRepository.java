@@ -7,6 +7,6 @@ import settleup.backend.domain.receipt.entity.ReceiptItemEntity;
 import java.util.List;
 
 @Repository
-public interface ReceiptItemRepository extends JpaRepository<ReceiptItemEntity, Long> {
+public interface ReceiptItemRepository extends JpaRepository<ReceiptItemEntity,Long> {
     List<ReceiptItemEntity> findByReceiptId(Long Id);
 }

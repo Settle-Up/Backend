@@ -1,11 +1,14 @@
 package settleup.backend.domain.user.service.Impl;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import settleup.backend.global.common.ApiCallHelper;
 import settleup.backend.global.common.UUID_Helper;
 import settleup.backend.domain.user.entity.UserEntity;
@@ -53,7 +56,11 @@ public class KaKaoServiceImpl implements KakaoService {
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
             params.add("grant_type", "authorization_code");
             params.add("client_id", kakaoConfig.getClientId());
-            params.add("redirect_uri", kakaoConfig.getRedirectUri());
+            if (!isHttps()) {
+                params.add("redirect_uri", kakaoConfig.getRedirectUriDev());
+            } else {
+                params.add("redirect_uri", kakaoConfig.getRedirectUriProd());
+            }
             params.add("code", code);
             params.add("client_secret", kakaoConfig.getSecret());
 
@@ -63,6 +70,11 @@ public class KaKaoServiceImpl implements KakaoService {
         } catch (Exception e) {
             throw new CustomException(ErrorCode.EXTERNAL_API_ERROR_SOCIAL_TOKEN);
         }
+    }
+
+    private boolean isHttps() {
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        return "https".equals(request.getHeader("X-Forwarded-Proto"));
     }
 
 

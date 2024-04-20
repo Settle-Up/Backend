@@ -32,7 +32,7 @@ public interface UltimateOptimizedTransactionRepository extends JpaRepository<Ul
             "AND uot.hasBeenChecked = false " +
             "AND uot.requiredReflection = 'REQUIRE_REFLECT'")
     List<TransactionalEntity> findFilteredTransactions(@Param("group") GroupEntity group,
-                                                                      @Param("user") UserEntity user);
+                                                       @Param("user") UserEntity user);
     @Query("SELECT f FROM UltimateOptimizedTransactionEntity f WHERE f.group = :group AND (f.senderUser = :user OR f.recipientUser = :user) AND f.hasBeenSent = true  AND f.clearStatusTimestamp >= :sevenDaysAgo")
     List<TransactionalEntity> findByGroupAndUserWithHAndHasBeenSentAndTransactionsSinceLastWeek(@Param("group") GroupEntity group, @Param("user") UserEntity user, @Param("sevenDaysAgo") LocalDateTime sevenDaysAgo);
 

@@ -44,7 +44,7 @@ public class ClusterController {
     }
 
 
-    @PatchMapping("/group/alarm")
+    @PatchMapping("/alarm")
     public ResponseEntity<ResponseDto> groupMonthlyReport(
             @RequestHeader(value = "Authorization") String token, @RequestParam("groupId") String groupUUID, @RequestBody GroupMonthlyReportDto groupMonthlyReportDto) throws CustomException {
         UserInfoDto userInfoDto = loginService.validTokenOrNot(token);
