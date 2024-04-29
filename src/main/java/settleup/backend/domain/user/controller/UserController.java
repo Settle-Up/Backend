@@ -27,4 +27,13 @@ public class UserController {
         ResponseDto responseDto =new ResponseDto<>(true,"User decimal input option status updated successfully",data);
         return ResponseEntity.ok(responseDto);
     }
+
+    @GetMapping("/option/decimal")
+    public ResponseEntity<ResponseDto> retrievedDecimalOption(
+            @RequestHeader(value = "Authorization") String token) {
+        UserInfoDto userInfo = loginService.validTokenOrNot(token);
+       Map<String,String> data =  userService.retrievedUserDecimal(userInfo);
+        ResponseDto responseDto =new ResponseDto<>(true,"User decimal input option retrieved successfully",data);
+        return ResponseEntity.ok(responseDto);
+    }
 }

@@ -7,4 +7,5 @@ import java.util.Map;
 
 public interface UserService {
     Map<String,String> clusterUserDecimal(UserInfoDto userInfoDto)throws CustomException;
+    Map<String, String> retrievedUserDecimal(UserInfoDto userInfoDto) throws  CustomException;
 }

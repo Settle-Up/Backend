@@ -33,6 +33,7 @@ public class UserServiceImpl implements UserService {
         return buildResponseData(user);
     }
 
+
     private UserEntity isValidUser(UserInfoDto userInfoDto) {
         UserEntity existingUser = userRepo.findByUserUUID(userInfoDto.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
@@ -45,5 +46,16 @@ public class UserServiceImpl implements UserService {
         responseData.put("userName", user.getUserName());
         responseData.put("isDecimalInputOption", String.valueOf(user.getIsDecimalInputOption()));
         return responseData;
+    }
+
+    @Override
+    public Map<String, String> retrievedUserDecimal(UserInfoDto userInfoDto) throws CustomException {
+        UserEntity existingUser = userRepo.findByUserUUID(userInfoDto.getUserId()).
+                orElseThrow(()->new CustomException(ErrorCode.USER_NOT_FOUND));
+        Map<String,String> response= new HashMap<>();
+        response.put("userId", userInfoDto.getUserId());
+        response.put("userName", userInfoDto.getUserName());
+        response.put("isDecimalInputOption", String.valueOf(existingUser.getIsDecimalInputOption()));
+        return response;
     }
 }
