@@ -11,7 +11,7 @@
 | 2   | OcrBridge                   | 영수증 이미지 분석                | SequenceDiagram - OcrBridge.md   |
 | 3   | create-transaction-receipt  | 영수증을 각 개인의 비용으로 변환 | flowchart-expense.md             |
 | 4   | ERD                         | 데이터베이스 구조 설계           | ERD.md           |
-
+| 5   | Email-search                | 이메일 검색                   | email-search.md|
 
 
 We have uploaded the main API diagrams, including sequence diagrams or flowcharts, as well as Entity Relationship Diagrams (ERD), as individual ***diagram files***. Given the extensive nature of the content, we decided to reduce clutter and enhance readability by not including all files in the readme but separating them instead. Reviewing these diagrams before diving into the code will offer a clearer understanding of the system's structure.
