@@ -1,26 +1,38 @@
 # SettleUp Project - **service-server (backend)**
 
-주요기능에 대한 **시퀀스 다이어그램** 또는 **플로우차트** 를 비롯한 주요 다이어그램과 **엔티티 관계 다이어그램(ERD)** 을 </br>***Diagram file*** 로 업로드하였습니다.<br>
+**OurService** </br>
+저희 서비스는 그룹 내에서 공유 정산서 기능을 제공합니다. 특히, 장기간에 걸쳐 자주 발생하는 지출이 있는 경우(예: 룸메이트, 장기 여행자, 정기적인 모임 등)에 초점을 맞추고 있습니다. 이러한 상황에서는 각 거래 후 즉시 정산하지 않으면 시간이 지날수록 누가 누구에게 얼마만큼의 채무가 있는지 파악하기 어렵습니다. 저희 시스템은 이러한 문제를 해결하기 위해 개발되었습니다.</br>
+
+저희 SettleUp 서비스를 사용하면 사용자는 영수증 사진을 간편하게 등록할 수 있습니다. 이렇게 쌓인 비용을 바탕으로, 언제든지 변제를 하더라도, 저희 시스템은 그룹 내의 채무 관계를 알고리즘으로 재조정하여 각 개인에게 최소한의 거래 횟수만을 요구합니다.</br>
+
+저희 사이트는 장기간에 걸쳐 발생한 비용으로 인한 복잡한 채무 관계를 단순화하여, 최종적으로 사용자가 받아야 할 금액과 지불해야 할 금액만을 명확하게 제시합니다. 이는 저희 프로그램이 제공하는 주된 서비스입니다.</br>
+
+기능 추가 설명</br>
+실제 영수증을 기반으로 거래를 추적함으로써 투명한 거래 최적화를 실현합니다. 사용자는 실물 영수증 사진을 직접 입력할 필요 없이 사이트에 업로드만 하면 됩니다. 그룹 내 특정 인원을 각 아이템마다 선택하면, 각 금액을 할당하여 서버에서 최적화를 통해 그룹 내 얽힌 채무 관계에 대한 최적화된 채무 재조정을 제공합니다.
+
+중간에 일부 송금이 완료되면, 보낸 유저는 그 금액을 체크하고, 받는 대상 유저는 저희 페이지에 접속했을 때 누구에게 얼마의 금액이 들어왔는지 확인할 수 있도록 하였습니다.
+
+또한, 그룹 내 비용 발생의 시작점이 되는 영수증은 날짜별로 유저가 추적할 수 있도록 설계하였습니다.
+
+![스크린샷 2024-05-02 오후 4 30 54](https://github.com/Settle-Up/settle-up-server/assets/129722492/cd36737b-bb88-44b2-9f8b-56d3ed0d0250)
+
+
+개발을 하기 전 기획 했던 , 또는 개발을 하면서 고려했던 사항들에 대한 리스트입니다 .<br>
 내용이 방대한 점을 고려하여, 혼란을 줄이고 가독성을 높이기 위해 파일들을 readme 파일에 모두 포함시키지 않고 분리하기로 결정했습니다. </br></br>
-**코드를 살펴보기시기 전에 이 다이어그램들을 검토하시면 시스템 구조에 대한 더 명확한 이해를 제공해 드릴 수 있습니다**.
+**코드를 살펴보기시기 전에 아래 파일들을 검토하시면 시스템 구조에 대한 더 명확한 이해를 제공해 드릴 수 있습니다**.
 
 아래는 기능들의 상세 목록, 그 기능들의 기능성, 그리고 해당 파일 이름들입니다: 
 | No. | Feature Name                | 기능                             | 파일명                           |
 |-----|-----------------------------|----------------------------------|----------------------------------|
-| 1   | KakaoLogin                  | 카카오 로그인                     | SequenceDiagram - KaKaoLogin.md  |
-| 2   | OcrBridge                   | 영수증 이미지 분석                | SequenceDiagram - OcrBridge.md   |
-| 3   | create-transaction-receipt  | 영수증을 각 개인의 비용으로 변환 | flowchart-expense.md             |
+| 1   | KakaoLogin                  | 카카오 로그인                     |  카카오 로그인.md  |
+| 2   | OcrBridge                   | 영수증 이미지 분석                | 영수증 이미지 분석 .md   |
+| 3   | create-transaction-receipt  | 영수증을 각 개인의 비용으로 변환 | 영수증 비용 최적화.md             |
 | 4   | ERD                         | 데이터베이스 구조 설계           | ERD.md           |
-| 5   | Email-search                | 이메일 검색                   | email-search.md|
+| 5   | Email-search                | 이메일 검색                   | 이메일 검색.md|
+| 6   | retrieved-overview          | 메인페이지 불러오기             | 메인페이지 불러오기.md|
+| 7   | trasaction-approval-update  | 거래완료 업데이트하기           | 거래 완료 업데이트.md|
+| 8   | group - invite -fundamental | 그룹 초대 , 이메일 알람 기능     | 그룹 초대 기능.md |
+| 9   | expense-list                | 메인페이지의 그룹 영수증 리스트 불러오기 | 그룹내 영수증 리스트 불러오기.md|
+| 10  | logout                      | 로그아웃과 레디스 활용              | 로그아웃.md
+| 11  | CI/CD                       | 지속적 통홥 지속적 배포              | 자동배포도입과정.md
 
-
-We have uploaded the main API diagrams, including sequence diagrams or flowcharts, as well as Entity Relationship Diagrams (ERD), as individual ***diagram files***. Given the extensive nature of the content, we decided to reduce clutter and enhance readability by not including all files in the readme but separating them instead. Reviewing these diagrams before diving into the code will offer a clearer understanding of the system's structure.
-
-Below is a detailed list of features, their functionalities, and the corresponding file names:
-
-| Feature Name               | Functionality                                | File Name                         |
-|----------------------------|----------------------------------------------|-----------------------------------|
-| KakaoLogin                 | Kakao Login                                  | SequenceDiagram - KaKaoLogin.md   |
-| OcrBridge                  | Analysis of Receipt Images                   | SequenceDiagram - OcrBridge.md    |
-| create-transaction-receipt | Conversion of Receipts into Individual Costs | flowchart-expense.md              |
-| ERD                        | Database Structure Design                    | ERD.md    |
