@@ -316,34 +316,9 @@ api의 궁극적인 목적은 영수증을 입력받아 알고리즘을 통해 "
  - Global Error handler </br>
  각 예외 대해 일관된 응답을 생성하고 CustomException, SSLException 등 예외별로 다른 로직을 적용합니다</br>
  - 응답 포맷 통일 </br>
- 응답마다 매번 다른 dto를 생성하는것은 인스턴스의 낭비라고 생각하고 처음 기획할 때 부터 응답은 아래와 같은 형식의 객체로 통일하여 클라이언트에게 응답에대한 혼란을 줄이고자 했습니다 </br>
-```java
-@Data
-@NoArgsConstructor
-public class ResponseDto<T> {
-    private boolean success;
-    private String message;
-    private T data;
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String errorCode;
+ 응답마다 매번 다른 dto를 생성하는것은 인스턴스의 낭비라고 생각하고 처음 기획할 때 부터 응답은 아래와 같은 형식의 객체로 통일하여 클라이언트에게 응답에대한 혼란을 줄이고자 했습니다 
 
 
-    public ResponseDto(boolean success, String message, T data) {
-        this.success = success;
-        this.message = message;
-        this.data = data;
-    }
-
-    public ResponseDto(boolean success, String message, T data, String errorCode) {
-        this.success = success;
-        this.message = message;
-        this.data = data;
-        this.errorCode = errorCode;
-    }
-}
-
-```
- 
  -----------------------------------
 **3. 인터페이스기반 프로그래밍**
   
@@ -406,6 +381,10 @@ public class ResponseDto<T> {
 이런식으로 적어 두고 스스로에게 묻고 답을 찾아가는 방식으로 진행하였습니다 
 
 본프로젝트를 진행하면서 전반적인 부분을 모두 담당개발을 진행한 결과 전반적인 백엔드 서버에 대해 이해도가 깊어지고 개발하는 방식에대한 체계성이 생겼습니다
+
+## 파일 구성 
+
+<img width="735" alt="스크린샷 2024-05-13 오후 2 29 05" src="https://github.com/Settle-Up/settle-up-server/assets/129722492/1ae6cd06-52cd-4da5-8ee1-8ba3640e4a3f">
 
       
 ## ⚙️ 협업툴
