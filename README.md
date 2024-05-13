@@ -43,7 +43,7 @@
 | ORM        | ![JPA](https://img.shields.io/badge/JPA-000000?style=flat-square&logo=Jpa&logoColor=white)                |
 | 메모리     | ![Redis](https://img.shields.io/badge/Redis-EE4266?style=flat-square&logo=Redis&logoColor=white)          |
 | 배포       | ![Shell](https://img.shields.io/badge/Shell-A5DD9B?style=flat-square&logo=Shell&logoColor=white) ![GithubAction](https://img.shields.io/badge/GithubAction-EE4266?style=flat-square&logo=Github&logoColor=white) ![AWS](https://img.shields.io/badge/AWS-FFD23F?style=flat-square&logo=AWS&logoColor=white) ![CodeDeploy](https://img.shields.io/badge/CodeDeploy-FFD23F?style=flat-square&logo=AWS&logoColor=white) ![S3](https://img.shields.io/badge/S3-A5DD9B?style=flat-square&logo=S3&logoColor=white)   
-| 외부 툴  | ![Sentry](https://img.shields.io/badge/Sentry-EE4266?style=flat-square&logo=Sentry&logoColor=white) ![JGrapht](https://img.shields.io/badge/JGrapht-337357?style=flat-square&logo=JGrapht&logoColor=white) ![Smtp](https://img.shields.io/badge/Smtp-EE4266?style=flat-square&logo=Smtp&logoColor=white)  
+| 외부 툴  | ![Sentry](https://img.shields.io/badge/Sentry-EE4266?style=flat-square&logo=Sentry&logoColor=white) ![JGrapht](https://img.shields.io/badge/JGrapht-337357?style=flat-square&logo=JGrapht&logoColor=white) ![Smtp](https://img.shields.io/badge/Smtp-EE4266?style=flat-square&logo=Smtp&logoColor=white)  ![azure](https://img.shields.io/badge/azure-A5DD9B?style=flat-square&logo=azure&logoColor=white)
 
 -------------------------------------------------------------------------------------
 
