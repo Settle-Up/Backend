@@ -27,10 +27,14 @@
 ------------------------------------------------------------------
 
 ## 🕒 <a name="개발-기간-및-팀원"></a>개발 기간 및 팀원
-개발기간 : 2024 .2.19 ~ 2024.4. 28 (70일간) </br>
-개발인원 : </br>
-**Backend  : 서동희**  </br>
-**Frontend : 박수빈**  </br> 
+ **개발기간** : 2024. 2. 19 ~ 2024. 4. 28 (70일간 매일 ) </br>
+ **회의시간** : 오전 9시 , 오후 9시 </br>
+ **팀원소개**
+|분야 | 담당자 | 홈페이지 |
+| --- | --- |---|
+|**Backend**  | 서동희 | <a href="https://github.com/donghee9"><img src="https://img.shields.io/badge/GitHub-007396?style=flat-square&logo=GitHub&logoColor=white&link=https://github.com/donghee9"/></a></br>
+|Frontend| 박수빈 |<a href="https://github.com/sooparkdev"><img src="https://img.shields.io/badge/GitHub-ED8B00?style=flat-square&logo=GitHub&logoColor=white&link=https://github.com/donghee9"/></a></br>
+
 
 ---------------------------------------------------------------------
 
