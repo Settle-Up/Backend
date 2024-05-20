@@ -37,7 +37,7 @@
 
 | 분야      | 기술스택                                                                                                   |
 |------------|----------------------------------------------------------------------------------------------------------|
-| 언어       | ![Java](https://img.shields.io/badge/Java-EE4266?style=flat-square&logo=Java&logoColor=white)             |
+| 언어       | ![Java_17](https://img.shields.io/badge/Java_17-EE4266?style=flat-square&logo=Java_17&logoColor=white)   ![Shell](https://img.shields.io/badge/Shell-A5DD9B?style=flat-square&logo=Shell&logoColor=white)          |
 | 프레임워크 | ![Spring](https://img.shields.io/badge/Spring-337357?style=flat-square&logo=Spring&logoColor=white)       |
 | 데이터베이스 | ![MySQL](https://img.shields.io/badge/MySQL-59B4C3?style=flat-square&logo=MySQL&logoColor=white)        |
 | ORM        | ![JPA](https://img.shields.io/badge/JPA-000000?style=flat-square&logo=Jpa&logoColor=white)                |
