@@ -35,16 +35,20 @@
 
 ## 💡 <a name="기술-스택"></a>기술 스택
 
-| 분야      | 기술스택                                                                                                   |
-|------------|----------------------------------------------------------------------------------------------------------|
-| 언어       | ![Java_corretto_17](https://img.shields.io/badge/Java_corretto_17-EE4266?style=flat-square&logo=Java_corretto_17&logoColor=white)   ![Shell](https://img.shields.io/badge/Shell-A5DD9B?style=flat-square&logo=Shell&logoColor=white)          |
-| 프레임워크 | ![Spring](https://img.shields.io/badge/Spring-337357?style=flat-square&logo=Spring&logoColor=white)       |
-| 데이터베이스 | ![MySQL](https://img.shields.io/badge/MySQL-59B4C3?style=flat-square&logo=MySQL&logoColor=white)        |
-| ORM        | ![JPA](https://img.shields.io/badge/JPA-000000?style=flat-square&logo=Jpa&logoColor=white)                |
-| 메모리     | ![Redis](https://img.shields.io/badge/Redis-EE4266?style=flat-square&logo=Redis&logoColor=white)          |
-| 배포       | ![Shell](https://img.shields.io/badge/Shell-A5DD9B?style=flat-square&logo=Shell&logoColor=white) ![GithubAction](https://img.shields.io/badge/GithubAction-EE4266?style=flat-square&logo=Github&logoColor=white) ![AWS](https://img.shields.io/badge/AWS-FFD23F?style=flat-square&logo=AWS&logoColor=white) ![CodeDeploy](https://img.shields.io/badge/CodeDeploy-FFD23F?style=flat-square&logo=AWS&logoColor=white) ![S3](https://img.shields.io/badge/S3-A5DD9B?style=flat-square&logo=S3&logoColor=white)   
-| 외부 툴  | ![Sentry](https://img.shields.io/badge/Sentry-EE4266?style=flat-square&logo=Sentry&logoColor=white) ![JGrapht](https://img.shields.io/badge/JGrapht-337357?style=flat-square&logo=JGrapht&logoColor=white) ![Smtp](https://img.shields.io/badge/Smtp-EE4266?style=flat-square&logo=Smtp&logoColor=white)  ![azure](https://img.shields.io/badge/azure-A5DD9B?style=flat-square&logo=azure&logoColor=white) |
-| Algorithm | ***Graph** Algorithm , **DFS** , **Sorting** Algorithm , **AES Encryption** Algorithm* |
+| 분야          | 기술스택                                                                                                   |
+|--------------|----------------------------------------------------------------------------------------------------------|
+| 언어         | ![Java_corretto_17](https://img.shields.io/badge/Java_corretto_17-007396?style=flat-square&logo=java&logoColor=white) ![Shell](https://img.shields.io/badge/Shell-A5DD9B?style=flat-square&logo=Shell&logoColor=white)        |
+| 프레임워크   | ![Spring Boot](https://img.shields.io/badge/Spring_Boot-6DB33F?style=flat-square&logo=spring&logoColor=white) |
+| 데이터베이스 | ![MySQL](https://img.shields.io/badge/MySQL-59B4C3?style=flat-square&logo=MySQL&logoColor=white)                                                |
+| ORM          | ![JPA](https://img.shields.io/badge/JPA-59666C?style=flat-square&logo=hibernate&logoColor=white)                                               |
+| 메모리       | ![Redis](https://img.shields.io/badge/Redis-EE4266?style=flat-square&logo=Redis&logoColor=white)                                               |
+| 배포         | ![GithubAction](https://img.shields.io/badge/GithubAction-EE4266?style=flat-square&logo=Github&logoColor=white) ![AWS](https://img.shields.io/badge/AWS-FF6631?style=flat-square&logo=AWS&logoColor=white) ![CodeDeploy](https://img.shields.io/badge/CodeDeploy-006400?style=flat-square&logo=AWS&logoColor=white) ![EC2](https://img.shields.io/badge/EC2-FF6600?style=flat-square&logo=EC2&logoColor=white) ![S3](https://img.shields.io/badge/S3-A5DD9B?style=flat-square&logo=S3&logoColor=white) ![Azure](https://img.shields.io/badge/Azure-0078D4?style=flat-square&logo=microsoft&logoColor=white)        |
+| 외부 툴      | ![Sentry](https://img.shields.io/badge/Sentry-EE4266?style=flat-square&logo=Sentry&logoColor=white) ![ngrok](https://img.shields.io/badge/ngrok-1F1E25?style=flat-square&logo=ngrok&logoColor=white)                       |
+| 로깅         | ![Log4j](https://img.shields.io/badge/Log4j-FF4500?style=flat-square&logo=apache&logoColor=white)                                              |
+| 알고리즘     | ![Graph Algorithm](https://img.shields.io/badge/Graph_Algorithm-2E8B57?style=flat-square&logo=graph&logoColor=white) ![DFS](https://img.shields.io/badge/DFS-8B0000?style=flat-square&logo=dfs&logoColor=white) ![Sorting Algorithm](https://img.shields.io/badge/Sorting_Algorithm-4682B4?style=flat-square&logo=sorting&logoColor=white) ![AES Encryption](https://img.shields.io/badge/AES_Encryption-4B0082?style=flat-square&logo=aes&logoColor=white)|
+| 보안         | ![OAuth2](https://img.shields.io/badge/OAuth2-4285F4?style=flat-square&logo=oauth&logoColor=white) ![BCrypt](https://img.shields.io/badge/BCrypt-FF4500?style=flat-square&logo=security&logoColor=white) |
+| 테스트       | ![JUnit](https://img.shields.io/badge/JUnit-25A162?style=flat-square&logo=junit5&logoColor=white) ![Mockito](https://img.shields.io/badge/Mockito-9F00C5?style=flat-square&logo=mockito&logoColor=white) |
+| 유틸리티     | ![p6spy](https://img.shields.io/badge/p6spy-00ACC1?style=flat-square&logo=database&logoColor=white) ![JWT](https://img.shields.io/badge/JWT-ED8B00?style=flat-square&logo=json-web-tokens&logoColor=white) ![JAXB](https://img.shields.io/badge/JAXB-9C27B0?style=flat-square&logo=java&logoColor=white) ![Embedded Tomcat](https://img.shields.io/badge/Embedded_Tomcat-FF6F00?style=flat-square&logo=apache-tomcat&logoColor=white) ![Embedded Redis](https://img.shields.io/badge/Embedded_Redis-DC143C?style=flat-square&logo=redis&logoColor=white) ![Mail](https://img.shields.io/badge/Mail-D14836?style=flat-square&logo=gmail&logoColor=white) |
 
 -------------------------------------------------------------------------------------
 
