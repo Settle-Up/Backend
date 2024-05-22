@@ -338,7 +338,7 @@ A 와 D 사이에 중복되는 거래가 생성된 것을 볼 수 있습니다
 
 ## 💡 <a name="구현기능"></a>구현기능
 
-개발기간동안 총 아래와 같이 18개의 api를 개발하였습니다 </br>
+개발기간동안 총 아래와 같이 21개의 api를 개발하였습니다 </br>
 개발은 공동으로 하는 작업이므로 제 코드를 남이 이해할 수 있도록 구성하는것도 중요한 업무 능력 중 하나라고 생각이 됩니다 </br>
 최대한 **구조화 , 캡슐화하여 복잡한 비지니스 로직은 은닉화 하여 가독성**을 높였으나 </br>
 **코드만으로는 제가 고민했던 흔적들을 다 남길 수 없다는 아쉬움**에 개발 시에 여러 고민을 한 기능들에 한해 따로 **개발일지** 파일을 만들어 설명을 제공합니다 </br>
@@ -346,35 +346,36 @@ A 와 D 사이에 중복되는 거래가 생성된 것을 볼 수 있습니다
 
 번거로우시더라도 해당 파일을 코드를 살펴 보시기 전에 검토하시면 시스템에 대한 더 명확한 이해를 제공해 드릴 수 있습니다
 
-아래는 개발한 기능들의 상세 목록, 그 기능들의 기능성, 그리고 설명이 필요한 경우 readme 파일에 추가한 파일 이름들입니다: 
+아래는 개발한 기능들 분류와 기능 , 간단한 부연 설명과 해당 기능들에 대한 Http 메서드와 엔드포인트 내역입니다  
 
-| **번호** |  **분류**  | **기능& readme파일명**  |  **부연설명**                    |  HTTP Method & EndPoint                           | 비고 |
-|---------|---------|----------------------|----------------------------------|---------------------------------------------------|-----|
-| 1       | 보안&인증 | 소셜로그인.md    | 카카오 소셜 로그인                   | **GET** /auth/login/social/kakao?code={code}   |  |
-| 2       | 보안&인증 | 토큰 검증.md     | 토큰 검증       | **GET** /auth/checkToken                      |  |
-| 3       | 보안&인증 | 로그아웃.md      | 레디스 활용 블랙리스트 기법    | **GET** /logout        |  |
-| 4       | 검색        | 이메일 검색1.md   | 그룹 생성시 멤버를 추가하기 위한 검색    | **GET** /users/search?email={email}&page={page}&size={size}  |  |
-| 5       | 검색         | 이메일 검색2.md   | 기존 그룹에 멤버를 추가하기 위한 검색    | **GET** /users/search?email={email}&page={page}&size={size}&excludeGroupId={groupId} |이메일 검색 1.md 에 내용 포함 |
-| 6       | 그룹        | 그룹생성.md          | 비용그룹을 생성                    | **POST** /groups |  | |
-| 7       | 그룹        | 그룹 리스트 불러오기.md | 유저가 포함된 그룹과 각각의 순액 불러오기| **GET** /groups?page={page}&size={size}|   |
-| 8       | 그룹        | 그룹내 유저 개인화 정보 불러오기.md | 거래잔액 , 정산해야할 목록 , 지난주에 정산된 거래목록 , 그룹 내 알람 설정등 | **GET**  /groups/{groupId}?page={page}&size={size} | |
-| 9       | 그룹        | 그룹내 모든 지출보기.md | 그룹 내에서 발생한 모든 영수증 지출내역 보기 |**GET** /groups/{groupID}/expenses?page={page}&size={size} | |
-| 10      | 그룹        | 특정 지출 내역 상세 정보 불러오기.md | 그룹내에서 발생한 특정 지출에 대한 정보 보기 | **GET** /groups/{groupID}/expenses?page={page}&size={size} | |
-| 11      | 그룹        | 그룹 멤버 불러오기.md  | 그룹 내의 유저 정보 불러오기 | **GET** /groups/{groupId}/members?page={page}&size={size} | |
-| 12      | 그룹        | 월간 보고서 신청 여부.md | 그룹 내 개별 사용자가 월간 보고서를 이메일로 송부 받을지 여부 |**PATCH** /groups/{groupId}/monthly-reports |  |
-| 13      | 그룹        | 그룹 탈퇴.md  | 그룹에서 탈퇴 |**DELETE** /groups/{groupId}/monthly-reports | |
-| 14      | 그룹        | 그룹 멤버 추가.md | 기존 그룹에 멤버 추가시 이메일 발송 | **POST** /groups/{groupId}/members |
-| 15      | 비용(Expense)     | 그룹 지출 내역 생성 | 영수증 데이터를 통한 지출 내역 생성 |  **POST** /expense | 본문에 포함 |
-| 16      | 거래(Transaction)  | 송금내역확인창.md | 타인에게서 송금받은 알림 | **PATCH** transactions/{transactionId}/manage |   |
-| 17      | 거래(Transaction)  | 송금내역 불러오기.md | 타인에게서 송금 받은 내역 불러오기 | **GET** transactions/received |  |
-| 18      | 사용자(User) | 사용자 정보 불러오기 .md | 사용자 정보 불러오기 | **GET** /users/profile |  |
-| 19      | 사용자(User) | 사용자 정보 수정 .md | 사용자 정보 수정 | **POST** /users/profile  |   |
-| 20      | 영수증       | Azure api 호출 .md | Azure Doc intelligence 를 통해 영수증사진에서 텍스트 추출 | **POST** /receipt/extract-text | |
-| 21      | health-check| health-check | 네트워크 정상 커넥션 확인 엔드포인트 | **GET** /auth/check/connection/brower | |
-|         | 에러핸들링 | 모듈화 에러핸들링.md | 모듈화로 재사용성을 높인 에러핸들링 | | |
-|         | CI/CD      | CI/CD 도입기.md | githubAction, AWS,S3,EC2,Script 를 사용한 자동배포 도입기 | | |
-|         | 추후 개선사항 | 추후 개선사항.md  | 고도화를 시키고 싶은 작업과 그 이유 | | |
+| **번호** |  **분류**  | **기능& readme파일명**  |  **부연설명**                    |  HTTP Method & EndPoint                           | 
+|----|-------|---------------------------|----------------------------------|---------------------------------------------------|
+| 1       | 보안&인증 | 소셜로그인    | 카카오 소셜 로그인                   | **GET** /auth/login/social/kakao?code={code}   | 
+| 2       | 보안&인증 | 토큰 검증     | 토큰 검증       | **GET** /auth/checkToken                      |  
+| 3       | 보안&인증 | 로그아웃      | 레디스 활용 블랙리스트 기법    | **GET** /logout        |  
+| 4       | 검색        | 이메일 검색  | 그룹 생성시 멤버를 추가하기 위한 검색    | **GET** /users/search?email={email}&page={page}&size={size}  |  
+| 5       | 검색         | 이메일 검색   | 기존 그룹에 멤버를 추가하기 위한 검색    | **GET** /users/search?email={email}&page={page}&size={size}&excludeGroupId={groupId} |
+| 6       | 그룹        | 그룹생성          | 비용그룹을 생성                    | **POST** /groups |  
+| 7       | 그룹        | 그룹 리스트 불러오기| 유저가 포함된 그룹과 각각의 순액 불러오기| **GET** /groups?page={page}&size={size}|   
+| 8       | 그룹        | 그룹 내 유저 개인화 정보 불러오기 | 거래잔액 , 정산해야할 목록 , 지난주에 정산된 거래목록 , 그룹 내 알람 설정등 | **GET**  /groups/{groupId}?page={page}&size={size} | 
+| 9       | 그룹        | 그룹 내 모든 지출보기| 그룹 내에서 발생한 모든 영수증 지출내역 보기 |**GET** /groups/{groupID}/expenses?page={page}&size={size} | 
+| 10      | 그룹        | 특정 지출 내역 상세 정보 불러오기| 그룹내에서 발생한 특정 지출에 대한 정보 보기 | **GET** /groups/{groupID}/expenses?page={page}&size={size} | 
+| 11      | 그룹        | 멤버 불러오기 | 그룹 내의 유저 정보 불러오기 | **GET** /groups/{groupId}/members?page={page}&size={size} | 
+| 12      | 그룹        | 월간 보고서 신청| 그룹 내 개별 사용자가 월간 보고서를 이메일로 송부 받을지 여부 |**PATCH** /groups/{groupId}/monthly-reports |  
+| 13      | 그룹        | 그룹 탈퇴 | 그룹에서 탈퇴 |**DELETE** /groups/{groupId}/monthly-reports | 
+| 14      | 그룹        | 그룹 멤버 추가 | 기존 그룹에 멤버 추가시 이메일 발송 | **POST** /groups/{groupId}/members 
+| 15      | 비용     | 그룹 지출 내역 생성 | 영수증 데이터를 통한 지출 내역 생성 |  **POST** /expense | 
+| 16      | 거래  | 송금내역확인창| 타인에게서 송금받은 알림 | **PATCH** transactions/{transactionId}/manage |   
+| 17      | 거래  | 송금내역 불러오기 | 타인에게서 송금 받은 내역 불러오기 | **GET** transactions/received |  
+| 18      | 사용자| 사용자 정보 불러오기 | 사용자 정보 불러오기 | **GET** /users/profile |  
+| 19      | 사용자| 사용자 정보 수정| 사용자 정보 수정 | **POST** /users/profile  |   
+| 20      | 영수증       | Azure api 호출 | Azure Doc intelligence 를 통해 영수증사진에서 텍스트 추출 | **POST** /receipt/extract-text | 
+| 21      | 헬스체크| health-check | 네트워크 정상 커넥션 확인 엔드포인트 | **GET** /auth/check/connection/brower | 
+|         | 에러핸들링 | 모듈화 에러핸들링 | 모듈화로 재사용성을 높인 에러핸들링 |  |
+|         | CI/CD      | CI/CD 도입기 | githubAction, AWS,S3,EC2,Script 를 사용한 자동배포 도입기 | | 
+|         | 추후 개선사항 | 추후 개선사항 | 고도화를 시키고 싶은 작업과 그 이유 | | 
 
+위의 표 중 15 번 그룹 지출 내역 생성은 본문에 포함시켜 놓았으므로 따로 개발일지에 넣지 않았습니다 참고 부탁드립니다
 
  ---------------------------------------------------- 
 
