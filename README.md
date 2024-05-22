@@ -348,29 +348,32 @@ A 와 D 사이에 중복되는 거래가 생성된 것을 볼 수 있습니다
 
 아래는 개발한 기능들의 상세 목록, 그 기능들의 기능성, 그리고 설명이 필요한 경우 readme 파일에 추가한 파일 이름들입니다: 
 
-| **번호** | **기능& readme파일명**                              | **분류**           | ** 추가 설명 여부 **|
-|-----------|----------------------------------------|--------------------|--------------|
-| 1         | 소셜로그인.md                         | 보안관련 api          | true O |
-| 2         | 로그아웃.md                           | 보안관련 api        | true O |
-| 3         | 그룹리스트 불러오기               | 그룹관련 api          | false X |
-| 4         | 이메일 검색.md                        | 그룹관련 api         | true O |
-| 5         | 그룹생성                         | 그룹관련 api        | false X |
-| 6         | 그룹정보 불러오기                 | 그룹관련 api     |false X |
-| 7         | 그룹 탈퇴.md                          | 그룹관련 api         | true O |
-| 8         | 멤버추가.md                           | 그룹관련 api          |  true O |
-| 9         | 최적화된 자본리스트.md   | 상세페이지관련 api    | true O |
-| 10        | 영수증 리스트.md             | 상세페이지관련 api  |  true O |
-| 11        | 알림 설정                             | 상세페이지관련 api    |false X |
-| 12        | 지난 영수증 보여주기.md               | 상세페이지관련 api    | true O |
-| 13        | 영수증 사진관련하여 외부 api 호출.md | 비용관련 api         | true O |
-| 14        | 새로운 영수증 입력(최적화).md        | 비용관련 api       | 본문에 포함|
-| 15        | 유저가 송금한 리스트 데이터베이스에 반영.md | 비용관련 api         | true O |
-| 16        | 타인이 나에게 송금한 리스트 불러오기.md  | 비용관련 api    |  true O |
-| 17        | 기본세팅입력                       | 유저관련 api         |false X |
-| 18        | 기본세팅불러오기                | 유저관련  api        |false X |
-|      | ci/cd 도입기 .md                   | 배포관련 doc   |  true O |
-|       | 로드발란서 healthcheck                   | 배포관련  api  |  true O |
-|       | 추후에 개선하고 싶은 부분              | 추후서비스 doc|  true O |
+| **번호** |  **분류**  | **기능& readme파일명**  |  **부연설명**                    |  HTTP Method & EndPoint                           | 비고 |
+|---------|---------|----------------------|----------------------------------|---------------------------------------------------|-----|
+| 1       | 보안&인증 | 소셜로그인.md    | 카카오 소셜 로그인                   | **GET** /auth/login/social/kakao?code={code}   |  |
+| 2       | 보안&인증 | 토큰 검증.md     | 토큰 검증       | **GET** /auth/checkToken                      |  |
+| 3       | 보안&인증 | 로그아웃.md      | 레디스 활용 블랙리스트 기법    | **GET** /logout        |  |
+| 4       | 검색        | 이메일 검색1.md   | 그룹 생성시 멤버를 추가하기 위한 검색    | **GET** /users/search?email={email}&page={page}&size={size}  |  |
+| 5       | 검색         | 이메일 검색2.md   | 기존 그룹에 멤버를 추가하기 위한 검색    | **GET** /users/search?email={email}&page={page}&size={size}&excludeGroupId={groupId} |이메일 검색 1.md 에 내용 포함 |
+| 6       | 그룹        | 그룹생성.md          | 비용그룹을 생성                    | **POST** /groups |  | |
+| 7       | 그룹        | 그룹 리스트 불러오기.md | 유저가 포함된 그룹과 각각의 순액 불러오기| **GET** /groups?page={page}&size={size}|   |
+| 8       | 그룹        | 그룹내 유저 개인화 정보 불러오기.md | 거래잔액 , 정산해야할 목록 , 지난주에 정산된 거래목록 , 그룹 내 알람 설정등 | **GET**  /groups/{groupId}?page={page}&size={size} | |
+| 9       | 그룹        | 그룹내 모든 지출보기.md | 그룹 내에서 발생한 모든 영수증 지출내역 보기 |**GET** /groups/{groupID}/expenses?page={page}&size={size} | |
+| 10      | 그룹        | 특정 지출 내역 상세 정보 불러오기.md | 그룹내에서 발생한 특정 지출에 대한 정보 보기 | **GET** /groups/{groupID}/expenses?page={page}&size={size} | |
+| 11      | 그룹        | 그룹 멤버 불러오기.md  | 그룹 내의 유저 정보 불러오기 | **GET** /groups/{groupId}/members?page={page}&size={size} | |
+| 12      | 그룹        | 월간 보고서 신청 여부.md | 그룹 내 개별 사용자가 월간 보고서를 이메일로 송부 받을지 여부 |**PATCH** /groups/{groupId}/monthly-reports |  |
+| 13      | 그룹        | 그룹 탈퇴.md  | 그룹에서 탈퇴 |**DELETE** /groups/{groupId}/monthly-reports | |
+| 14      | 그룹        | 그룹 멤버 추가.md | 기존 그룹에 멤버 추가시 이메일 발송 | **POST** /groups/{groupId}/members |
+| 15      | 비용(Expense)     | 그룹 지출 내역 생성 | 영수증 데이터를 통한 지출 내역 생성 |  **POST** /expense | 본문에 포함 |
+| 16      | 거래(Transaction)  | 송금내역확인창.md | 타인에게서 송금받은 알림 | **PATCH** transactions/{transactionId}/manage |   |
+| 17      | 거래(Transaction)  | 송금내역 불러오기.md | 타인에게서 송금 받은 내역 불러오기 | **GET** transactions/received |  |
+| 18      | 사용자(User) | 사용자 정보 불러오기 .md | 사용자 정보 불러오기 | **GET** /users/profile |  |
+| 19      | 사용자(User) | 사용자 정보 수정 .md | 사용자 정보 수정 | **POST** /users/profile  |   |
+| 20      | 영수증       | Azure api 호출 .md | Azure Doc intelligence 를 통해 영수증사진에서 텍스트 추출 | **POST** /receipt/extract-text | |
+| 21      | health-check| health-check | 네트워크 정상 커넥션 확인 엔드포인트 | **GET** /auth/check/connection/brower | |
+|         | 에러핸들링 | 모듈화 에러핸들링.md | 모듈화로 재사용성을 높인 에러핸들링 | | |
+|         | CI/CD      | CI/CD 도입기.md | githubAction, AWS,S3,EC2,Script 를 사용한 자동배포 도입기 | | |
+|         | 추후 개선사항 | 추후 개선사항.md  | 고도화를 시키고 싶은 작업과 그 이유 | | |
 
 
  ---------------------------------------------------- 
