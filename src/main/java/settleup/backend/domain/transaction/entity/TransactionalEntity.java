@@ -3,6 +3,7 @@ package settleup.backend.domain.transaction.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import lombok.Getter;
 import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.global.common.Status;

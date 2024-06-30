@@ -8,6 +8,7 @@ import settleup.backend.global.exception.CustomException;
 
 public interface TransactionUpdateService {
     TransactionUpdateDto transactionManage(UserInfoDto userInfoDto, String groupId, TransactionUpdateRequestDto requestDto) throws CustomException;
+//    TransactionUpdateDto transactionManage(String uuid, String groupId, TransactionUpdateRequestDto requestDto) throws CustomException;
 
     TransactionUpdateDto retrievedReceivedListInGroup(UserInfoDto userInfoDto) throws CustomException;
 }

@@ -1,6 +1,8 @@
 package settleup.backend.domain.group.service.Impl;
 
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -34,8 +36,11 @@ public class RetrievedServiceImpl implements RetrievedService {
     private final GroupRepository groupRepo;
     private final NetService netService;
     private final ReceiptRepository receiptRepo;
+    private static final Logger logger = LoggerFactory.getLogger(RetrievedServiceImpl.class);
+
 
     @Override
+
     public GroupInfoListDto getGroupInfoByUser(UserInfoDto userInfoDto, Pageable pageable) throws CustomException {
         UserEntity existingUser = userRepo.findByUserUUID(userInfoDto.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));

@@ -28,7 +28,7 @@ public class ReceiptController {
     private final ApplicationEventPublisher eventPublisher;
 
 
-    @PostMapping("/expense/create")
+    @PostMapping("/expenses")
     public ResponseEntity<ResponseDto> createExpenseByReceipt(
             @RequestHeader(value = "Authorization") String token, @RequestBody ReceiptDto requestDto) {
 
@@ -55,14 +55,17 @@ public class ReceiptController {
     }
 
 
-    @GetMapping("/group/detail")
+    @GetMapping("/groups/expenses/{expenseId}")
     public ResponseEntity<ResponseDto> retrievedReceipt(
-            @RequestHeader(value = "Authorization") String token, @RequestParam("receipt") String receiptUUID) {
+            @RequestHeader(value = "Authorization") String token, @PathVariable("expenseId") String receiptUUID) {
+
         UserInfoDto userInfoDto = loginService.validTokenOrNot(token);
         ReceiptDto data = receiptService.getReceiptInfo(userInfoDto, receiptUUID);
         ResponseDto responseDto = new ResponseDto<>(true, "receipt detail retrieved successfully", data);
         return ResponseEntity.ok(responseDto);
 
     }
+
+
 }
 

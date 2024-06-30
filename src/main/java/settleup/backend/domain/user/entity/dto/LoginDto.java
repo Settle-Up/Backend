@@ -16,6 +16,5 @@ public class LoginDto {
     private String expiresIn;
     private String userId;
     private String userName;
-    private Boolean isDecimalInputOption;
 
 }

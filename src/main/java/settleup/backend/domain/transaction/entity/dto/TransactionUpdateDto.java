@@ -25,5 +25,6 @@ public class TransactionUpdateDto {
         private String counterPartyName;
         private String transactionDirection;
         private String transactionAmount;
+        private String clearedAt;
     }
 }

@@ -1,13 +1,13 @@
 package settleup.backend.domain.transaction.service.Impl;
 
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionDetailsEntity;
-import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionEntity;
-import settleup.backend.domain.transaction.entity.OptimizedTransactionDetailsEntity;
-import settleup.backend.domain.transaction.entity.OptimizedTransactionEntity;
+import settleup.backend.domain.transaction.entity.*;
 import settleup.backend.domain.transaction.repository.*;
+import settleup.backend.domain.transaction.service.RequireTransactionService;
 import settleup.backend.domain.transaction.service.TransactionInheritanceService;
 import settleup.backend.global.common.Status;
 import settleup.backend.global.exception.CustomException;
@@ -26,16 +26,16 @@ public class TransactionInheritanceServiceImpl implements TransactionInheritance
     private final OptimizedTransactionDetailsRepository optimizedTransactionDetailsRepo;
     private final GroupOptimizedTransactionRepository groupOptimizedTransactionRepo;
     private final GroupOptimizedTransactionDetailRepository groupOptimizedTransactionDetailRepo;
+    private static final Logger log = LoggerFactory.getLogger(TransactionInheritanceServiceImpl.class);
 
     @Transactional
-    public void clearInheritanceStatusFromOptimizedToRequired(Long optimizedTransactionId) {
-        List<OptimizedTransactionDetailsEntity> inheritedTargetList = optimizedTransactionDetailsRepo.findByOptimizedTransactionId(optimizedTransactionId);
-        for (OptimizedTransactionDetailsEntity inheritedTarget : inheritedTargetList) {
-            requireTransactionRepo.updateRequiredReflectionStatusById(inheritedTarget.getRequiresTransaction().getId(), Status.INHERITED_CLEAR);
+    public void clearInheritanceStatusFromOptimizedToRequired(Long requireTransactionId) {
+            requireTransactionRepo.updateRequiredReflectionStatusById(requireTransactionId, Status.INHERITED_CLEAR);
             LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
-            requireTransactionRepo.updateClearStatusTimestampById(inheritedTarget.getRequiresTransaction().getId(), newClearStatusTimestamp);
-        }
+            requireTransactionRepo.updateClearStatusTimestampById(requireTransactionId, newClearStatusTimestamp);
+
     }
+
 
 
     @Transactional

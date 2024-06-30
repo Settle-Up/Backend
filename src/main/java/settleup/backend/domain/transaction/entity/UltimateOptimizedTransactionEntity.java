@@ -57,6 +57,7 @@ public class UltimateOptimizedTransactionEntity implements TransactionalEntity {
 
     @Column(name = "clear_status_timestamp")
     @Setter
+    @Getter
     private LocalDateTime clearStatusTimestamp;
 
 

@@ -16,27 +16,28 @@ import settleup.backend.global.common.ResponseDto;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/group")
+@RequestMapping("/groups/overview")
 public class OverviewController {
     private final LoginService loginService;
     private final OverviewService overviewService;
 
 
-    @GetMapping("/overview")
+    @GetMapping("/{groupId}")
     public ResponseEntity<ResponseDto> getGroupOverview(
             @RequestHeader(value = "Authorization") String token,
-            @RequestParam("groupId") String groupId) {
+            @PathVariable("groupId") String groupId) {
 
         UserInfoDto userInfoDto = loginService.validTokenOrNot(token);
         GroupOverviewDto overviewDto;
         overviewDto = overviewService.retrievedOverview(groupId, userInfoDto);
+
         ResponseDto response = new ResponseDto<>(true, "GroupDetail retrieved successfully", overviewDto);
         return ResponseEntity.ok(response);
     }
-    @GetMapping("/overview/expense/list")
+    @GetMapping("/{groupId}/expenses")
     public ResponseEntity<ResponseDto> getOverviewExpenseList(
             @RequestHeader(value = "Authorization") String token,
-            @RequestParam("groupId") String groupId,
+            @PathVariable("groupId") String groupId,
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
 

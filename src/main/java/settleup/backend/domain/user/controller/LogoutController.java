@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import settleup.backend.domain.receipt.entity.ReceiptEntity;
@@ -23,7 +24,7 @@ public class LogoutController {
     private RedisUtils redisUtils;
 
 
-    @GetMapping("/logout")
+    @PostMapping("/auth/logout")
     public ResponseEntity<ResponseDto> logout(@RequestHeader(value = "Authorization") String token) {
 
         if (token.startsWith("Bearer ")) {

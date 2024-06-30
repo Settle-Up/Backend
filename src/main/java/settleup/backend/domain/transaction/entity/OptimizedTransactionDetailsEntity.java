@@ -18,11 +18,11 @@ public class OptimizedTransactionDetailsEntity {
     private String transactionDetailUUID;//OPTD 로 시작
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "optimizedTransaction_id")
+    @JoinColumn(name = "optimized_transaction_id")
     private OptimizedTransactionEntity optimizedTransaction;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "requiresTransaction_id")
+    @JoinColumn(name = "requires_transaction_id")
     private RequiresTransactionEntity requiresTransaction;
 
 

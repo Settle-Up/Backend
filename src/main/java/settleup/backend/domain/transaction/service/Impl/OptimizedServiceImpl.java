@@ -2,6 +2,8 @@ package settleup.backend.domain.transaction.service.Impl;
 
 import lombok.AllArgsConstructor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
@@ -45,6 +47,7 @@ public class OptimizedServiceImpl implements OptimizedService {
     private UUID_Helper uuidHelper;
     private final TransactionInheritanceService transactionInheritanceService;
 
+    private static final Logger log = LoggerFactory.getLogger(OptimizedServiceImpl.class);
 
     /**
      * optimizationOfp2p
@@ -196,23 +199,28 @@ public class OptimizedServiceImpl implements OptimizedService {
     @Override
     @Transactional
     public TransactionalEntity processTransaction(TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
+        log.info("Processing transaction with Transaction ID: {}", request.getTransactionId());
         OptimizedTransactionEntity transactionEntity = optimizedTransactionRepo.findByTransactionUUID(request.getTransactionId())
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP));
 
+        log.info("Found transaction entity for UUID: {}", transactionEntity.getTransactionUUID());
+
         if (!transactionEntity.getGroup().getId().equals(existingGroup.getId())) {
+            log.error("Transaction group ID {} does not match existing group ID {}", transactionEntity.getGroup().getId(), existingGroup.getId());
             throw new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP);
         }
-        List<OptimizedTransactionDetailsEntity> optimizedTransactionId =
-                optimizedTransactionDetailsRepo.findByOptimizedTransactionId(transactionEntity.getId());
 
-        for(OptimizedTransactionDetailsEntity inheritanceTransaction :optimizedTransactionId){
-            transactionInheritanceService.clearInheritanceStatusFromOptimizedToRequired(inheritanceTransaction.getId());
+        List<RequiresTransactionEntity> requiresTransactions = optimizedTransactionDetailsRepo.findRequiresTransactionsByOptimizedTransactionId(transactionEntity.getId());
+
+        log.info("Found {} RequiresTransactionEntities for OptimizedTransaction ID {}", requiresTransactions.size(), transactionEntity.getId());
+
+        for (RequiresTransactionEntity requiresTransaction : requiresTransactions) {
+            log.info("Processing RequiresTransaction ID {}", requiresTransaction.getId());
+            transactionInheritanceService.clearInheritanceStatusFromOptimizedToRequired(requiresTransaction.getId());
         }
 
         return transactionEntity;
     }
 
+
 }
-
-
-

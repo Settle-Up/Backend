@@ -18,7 +18,7 @@ import settleup.backend.global.exception.CustomException;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/expense")
+@RequestMapping("/receipts")
 public class OcrController {
 
     private final OcrService ocrService;
@@ -26,7 +26,7 @@ public class OcrController {
     private static final Logger logger = LoggerFactory.getLogger(OcrController.class);
 
 
-    @PostMapping("azure/callback")
+    @PostMapping("/extract-text")
     public DeferredResult<ResponseEntity<?>> externalData(
             @RequestHeader(value = "Authorization") String token, @ModelAttribute FormDataDto dataDto) throws CustomException {
         loginService.validTokenOrNot(token);

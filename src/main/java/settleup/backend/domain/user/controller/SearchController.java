@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("")
+@RequestMapping("/users/search")
 public class SearchController {
 
     private SearchService searchService;
@@ -32,8 +32,8 @@ public class SearchController {
     @GetMapping("")
     public ResponseEntity<ResponseDto<Map<String, Object>>> findUserEmail(
             @RequestHeader(value = "Authorization") String token,
-            @RequestParam("search") String partOfEmail,
-            @RequestParam(value = "groupId", required = false) String groupId,
+            @RequestParam("email") String partOfEmail,
+            @RequestParam(value = "excludeGroupId", required = false) String groupId,
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
 

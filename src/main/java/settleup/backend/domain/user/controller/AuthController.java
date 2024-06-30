@@ -23,7 +23,7 @@ public class AuthController {
     private final LoginService loginService;
 
 
-    @GetMapping("/kakao/callback")
+    @GetMapping("/login/social/kakao")
     public ResponseEntity<ResponseDto> getTokenFromSocial(@RequestParam("code") String validCode) {
         KakaoTokenDto tokenInfo = kakaoService.getKakaoAccessToken(validCode);
         UserInfoDto userInfo = kakaoService.getUserInfo(tokenInfo.getAccess_token());

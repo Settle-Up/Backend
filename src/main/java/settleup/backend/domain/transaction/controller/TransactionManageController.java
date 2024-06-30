@@ -13,14 +13,15 @@ import settleup.backend.global.exception.CustomException;
 
 @RestController
 @AllArgsConstructor
+@RequestMapping("/transactions")
 public class TransactionManageController {
     private final LoginService loginService;
     private final TransactionUpdateService transactionUpdateService;
 
-    @PatchMapping("/transaction/manage")
+    @PatchMapping("/{groupId}/manage")
     public ResponseEntity<ResponseDto> updateTransaction(
             @RequestHeader(value = "Authorization") String token,
-            @RequestParam("groupId") String groupId,
+            @PathVariable("groupId") String groupId,
             @RequestBody TransactionUpdateRequestDto requestDto) throws CustomException {
         UserInfoDto userInfoDto = loginService.validTokenOrNot(token);
         TransactionUpdateDto data = transactionUpdateService.transactionManage(userInfoDto, groupId, requestDto);
@@ -28,7 +29,8 @@ public class TransactionManageController {
         return ResponseEntity.ok(responseDto);
     }
 
-    @GetMapping("/notifications/transactions/received")
+
+    @GetMapping("/received")
     public ResponseEntity<ResponseDto> retrievedUpdateData(@RequestHeader(value = "Authorization") String token) throws CustomException {
         UserInfoDto userInfoDto = loginService.validTokenOrNot(token);
         TransactionUpdateDto data = transactionUpdateService.retrievedReceivedListInGroup(userInfoDto);

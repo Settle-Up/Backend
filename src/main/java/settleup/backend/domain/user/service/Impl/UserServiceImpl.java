@@ -14,6 +14,7 @@ import settleup.backend.global.exception.ErrorCode;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @Transactional
@@ -25,7 +26,7 @@ public class UserServiceImpl implements UserService {
     private EntityManager entityManager;
 
     @Override
-    public Map<String, String> clusterUserDecimal(UserInfoDto userInfoDto) throws CustomException {
+    public Map<String, Object> clusterUserDecimal(UserInfoDto userInfoDto) throws CustomException {
         UserEntity user = isValidUser(userInfoDto);
         user.setIsDecimalInputOption(userInfoDto.getIsDecimalInputOption());
         userRepo.save(user);
@@ -40,22 +41,22 @@ public class UserServiceImpl implements UserService {
         return existingUser;
     }
 
-    private Map<String, String> buildResponseData(UserEntity user) {
-        Map<String, String> responseData = new HashMap<>();
+    private Map<String, Object> buildResponseData(UserEntity user) {
+        Map<String, Object> responseData = new HashMap<>();
         responseData.put("userId", user.getUserUUID());
         responseData.put("userName", user.getUserName());
-        responseData.put("isDecimalInputOption", String.valueOf(user.getIsDecimalInputOption()));
+        responseData.put("isDecimalInputOption", user.getIsDecimalInputOption());
         return responseData;
     }
 
     @Override
-    public Map<String, String> retrievedUserDecimal(UserInfoDto userInfoDto) throws CustomException {
+    public Map<String, Object> retrievedUserDecimal(UserInfoDto userInfoDto) throws CustomException {
         UserEntity existingUser = userRepo.findByUserUUID(userInfoDto.getUserId()).
                 orElseThrow(()->new CustomException(ErrorCode.USER_NOT_FOUND));
-        Map<String,String> response= new HashMap<>();
+        Map<String,Object> response= new HashMap<>();
         response.put("userId", userInfoDto.getUserId());
         response.put("userName", userInfoDto.getUserName());
-        response.put("isDecimalInputOption", String.valueOf(existingUser.getIsDecimalInputOption()));
+        response.put("isDecimalInputOption", existingUser.getIsDecimalInputOption());
         return response;
     }
 }

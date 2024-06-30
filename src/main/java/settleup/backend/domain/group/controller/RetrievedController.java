@@ -1,12 +1,15 @@
 package settleup.backend.domain.group.controller;
 
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import settleup.backend.domain.group.entity.dto.GroupInfoListDto;
+import settleup.backend.domain.group.service.Impl.RetrievedServiceImpl;
 import settleup.backend.domain.group.service.RetrievedService;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.service.LoginService;
@@ -20,13 +23,14 @@ import java.util.Map;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/group")
+@RequestMapping("/groups")
 public class RetrievedController {
     private final LoginService loginService;
     private final RetrievedService retrievedService;
+    private static final Logger logger = LoggerFactory.getLogger(RetrievedController.class);
 
 
-    @GetMapping("/list/summary")
+    @GetMapping("")
     public ResponseEntity<ResponseDto> retrievedGroupList(@RequestHeader(value = "Authorization") String token,
                                                           @RequestParam(value = "page", defaultValue = "1") int page,
                                                           @RequestParam(value = "size", defaultValue = "10") int size) {
@@ -37,9 +41,12 @@ public class RetrievedController {
         ResponseDto responseDto = new ResponseDto<>(true, "groupList retrieved successfully ", groupInfoListDtoList);
         return ResponseEntity.ok(responseDto);
     }
-    @GetMapping("/user/list")
+
+
+    @GetMapping("/{groupId}/members")
     public ResponseEntity<ResponseDto> retrievedGroupUserList(
-            @RequestHeader(value = "Authorization") String token, @RequestParam("groupId") String groupUUID) throws CustomException {
+            @RequestHeader(value = "Authorization") String token,
+            @PathVariable("groupId") String groupUUID) throws CustomException {
         loginService.validTokenOrNot(token);
         Map<String, Object> data = new HashMap<>();
         List<UserInfoDto> memberList = retrievedService.getGroupUserInfo(groupUUID);

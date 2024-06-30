@@ -21,7 +21,7 @@ public class SettleUpApplication {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:3000")
+                        .allowedOrigins("http://localhost:3000", " https://c2bd-125-132-224-129.ngrok-free.app")
                         .allowedMethods("GET", "POST", "PUT", "DELETE","PATCH")
                         .allowCredentials(true)
                         .allowedHeaders("*")

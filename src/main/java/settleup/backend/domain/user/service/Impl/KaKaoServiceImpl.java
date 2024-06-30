@@ -56,11 +56,12 @@ public class KaKaoServiceImpl implements KakaoService {
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
             params.add("grant_type", "authorization_code");
             params.add("client_id", kakaoConfig.getClientId());
-            if (!isHttps()) {
-                params.add("redirect_uri", kakaoConfig.getRedirectUriDev());
-            } else {
-                params.add("redirect_uri", kakaoConfig.getRedirectUriProd());
-            }
+            params.add("redirect_uri",kakaoConfig.getRedirectUriDev());
+//            if (!isHttps()) {
+//                params.add("redirect_uri", kakaoConfig.getRedirectUriDev());
+//            } else {
+//                params.add("redirect_uri", kakaoConfig.getRedirectUriProd());
+//            }
             params.add("code", code);
             params.add("client_secret", kakaoConfig.getSecret());
 
@@ -72,10 +73,10 @@ public class KaKaoServiceImpl implements KakaoService {
         }
     }
 
-    private boolean isHttps() {
-        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-        return "https".equals(request.getHeader("X-Forwarded-Proto"));
-    }
+//    private boolean isHttps() {
+//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+//        return "https".equals(request.getHeader("X-Forwarded-Proto"));
+//    }
 
 
     /**
@@ -170,7 +171,6 @@ public class KaKaoServiceImpl implements KakaoService {
             loginDto.setIssuedTime(new Date().toString());
             loginDto.setUserId(userInfoDto.getUserId());
             loginDto.setUserName(userInfoDto.getUserName());
-            loginDto.setIsDecimalInputOption(userInfoDto.getIsDecimalInputOption());
             return loginDto;
         } catch (Exception e) {
             throw new CustomException(ErrorCode.TOKEN_CREATION_FAILED);

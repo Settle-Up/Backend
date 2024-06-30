@@ -1,5 +1,6 @@
 package settleup.backend.domain.transaction.service.Impl;
 
+import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import settleup.backend.domain.group.entity.GroupUserEntity;
@@ -26,7 +27,9 @@ import settleup.backend.global.common.Status;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -61,6 +64,7 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
 
 
+
         String goesNextOrNot = strategySelector.selectRepository(request);
 
         if ("save-success".equals(goesNextOrNot)) {
@@ -87,13 +91,14 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
                 transactionUpdateDto.setTransactionUpdateList(new ArrayList<>());
             }
 
-
+            LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
             TransactionUpdateDto.TransactionListDto transactionListDto = new TransactionUpdateDto.TransactionListDto();
             transactionListDto.setGroupId(existingGroup.getGroupUUID());
             transactionListDto.setGroupName(existingGroup.getGroupName());
             transactionListDto.setTransactionId(result.getTransactionUUID());
             transactionListDto.setCounterPartyId(counterParty.getUserUUID());
             transactionListDto.setCounterPartyName(counterParty.getUserName());
+            transactionListDto.setClearedAt(String.valueOf(newClearStatusTimestamp));
             transactionListDto.setTransactionDirection(String.valueOf(transactionDirection));
             String formattedTransactionAmount = String.format("%.2f", result.getTransactionAmount());
             transactionListDto.setTransactionAmount(formattedTransactionAmount);
@@ -159,6 +164,7 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
         transactionListDto.setGroupName(transaction.getGroup().getGroupName());
         transactionListDto.setCounterPartyId(counterParty.getUserUUID());
         transactionListDto.setCounterPartyName(counterParty.getUserName());
+        transactionListDto.setClearedAt(String.valueOf(transaction.getClearStatusTimeStamp()));
         transactionListDto.setTransactionDirection(String.valueOf(transactionDirection));
         String formattedTransactionAmount = String.format("%.2f", transaction.getTransactionAmount());
         transactionListDto.setTransactionAmount(formattedTransactionAmount);

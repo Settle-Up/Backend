@@ -18,7 +18,7 @@ import java.util.Optional;
 public interface RequireTransactionRepository extends JpaRepository<RequiresTransactionEntity, Long> {
 
     @Query("SELECT r FROM RequiresTransactionEntity r WHERE r.group.id = :groupId AND r.requiredReflection= 'REQUIRE_OPTIMIZED'")
-    List<RequiresTransactionEntity> findByGroupIdAndRequiredReflection (@Param("groupId") Long groupId);
+    List<RequiresTransactionEntity> findByGroupIdAndRequiredReflection(@Param("groupId") Long groupId);
 
 
     @Query("SELECT r FROM RequiresTransactionEntity r WHERE r.group.id = :groupId AND (r.senderUser.id = :userId OR r.recipientUser.id = :userId) AND (r.requiredReflection <> 'INHERITED_CLEAR')")
@@ -31,17 +31,14 @@ public interface RequireTransactionRepository extends JpaRepository<RequiresTran
     @Query("SELECT r FROM RequiresTransactionEntity r WHERE r.receipt.id = :receiptId")
     List<RequiresTransactionEntity> findByReceiptId(@Param("receiptId") Long receiptId);
 
-    @Modifying
-    @Transactional
-    @Query("UPDATE RequiresTransactionEntity r SET r.requiredReflection = :requireReflectStatus WHERE r.id = :id")
-    void updateRequiredReflectionStatusById(@Param("id") Long id, @Param("requireReflectStatus") Status requireReflectStatus);
-
 
     @Modifying
-    @Transactional
-    @Query("UPDATE RequiresTransactionEntity r SET r.clearStatusTimestamp = :clearStatusTimestamp WHERE r.id = :id")
-    void updateClearStatusTimestampById(@Param("id") Long id, @Param("clearStatusTimestamp") LocalDateTime clearStatusTimestamp);
+    @Query("UPDATE RequiresTransactionEntity rte SET rte.requiredReflection = :status WHERE rte.id = :id")
+    void updateRequiredReflectionStatusById(@Param("id") Long id, @Param("status") Status status);
+
+    @Modifying
+    @Query("UPDATE RequiresTransactionEntity rte SET rte.clearStatusTimestamp = :timestamp WHERE rte.id = :id")
+    void updateClearStatusTimestampById(@Param("id") Long id, @Param("timestamp") LocalDateTime timestamp);
+
+
 }
-
-
-
