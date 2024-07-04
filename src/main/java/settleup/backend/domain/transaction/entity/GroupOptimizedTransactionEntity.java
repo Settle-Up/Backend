@@ -8,6 +8,7 @@ import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.global.common.Status;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 @Entity
 @Setter
@@ -34,7 +35,7 @@ public class GroupOptimizedTransactionEntity implements TransactionalEntity {
     private UserEntity recipientUser;
 
     @Column(name = "transaction_amount", nullable = false)
-    private double transactionAmount;
+    private BigDecimal transactionAmount;
 
 
     @Column(name = "optimization_status",nullable = false)
@@ -101,7 +102,7 @@ public class GroupOptimizedTransactionEntity implements TransactionalEntity {
     }
 
     @Override
-    public double getTransactionAmount(){return  this.transactionAmount;}
+    public BigDecimal getTransactionAmount(){return  this.transactionAmount;}
 
 }
 

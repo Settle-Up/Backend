@@ -9,13 +9,7 @@ group = 'SettleUP'
 version = '0.0.1-SNAPSHOT'
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-    withJavadocJar()
-    withSourcesJar()
-    tasks.withType(JavaCompile) {
-        options.compilerArgs += ['-parameters']
-    }
+    sourceCompatibility = '17'
 }
 
 configurations {
@@ -44,15 +38,25 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     annotationProcessor "org.springframework.boot:spring-boot-configuration-processor"
     implementation 'io.jsonwebtoken:jjwt:0.9.1'
-    implementation 'javax.xml.bind:jaxb-api:2.3.1'
-    implementation group: 'org.apache.tomcat.embed', name: 'tomcat-embed-jasper', version: '9.0.44'
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:3.0.1'
+    implementation 'org.glassfish.jaxb:jaxb-runtime:3.0.1'
+    implementation 'javax.xml.bind:jaxb-api:2.3.1' // 추가된 부분
     runtimeOnly 'com.mysql:mysql-connector-j'
-    implementation 'io.sentry:sentry-spring-boot-starter:7.0.0'
-    implementation 'io.sentry:sentry-logback:7.0.0'
+    implementation 'io.sentry:sentry-spring-boot-starter-jakarta:7.4.0'
+    implementation 'io.sentry:sentry-logback:7.4.0'
     implementation 'org.jgrapht:jgrapht-core:1.5.0'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'it.ozimov:embedded-redis:0.7.2'
     implementation 'org.springframework.boot:spring-boot-starter-mail'
+    implementation 'org.hibernate.orm:hibernate-core:6.1.7.Final'
+    compileOnly 'org.jetbrains:annotations:24.0.1'
+}
+
+
+sentry {
+    autoInstallation {
+        sentryVersion.set("7.4.0")
+    }
 }
 
 tasks.named('test') {

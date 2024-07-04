@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "receipt_item")
 @Getter
@@ -24,10 +26,10 @@ public class ReceiptItemEntity {
     private String receiptItemName;
 
     @Column(name = "item_quantity", nullable = false)
-    private Double itemQuantity;
+    private BigDecimal itemQuantity;
 
     @Column(name = "unit_price", nullable = false)
-    private Double unitPrice;
+    private BigDecimal unitPrice;
 
     @Column(name = "joint_purchaser_count", nullable = false)
     private Integer jointPurchaserCount;

@@ -10,6 +10,7 @@ import settleup.backend.domain.receipt.entity.ReceiptEntity;
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.global.common.Status;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -41,7 +42,7 @@ public class RequiresTransactionEntity {
     private UserEntity recipientUser;
 
     @Column(name = "transaction_amount", nullable = false)
-    private Double transactionAmount;
+    private BigDecimal transactionAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "require_reflection", nullable = false)

@@ -1,8 +1,6 @@
 package settleup.backend.domain.transaction.service.Impl;
 
-
 import lombok.AllArgsConstructor;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
@@ -11,19 +9,17 @@ import settleup.backend.domain.transaction.entity.dto.*;
 import settleup.backend.domain.transaction.repository.*;
 import settleup.backend.domain.transaction.service.UltimateOptimizedService;
 import settleup.backend.domain.transaction.service.TransactionInheritanceService;
-
 import settleup.backend.domain.user.repository.UserRepository;
 import settleup.backend.global.common.Status;
 import settleup.backend.global.common.UUID_Helper;
-
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
 
 @Service
 @AllArgsConstructor
@@ -37,25 +33,11 @@ public class UltimateOptimizedServiceImpl implements UltimateOptimizedService {
     private final UUID_Helper uuidHelper;
     private final TransactionInheritanceService inheritanceService;
 
-
     @Override
     public void ultimateOptimizedTransaction(TransactionP2PResultDto resultDto) {
         List<TransactionalEntity> combinedListForUltimateProcessing = getCombinedList(resultDto);
         ultimateTransaction(combinedListForUltimateProcessing, resultDto);
     }
-
-    /**
-     * 대전제 => 2차 최적화가 이루어지지 않으면 3차 최적화도 이루어지지 않음
-     * CombinationListDto 어떤 목적에서 만든건지 ..?
-     * optimizedTransaction , groupOptimizedTransaction 중에서 optimizationStatus => Current 대상으로
-     * 만약에 2차 최적화로 인해 새로 만들어진 에지와 optimizedTransaction 에지가 겹치는 것을 통합하기 위해
-     * 구체화 : 1.optimizedTransaction 중에 Current ^ requireReflection (Require_Reflect)
-     * 2.group 최적화 중에 Current
-     * <p>
-     * 3차 최적화를 위해 필요한 필드
-     * => 1. transactionUUID 2.groupEntity 3.senderUser 4.recipientUser 5. transactionAmount 6.
-     */
-
 
     private List<TransactionalEntity> getCombinedList(TransactionP2PResultDto resultDto) {
         List<TransactionalEntity> groupOptimizedCurrentList =
@@ -70,7 +52,6 @@ public class UltimateOptimizedServiceImpl implements UltimateOptimizedService {
 
         return combinedList;
     }
-
 
     private void ultimateTransaction(List<TransactionalEntity> combinedListForUltimateProcessing, TransactionP2PResultDto result) {
         List<List<Long>> nodeList = result.getNodeList();
@@ -93,31 +74,30 @@ public class UltimateOptimizedServiceImpl implements UltimateOptimizedService {
                 }
             }
 
-
             if (!filteredTransactionsUltimate.isEmpty()) {
-                double totalFinalAmount = 0;
+                BigDecimal totalFinalAmount = BigDecimal.ZERO;
                 for (TransactionalEntity transaction : filteredTransactionsUltimate) {
                     if (transaction.getSenderUser().getId().equals(senderId)) {
-                        totalFinalAmount += transaction.getTransactionAmount();
+                        totalFinalAmount = totalFinalAmount.add(transaction.getTransactionAmount());
                     } else if (transaction.getSenderUser().getId().equals(recipientId)) {
-                        totalFinalAmount -= transaction.getTransactionAmount();
+                        totalFinalAmount = totalFinalAmount.subtract(transaction.getTransactionAmount());
                     }
                 }
 
                 IntermediateCalcDto intermediateCalcDto = new IntermediateCalcDto();
                 intermediateCalcDto.setGroup(group);
-                intermediateCalcDto.setTransactionAmount(Math.abs(totalFinalAmount));
+                intermediateCalcDto.setTransactionAmount(totalFinalAmount.abs());
                 intermediateCalcDto.setDuringFinalOptimizationUsed(filteredTransactionsUltimate);
 
-                if (totalFinalAmount > 0) {
+                if (totalFinalAmount.compareTo(BigDecimal.ZERO) > 0) {
                     intermediateCalcDto.setSenderUser(userRepo.findById(senderId).get());
                     intermediateCalcDto.setRecipientUser(userRepo.findById(recipientId).get());
-                } else if (totalFinalAmount < 0) {
+                } else if (totalFinalAmount.compareTo(BigDecimal.ZERO) < 0) {
                     intermediateCalcDto.setSenderUser(userRepo.findById(recipientId).get());
                     intermediateCalcDto.setRecipientUser(userRepo.findById(senderId).get());
                 }
 
-                if (totalFinalAmount != 0) {
+                if (totalFinalAmount.compareTo(BigDecimal.ZERO) != 0) {
                     UltimateOptimizedTransactionEntity ultimateOptimizedTransaction = new UltimateOptimizedTransactionEntity();
                     ultimateOptimizedTransaction.setTransactionUUID(uuidHelper.UUIDForFinalOptimized());
                     ultimateOptimizedTransaction.setGroup(intermediateCalcDto.getGroup());
@@ -133,7 +113,6 @@ public class UltimateOptimizedServiceImpl implements UltimateOptimizedService {
                             ultimateRepo.save(ultimateOptimizedTransaction);
                     listForSaveUltimateIds.add(saveFinalOptimizedTransaction.getId());
 
-
                     for (TransactionalEntity transaction : intermediateCalcDto.getDuringFinalOptimizationUsed()) {
                         UltimateOptimizedTransactionDetailEntity finalOptimizedTransactionDetail = new UltimateOptimizedTransactionDetailEntity();
                         finalOptimizedTransactionDetail.setTransactionDetailUUID(uuidHelper.UUIDForFinalOptimizedDetail());
@@ -145,7 +124,6 @@ public class UltimateOptimizedServiceImpl implements UltimateOptimizedService {
                             optimizedRepo.updateRequiredReflectionByTransactionUUID(transaction.getTransactionUUID(), Status.INHERITED);
                         } else if (transaction.getTransactionUUID().startsWith("GPT")) {
                             groupOptimizedRepo.updateRequiredReflectionByTransactionUUID(transaction.getTransactionUUID(), Status.INHERITED);
-
                         }
                     }
                 } else {
@@ -163,12 +141,10 @@ public class UltimateOptimizedServiceImpl implements UltimateOptimizedService {
                             });
                         }
                     });
-
                 }
             }
         }
     }
-
 
     @Override
     @Transactional
@@ -186,7 +162,6 @@ public class UltimateOptimizedServiceImpl implements UltimateOptimizedService {
         for (String requireSelectServiceFromUUID : requireInheritanceSelectedList) {
             selectServiceUpdateReflectionByInheritance(requireSelectServiceFromUUID);
         }
-
 
         return transactionEntity;
     }
@@ -208,6 +183,4 @@ public class UltimateOptimizedServiceImpl implements UltimateOptimizedService {
             throw new CustomException(ErrorCode.TRANSACTION_TYPE_NOT_SUPPORTED);
         }
     }
-
 }
-

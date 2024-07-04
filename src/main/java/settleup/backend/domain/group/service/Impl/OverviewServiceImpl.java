@@ -30,6 +30,7 @@ import settleup.backend.global.event.ReceiptEventListener;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -57,7 +58,6 @@ public class OverviewServiceImpl implements OverviewService {
         buildNeededTransactionResponseDto(overviewDto, userGroupDto);
         return buildLastWeekSettledTransactionList(overviewDto, userGroupDto);
     }
-
 
 
     private UserGroupDto isValidUserGroup(String groupUUID, UserInfoDto userInfoDto) {
@@ -89,27 +89,37 @@ public class OverviewServiceImpl implements OverviewService {
         resultDto.setGroupName(group.getGroupName());
         resultDto.setIsMonthlyReportUpdateOn(userInGroupBridgeInfo.getIsMonthlyReportUpdateOn());
 
-        List<NetDto> netDtoList = netService.calculateNet(userGroupDto);
-        String formattedNetAmount = netDtoList.stream()
-                .filter(netDto -> {
-                    boolean isEqual = netDto.getUser().equals(user);
-                    log.debug("Comparing user in NetDto: {}, with user: {}, isEqual: {}", netDto.getUser().getId(), user.getId(), isEqual);
-                    return isEqual;
-                })
-                .findFirst()
-                .map(netDto -> {
-                    String amountFormatted = String.format("%.2f", netDto.getNetAmount());
-                    log.debug("Net amount found for user {}: {}", user.getId(), amountFormatted);
-                    return amountFormatted;
-                })
-                .orElse("0.00");
+        boolean isReceiptRegistered = netService.isReceiptRegisteredInGroup(userGroupDto.getGroup().getId());
+        log.debug("Is receipt registered for group {}: {}", userGroupDto.getGroup().getGroupUUID(), isReceiptRegistered);
+
+        String formattedNetAmount = null;
+
+        if (isReceiptRegistered) {
+            List<NetDto> netDtoList = netService.calculateNet(userGroupDto);
+            log.debug("Net calculation result for group {}: {}", userGroupDto.getGroup().getGroupUUID(), netDtoList);
+
+            formattedNetAmount = netDtoList.stream()
+                    .filter(netDto -> {
+                        boolean isEqual = netDto.getUser().equals(user);
+                        log.debug("Comparing user in NetDto: {}, with user: {}, isEqual: {}", netDto.getUser().getId(), user.getId(), isEqual);
+                        return isEqual;
+                    })
+                    .findFirst()
+                    .map(netDto -> {
+                        String amountFormatted = String.format("%.2f", netDto.getNetAmount());
+                        log.debug("Net amount found for user {}: {}", user.getId(), amountFormatted);
+                        return amountFormatted;
+                    })
+                    .orElse("0.00");
+        } else {
+            formattedNetAmount = null;
+        }
+
+        log.debug("Final settlement balance for group {}: {}", userGroupDto.getGroup().getGroupUUID(), formattedNetAmount);
 
         resultDto.setSettlementBalance(formattedNetAmount);
-
-
         return resultDto;
     }
-
 
     private void buildNeededTransactionResponseDto(GroupOverviewDto overviewDto, UserGroupDto userGroupInfo) {
         UserEntity user = userGroupInfo.getSingleUser();
@@ -187,7 +197,6 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
 
-
     @Override
     public GroupOverviewExpenseDto updateRetrievedExpenseList(GroupOverviewExpenseDto groupOverviewExpenseDto, String groupUUID, UserInfoDto userInfoDto, Pageable pageable) throws CustomException {
         GroupEntity existingGroup = groupRepo.findByGroupUUID(groupUUID)
@@ -216,23 +225,18 @@ public class OverviewServiceImpl implements OverviewService {
             expenseTransaction.setTotalPrice(String.format("%.2f", expense.getActualPaidPrice()));
 
             List<RequiresTransactionEntity> requireExpenseList = requireTransactionRepo.findByReceiptId(expense.getId());
-            Double totalAmountForCurrentUser = requireExpenseList.stream()
+            BigDecimal totalAmountForCurrentUser = requireExpenseList.stream()
                     .filter(transaction -> transaction.getRecipientUser().getId().equals(existingUser.getId()) || transaction.getSenderUser().getId().equals(existingUser.getId()))
-                    .mapToDouble(transaction -> transaction.getRecipientUser().getId().equals(existingUser.getId()) ? transaction.getTransactionAmount() : -transaction.getTransactionAmount())
-                    .sum();
+                    .map(transaction -> transaction.getRecipientUser().getId().equals(existingUser.getId()) ? transaction.getTransactionAmount() : transaction.getTransactionAmount().negate())
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
             expenseTransaction.setUserOwedAmount(String.format("%.2f", totalAmountForCurrentUser));
 
             groupOverviewExpenseDto.getExpenses().add(expenseTransaction);
         }
-
 
         groupOverviewExpenseDto.getExpenses().sort((e1, e2) -> e2.getCreatedAt().compareTo(e1.getCreatedAt()));
 
         groupOverviewExpenseDto.setHasNextPage(pagedReceipts.hasNext());
         return groupOverviewExpenseDto;
     }
-
-
-
-
 }

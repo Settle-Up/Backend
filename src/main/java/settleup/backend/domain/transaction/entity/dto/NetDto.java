@@ -6,11 +6,13 @@ import lombok.NoArgsConstructor;
 import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.user.entity.UserEntity;
 
+import java.math.BigDecimal;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class NetDto {
     private UserEntity user;
     private GroupEntity group;
-    private float netAmount;
+    private BigDecimal netAmount;
 }

@@ -26,6 +26,7 @@ import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -99,32 +100,29 @@ public class OptimizedServiceImpl implements OptimizedService {
 
             System.out.println("Filtered transactions count for this pair: " + filteredTransactions.size());
             if (!filteredTransactions.isEmpty()) {
-                double totalAmount = 0;
+                BigDecimal totalAmount = BigDecimal.ZERO;
                 for (RequiresTransactionEntity transaction : filteredTransactions) {
                     if (transaction.getSenderUser().getId().equals(senderId)) {
-                        totalAmount += transaction.getTransactionAmount();
+                        totalAmount = totalAmount.add(transaction.getTransactionAmount());
                     } else if (transaction.getSenderUser().getId().equals(recipientId)) {
-                        totalAmount -= transaction.getTransactionAmount();
+                        totalAmount = totalAmount.subtract(transaction.getTransactionAmount());
                     }
                 }
 
-
                 IntermediateCalcDto intermediateCalcDto = new IntermediateCalcDto();
                 intermediateCalcDto.setGroup(group);
-                intermediateCalcDto.setTransactionAmount(Math.abs(totalAmount));
+                intermediateCalcDto.setTransactionAmount(totalAmount.abs());
                 intermediateCalcDto.setDuringOptimizationUsed(filteredTransactions);
 
-
-                if (totalAmount > 0) {
-                    intermediateCalcDto.setSenderUser(userRepo.findById(senderId).get());
-                    intermediateCalcDto.setRecipientUser(userRepo.findById(recipientId).get());
-                } else if (totalAmount < 0) {
-                    intermediateCalcDto.setSenderUser(userRepo.findById(recipientId).get());
-                    intermediateCalcDto.setRecipientUser(userRepo.findById(senderId).get());
+                if (totalAmount.compareTo(BigDecimal.ZERO) > 0) {
+                    intermediateCalcDto.setSenderUser(userRepo.findById(senderId).orElse(null));
+                    intermediateCalcDto.setRecipientUser(userRepo.findById(recipientId).orElse(null));
+                } else if (totalAmount.compareTo(BigDecimal.ZERO) < 0) {
+                    intermediateCalcDto.setSenderUser(userRepo.findById(recipientId).orElse(null));
+                    intermediateCalcDto.setRecipientUser(userRepo.findById(senderId).orElse(null));
                 }
 
-
-                if (totalAmount != 0) {
+                if (totalAmount.compareTo(BigDecimal.ZERO) != 0) {
                     OptimizedTransactionEntity optimizedTransaction = new OptimizedTransactionEntity();
                     optimizedTransaction.setTransactionUUID(uuidHelper.UUIDForOptimizedTransaction());
                     optimizedTransaction.setGroup(intermediateCalcDto.getGroup());
@@ -147,15 +145,8 @@ public class OptimizedServiceImpl implements OptimizedService {
                         details.setOptimizedTransaction(optimizedTransaction);
                         details.setRequiresTransaction(transaction);
                         optimizedTransactionDetailsRepo.save(details);
-                        // requireTransaction 은 최초 최적화에 쓰였다고 해도 , hasBeenSent 나 , 합계가 0 이 발생하지 않는한 reflection 건들지 않는다
                     }
                 } else {
-                    /**
-                     * totalAmount가 0인 경우, 모든 거래의 상태를 true로 설정이 아니라 상속에 의한 clear 만  true로 설정한다
-                     * hasBeenSentStatus 를 true로 설정하면 실제유저가 정산한 것 처럼 나오기 때문에
-                     * 추가적으로 clearStatusTimeStamp 수동으로 설정
-                     */
-
                     LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
                     for (RequiresTransactionEntity transactionForClear : filteredTransactions) {
                         transactionForClear.setRequiredReflection(Status.INHERITED_CLEAR);
@@ -164,7 +155,6 @@ public class OptimizedServiceImpl implements OptimizedService {
                     }
                 }
             }
-
         }
         return resultDto;
     }

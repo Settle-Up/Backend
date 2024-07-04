@@ -7,6 +7,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import settleup.backend.domain.user.entity.UserEntity;
+
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "receipt_item_user")
 @Getter
@@ -22,7 +25,7 @@ public class ReceiptItemUserEntity {
 
 
     @Column(name = "purchased_quantity",nullable = true)
-    private Double purchasedQuantity;
+    private BigDecimal purchasedQuantity;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

@@ -25,6 +25,7 @@ import settleup.backend.domain.user.repository.UserRepository;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 @Service
@@ -61,33 +62,41 @@ public class RetrievedServiceImpl implements RetrievedService {
             String lastActive = receipts.isEmpty() ? null : receipts.get(0).getCreatedAt().toString();
             groupInfoDto.setLastActive(lastActive);
 
-            // Net 계산
-            UserGroupDto groupDto =new UserGroupDto();
-            groupDto.setGroup(group);
-            List<NetDto> groupAllNetList = netService.calculateNet(groupDto);
 
-            for (NetDto netDto : groupAllNetList) {
-                if (netDto.getUser().equals(existingUser)) {
-                    Float netAmount = netDto.getNetAmount();
-                    if (netAmount != null) {
-                        String formattedNetAmount = String.format("%.2f", netAmount);
-                        groupInfoDto.setSettlementBalance(formattedNetAmount);
-                        groupInfoDto.setLastActive(lastActive);
+            // 영수증 등록 여부 확인
+            boolean isReceiptRegistered = netService.isReceiptRegisteredInGroup(group.getId());
+            logger.debug("Is receipt registered for group {}: {}", group.getGroupUUID(), isReceiptRegistered);
+
+            String formattedNetAmount = "0.00";
+            if (isReceiptRegistered) {
+                // 영수증이 등록되어 있으면 Net 계산
+                UserGroupDto groupDto = new UserGroupDto();
+                groupDto.setGroup(group);
+                List<NetDto> groupAllNetList = netService.calculateNet(groupDto);
+
+                logger.debug("Net calculation result for group {}: {}", group.getGroupUUID(), groupAllNetList);
+
+                for (NetDto netDto : groupAllNetList) {
+                    if (netDto.getUser().equals(existingUser)) {
+                        BigDecimal netAmount = netDto.getNetAmount();
+                        logger.debug("Net amount for user {}: {}", existingUser.getId(), netAmount);
+                        formattedNetAmount = String.format("%.2f", netAmount);
+                        break;
                     }
-                    break;
                 }
+            } else {
+                formattedNetAmount = null;
             }
 
+            logger.debug("Final settlement balance for group {}: {}", group.getGroupUUID(), formattedNetAmount);
+            groupInfoDto.setSettlementBalance(formattedNetAmount);
             groupList.add(groupInfoDto);
         }
 
-
         boolean hasNextPage = userGroupPage.hasNext();
-
 
         return new GroupInfoListDto(existingUser.getUserUUID(), existingUser.getUserName(), hasNextPage, groupList);
     }
-
     @Override
     public List<UserInfoDto> getGroupUserInfo(String groupUUID) throws CustomException {
         try {

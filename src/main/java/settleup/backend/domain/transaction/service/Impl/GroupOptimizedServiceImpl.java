@@ -15,7 +15,6 @@ import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionDetailsEntity;
 import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionEntity;
 import settleup.backend.domain.transaction.entity.OptimizedTransactionEntity;
-
 import settleup.backend.domain.transaction.entity.TransactionalEntity;
 import settleup.backend.domain.transaction.entity.dto.*;
 import settleup.backend.domain.transaction.repository.GroupOptimizedTransactionDetailRepository;
@@ -23,14 +22,13 @@ import settleup.backend.domain.transaction.repository.GroupOptimizedTransactionR
 import settleup.backend.domain.transaction.repository.OptimizedTransactionRepository;
 import settleup.backend.domain.transaction.service.GroupOptimizedService;
 import settleup.backend.domain.transaction.service.TransactionInheritanceService;
-
 import settleup.backend.domain.user.repository.UserRepository;
 import settleup.backend.global.common.Status;
 import settleup.backend.global.common.UUID_Helper;
-
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -65,7 +63,6 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
         return optimizedTransactionRepo.findGroupByTransactionId(p2pList.get(0));
     }
 
-
     private boolean startGroupOptimization(GraphResult graphResult,
                                            List<Long> orderedUserIdList,
                                            GroupEntity group) {
@@ -80,7 +77,7 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
             if (!visitedEdges.containsAll(graph.outgoingEdgesOf(userId))) {
                 for (DefaultWeightedEdge edge : graph.outgoingEdgesOf(userId)) {
                     if (!visitedEdges.contains(edge)) {
-                        double initialWeight = graph.getEdgeWeight(edge);
+                        BigDecimal initialWeight = BigDecimal.valueOf(graph.getEdgeWeight(edge));
                         Long targetNode = graph.getEdgeTarget(edge);
                         if (dfs(graph, targetNode, visitedEdges, edgeTransactionIdMap, group, userId, initialWeight)) {
                             transactionCreated = true;
@@ -98,7 +95,7 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
                         Map<DefaultWeightedEdge, Long> edgeTransactionIdMap,
                         GroupEntity group,
                         Long startNode,
-                        double lastWeight) {
+                        BigDecimal lastWeight) {
         logger.debug("DFS started for node: {}", currentNode);
         boolean transactionCreated = false;
         for (DefaultWeightedEdge edge : graph.outgoingEdgesOf(currentNode)) {
@@ -106,26 +103,23 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
 
             visitedEdges.add(edge);
             Long targetNode = graph.getEdgeTarget(edge);
-            double currentWeight = graph.getEdgeWeight(edge);
+            BigDecimal currentWeight = BigDecimal.valueOf(graph.getEdgeWeight(edge));
 
-
-            if (currentWeight == lastWeight && !targetNode.equals(startNode)) {
+            if (currentWeight.compareTo(lastWeight) == 0 && !targetNode.equals(startNode)) {
                 transactionCreated |= dfs(graph, targetNode, visitedEdges, edgeTransactionIdMap, group, startNode, lastWeight);
             } else {
-                if (startNode != null && startNode != currentNode) {
+                if (startNode != null && !startNode.equals(currentNode)) {
                     GroupOptimizedTransactionEntity newTransaction = createOptimizedTransaction(startNode, currentNode, lastWeight, group);
                     saveTransactionDetails(newTransaction, edgeTransactionIdMap, startNode, currentNode, graph);
                     transactionCreated = true;
                 }
-                transactionCreated |= dfs(graph, targetNode, new HashSet<>(visitedEdges), edgeTransactionIdMap, group, currentNode, currentWeight);  // 새로운 visitedEdges 세트와 함께 호출
+                transactionCreated |= dfs(graph, targetNode, new HashSet<>(visitedEdges), edgeTransactionIdMap, group, currentNode, currentWeight);
             }
         }
         return transactionCreated;
     }
 
-
-
-    private GroupOptimizedTransactionEntity createOptimizedTransaction(Long senderId, Long recipientId, double amount, GroupEntity group) {
+    private GroupOptimizedTransactionEntity createOptimizedTransaction(Long senderId, Long recipientId, BigDecimal amount, GroupEntity group) {
         GroupOptimizedTransactionEntity newTransaction = new GroupOptimizedTransactionEntity();
         newTransaction.setTransactionUUID(uuidHelper.UUIDForGroupOptimizedTransactions());
         newTransaction.setSenderUser(userRepo.findById(senderId).get());
@@ -143,7 +137,6 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
 
         return newTransaction;
     }
-
 
     private void saveTransactionDetails(GroupOptimizedTransactionEntity optimizedTransaction, Map<DefaultWeightedEdge, Long> edgeTransactionIdMap, Long startNode, Long endNode, Graph<Long, DefaultWeightedEdge> graph) {
         DefaultWeightedEdge edge = graph.getEdge(startNode, endNode);
@@ -175,14 +168,14 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
             transactionOpt.ifPresent(transaction -> {
                 Long senderId = transaction.getSenderUser().getId();
                 Long recipientId = transaction.getRecipientUser().getId();
-                double amount = transaction.getTransactionAmount();
+                BigDecimal amount = transaction.getTransactionAmount();
 
                 graph.addVertex(senderId);
                 graph.addVertex(recipientId);
 
                 DefaultWeightedEdge edge = graph.addEdge(senderId, recipientId);
                 if (edge != null) {
-                    graph.setEdgeWeight(edge, amount);
+                    graph.setEdgeWeight(edge, amount.doubleValue());
                     edgeTransactionIdMap.put(edge, transactionId);
                 }
             });
@@ -191,21 +184,10 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
         return new GraphResult(graph, edgeTransactionIdMap);
     }
 
-
     private List<Long> createGraphOrder(List<NetDto> net) {
         Collections.sort(net, (o1, o2) -> {
-
-            if (o1.getNetAmount() < 0 && o2.getNetAmount() < 0) {
-
-                return Float.compare(o2.getNetAmount(), o1.getNetAmount());
-            } else if (Float.compare(o1.getNetAmount(), o2.getNetAmount()) == 0) {
-
-                return Long.compare(o1.getUser().getId(), o2.getUser().getId());
-            }
-
-            return Float.compare(o1.getNetAmount(), o2.getNetAmount());
+            return o1.getNetAmount().compareTo(o2.getNetAmount());
         });
-
 
         List<Long> orderedUserIdList = new ArrayList<>();
         for (NetDto dto : net) {
@@ -226,9 +208,9 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
             throw new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP);
         }
 
-        List<GroupOptimizedTransactionDetailsEntity> requireInheritanceList=
+        List<GroupOptimizedTransactionDetailsEntity> requireInheritanceList =
                 groupOptimizedDetailRepo.findByGroupOptimizedTransactionId(groupOptimizedTransactionRepo.findByTransactionUUID(transactionEntity.getTransactionUUID()).get().getId());
-        for(GroupOptimizedTransactionDetailsEntity requireInheritanceTransaction:requireInheritanceList){
+        for (GroupOptimizedTransactionDetailsEntity requireInheritanceTransaction : requireInheritanceList) {
             transactionInheritanceService.clearInheritanceStatusFromGroupToOptimized(requireInheritanceTransaction.getId());
         }
 

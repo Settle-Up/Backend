@@ -8,6 +8,7 @@ import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.global.common.Status;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public interface TransactionalEntity {
@@ -19,7 +20,7 @@ public interface TransactionalEntity {
 
     GroupEntity getGroup();
 
-    double getTransactionAmount();
+    BigDecimal getTransactionAmount();
 
     String getTransactionUUID();
 

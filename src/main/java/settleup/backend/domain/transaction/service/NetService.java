@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface NetService {
     List<NetDto> calculateNet(UserGroupDto groupDto);
+
+    boolean isReceiptRegisteredInGroup(Long groupId);
 }

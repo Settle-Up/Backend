@@ -21,12 +21,16 @@ public class MailConfig {
         mailSender.setPort(Integer.parseInt(emailConfig.getPort()));
         mailSender.setUsername(emailConfig.getUserName());
         mailSender.setPassword(emailConfig.getPassword());
-        mailSender.setDefaultEncoding("UTF-8");
+        mailSender.setDefaultEncoding(emailConfig.getDefaultEncoding());
         mailSender.setProtocol("smtp");
 
         Properties props = new Properties();
         props.put("mail.smtp.auth", emailConfig.getAuth());
         props.put("mail.smtp.starttls.enable", emailConfig.getStarttlsEnable());
+        props.put("mail.smtp.starttls.required", emailConfig.getStarttlsRequired());
+        props.put("mail.smtp.connectiontimeout", emailConfig.getConnectionTimeout());
+        props.put("mail.smtp.timeout", emailConfig.getTimeout());
+        props.put("mail.smtp.writetimeout", emailConfig.getWriteTimeout());
         mailSender.setJavaMailProperties(props);
 
         return mailSender;

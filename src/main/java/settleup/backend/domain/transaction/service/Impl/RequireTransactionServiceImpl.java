@@ -26,6 +26,7 @@ import settleup.backend.global.common.UUID_Helper;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -42,22 +43,11 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
     private final RequireTransactionRepository transactionRepository;
     private static final Logger logger = LoggerFactory.getLogger(RequireTransactionService.class);
 
-    /**
-     * createExpense
-     *
-     * @param requestDto (receipt , group , allocationType , payerUser)
-     * @return TransactionDto
-     * @throws CustomException
-     */
-
-
     @Override
     @Transactional
     public void createExpense(TransactionDto requestDto) {
         processTransactionItems(requestDto);
-
     }
-
 
     private void processTransactionItems(TransactionDto requestDto) {
         List<ReceiptItemEntity> itemList = itemRepository.findByReceiptId(requestDto.getReceipt().getId());
@@ -66,7 +56,7 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
         for (ReceiptItemEntity item : itemList) {
             List<ReceiptItemUserEntity> itemUserList = itemUserRepository.findByReceiptItemId(item.getId());
             for (ReceiptItemUserEntity itemUser : itemUserList) {
-                double saveAmount = calculateSaveAmount(item, itemUser);
+                BigDecimal saveAmount = calculateSaveAmount(item, itemUser);
                 if (isTransactionRequired(itemUser, requestDto) && !saveTransaction(itemUser, requestDto, saveAmount)) {
                     allTransactionsSaved = false;
                 }
@@ -80,9 +70,8 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
         }
     }
 
-
     private void processEachTransaction(ReceiptItemEntity item, ReceiptItemUserEntity itemUser, TransactionDto requestDto) {
-        double saveAmount = calculateSaveAmount(item, itemUser);
+        BigDecimal saveAmount = calculateSaveAmount(item, itemUser);
         logger.debug("Processed transaction item with amount: {}, for user: {}", saveAmount, itemUser.getUser().getId());
         if (isTransactionRequired(itemUser, requestDto)) {
             saveTransaction(itemUser, requestDto, saveAmount);
@@ -91,22 +80,18 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
         }
     }
 
-
-    private double calculateSaveAmount(ReceiptItemEntity item, ReceiptItemUserEntity itemUser) {
-        double targetDividedValue = item.getUnitPrice() * item.getItemQuantity();
+    private BigDecimal calculateSaveAmount(ReceiptItemEntity item, ReceiptItemUserEntity itemUser) {
+        BigDecimal targetDividedValue = item.getUnitPrice().multiply(item.getItemQuantity());
         return Optional.ofNullable(itemUser.getPurchasedQuantity())
-                .map(purchasedQuantity -> targetDividedValue * purchasedQuantity / item.getItemQuantity())
-                .orElseGet(() -> targetDividedValue);
+                .map(purchasedQuantity -> targetDividedValue.multiply(purchasedQuantity).divide(item.getItemQuantity(), BigDecimal.ROUND_HALF_UP))
+                .orElse(targetDividedValue.divide(BigDecimal.valueOf(item.getJointPurchaserCount()), BigDecimal.ROUND_HALF_UP));
     }
 
-
     private boolean isTransactionRequired(ReceiptItemUserEntity itemUser, TransactionDto requestDto) {
-
         return !itemUser.getUser().getId().equals(requestDto.getReceipt().getPayerUser().getId());
     }
 
-
-    private boolean saveTransaction(ReceiptItemUserEntity itemUser, TransactionDto requestDto, double saveAmount) {
+    private boolean saveTransaction(ReceiptItemUserEntity itemUser, TransactionDto requestDto, BigDecimal saveAmount) {
         try {
             RequiresTransactionEntity transaction = createTransactionEntity(itemUser, requestDto, saveAmount);
             transactionRepository.save(transaction);
@@ -118,9 +103,7 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
         }
     }
 
-
-
-    private RequiresTransactionEntity createTransactionEntity(ReceiptItemUserEntity itemUser, TransactionDto requestDto, double saveAmount) {
+    private RequiresTransactionEntity createTransactionEntity(ReceiptItemUserEntity itemUser, TransactionDto requestDto, BigDecimal saveAmount) {
         RequiresTransactionEntity transaction = new RequiresTransactionEntity();
         transaction.setTransactionUUID(uuidHelper.UUIDForTransaction());
         transaction.setReceipt(requestDto.getReceipt());
@@ -131,5 +114,5 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
         transaction.setTransactionAmount(saveAmount);
         return transaction;
     }
-
 }
+

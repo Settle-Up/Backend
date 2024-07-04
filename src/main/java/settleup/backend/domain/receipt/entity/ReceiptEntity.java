@@ -9,6 +9,7 @@ import lombok.Setter;
 import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.user.entity.UserEntity;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -42,13 +43,13 @@ public class ReceiptEntity {
     private UserEntity payerUser;
 
     @Column(name = "total_price", nullable = false)
-    private Double totalPrice;
+    private BigDecimal totalPrice;
 
     @Column(name = "discount_applied", nullable = false)
-    private Double discountApplied;
+    private BigDecimal discountApplied;
 
     @Column(name = "actual_paid_price", nullable = false)
-    private Double actualPaidPrice;
+    private BigDecimal actualPaidPrice;
 
     @Column(name = "allocation_type", nullable = false)
     private String allocationType;

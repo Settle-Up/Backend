@@ -4,12 +4,8 @@ import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-import lombok.Getter;
-
-@Component
 @Getter
+@Component
 public class EmailSendConfig {
     @Value("${mail.username}")
     private String userName;
@@ -47,5 +43,3 @@ public class EmailSendConfig {
     @Value("${mail.auth-code-expiration-millis}")
     private long authCodeExpirationMillis;
 }
-
-

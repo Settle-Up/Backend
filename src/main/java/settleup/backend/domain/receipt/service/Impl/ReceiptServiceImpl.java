@@ -24,6 +24,7 @@ import settleup.backend.global.common.UUID_Helper;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -41,14 +42,6 @@ public class ReceiptServiceImpl implements ReceiptService {
     private final GroupUserRepository groupUserRepo;
     private final UUID_Helper uuidHelper;
     private final ApplicationEventPublisher eventPublisher;
-
-    /**
-     * createReceipt
-     *
-     * @param requestDto receipt
-     * @return
-     * @throws CustomException
-     */
 
     @Override
     @Transactional
@@ -74,9 +67,9 @@ public class ReceiptServiceImpl implements ReceiptService {
         receiptEntity.setAddress(requestDto.getAddress());
         receiptEntity.setGroup(groupEntity);
         receiptEntity.setReceiptDate(requestDto.getReceiptDate());
-        receiptEntity.setTotalPrice(Double.valueOf(requestDto.getTotalPrice()));
-        receiptEntity.setDiscountApplied(Double.valueOf(requestDto.getDiscountApplied()));
-        receiptEntity.setActualPaidPrice(Double.valueOf(requestDto.getActualPaidPrice()));
+        receiptEntity.setTotalPrice(new BigDecimal(requestDto.getTotalPrice()));
+        receiptEntity.setDiscountApplied(new BigDecimal(requestDto.getDiscountApplied()));
+        receiptEntity.setActualPaidPrice(new BigDecimal(requestDto.getActualPaidPrice()));
         receiptEntity.setAllocationType(requestDto.getAllocationType());
         receiptEntity.setPayerUser(userEntity);
         receiptEntity.setCreatedAt(LocalDateTime.now());
@@ -87,28 +80,34 @@ public class ReceiptServiceImpl implements ReceiptService {
         requestDto.getReceiptItemList().forEach(itemDto -> {
             ReceiptItemEntity itemEntity = new ReceiptItemEntity();
             itemEntity.setReceiptItemName(itemDto.getReceiptItemName());
-            itemEntity.setItemQuantity(Double.valueOf(itemDto.getTotalItemQuantity()));
-            itemEntity.setUnitPrice(Double.valueOf(itemDto.getUnitPrice()));
+            itemEntity.setItemQuantity(new BigDecimal(itemDto.getTotalItemQuantity()));
+            itemEntity.setUnitPrice(new BigDecimal(itemDto.getUnitPrice()));
             itemEntity.setJointPurchaserCount(Integer.parseInt(itemDto.getJointPurchaserCount()));
 
             itemEntity.setReceipt(receiptEntity);
 
             ReceiptItemEntity savedItemEntity = receiptItemRepo.save(itemEntity);
 
+            int jointPurchaserCount = Integer.parseInt(itemDto.getJointPurchaserCount());
+            BigDecimal totalItemQuantity = new BigDecimal(itemDto.getTotalItemQuantity());
+            BigDecimal defaultItemQuantityPerUser = totalItemQuantity.divide(new BigDecimal(jointPurchaserCount), 2, BigDecimal.ROUND_HALF_UP);
+
             itemDto.getJointPurchaserList().forEach(jointPurchaserDto -> {
                 ReceiptItemUserEntity itemUserEntity = new ReceiptItemUserEntity();
                 itemUserEntity.setReceiptItem(savedItemEntity);
 
-                String itemQuantityStr = jointPurchaserDto.getPurchasedQuantity();
-                Double itemQuantity = null;
-                if (itemQuantityStr != null) {
+                BigDecimal itemQuantity = null;
+                if (jointPurchaserDto.getPurchasedQuantity() != null) {
                     try {
-                        itemQuantity = Double.parseDouble(itemQuantityStr.trim());
+                        itemQuantity = new BigDecimal(jointPurchaserDto.getPurchasedQuantity().trim());
                     } catch (NumberFormatException e) {
-                        throw e;
+                        throw new CustomException(ErrorCode.INVALID_INPUT, "Invalid purchased quantity format");
                     }
+                } else {
+                    itemQuantity = defaultItemQuantityPerUser;
                 }
                 itemUserEntity.setPurchasedQuantity(itemQuantity);
+
                 UserEntity owedUser = userRepo.findByUserUUID(jointPurchaserDto.getUserId())
                         .orElseThrow(() -> new CustomException(ErrorCode.OWED_USER_NOT_FOUND));
                 itemUserEntity.setUser(owedUser);
@@ -126,37 +125,36 @@ public class ReceiptServiceImpl implements ReceiptService {
         return transactionDto;
     }
 
-
     private void isValidTotalAmount(ReceiptDto requestDto) throws CustomException {
-        double expectedTotalPrice = Double.parseDouble(requestDto.getActualPaidPrice());
-        double calculatedSimpleTotalPrice = requestDto.getReceiptItemList().stream()
-                .mapToDouble(item -> Double.parseDouble(item.getUnitPrice()) * Double.parseDouble(item.getTotalItemQuantity()))
-                .sum();
+        BigDecimal expectedTotalPrice = new BigDecimal(requestDto.getActualPaidPrice());
+        BigDecimal calculatedSimpleTotalPrice = requestDto.getReceiptItemList().stream()
+                .map(item -> new BigDecimal(item.getUnitPrice()).multiply(new BigDecimal(item.getTotalItemQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        double calculatedTotalPriceByEachUser = 0;
+        BigDecimal calculatedTotalPriceByEachUser = BigDecimal.ZERO;
 
         for (ReceiptDto.ReceiptItemDto item : requestDto.getReceiptItemList()) {
-            double itemPrice = Double.parseDouble(item.getUnitPrice());
-            double totalItemQuantity = Double.parseDouble(item.getTotalItemQuantity());
+            BigDecimal itemPrice = new BigDecimal(item.getUnitPrice());
+            BigDecimal totalItemQuantity = new BigDecimal(item.getTotalItemQuantity());
             int jointPurchaserCount = Integer.parseInt(item.getJointPurchaserCount());
 
             for (ReceiptDto.JointPurchaserDto itemUser : item.getJointPurchaserList()) {
-                double saveAmount;
+                BigDecimal saveAmount;
                 if (itemUser.getPurchasedQuantity() != null) {
-                    double itemQuantityEachPerson = Double.parseDouble(itemUser.getPurchasedQuantity());
-                    saveAmount = (itemPrice * totalItemQuantity) * itemQuantityEachPerson / totalItemQuantity;
+                    BigDecimal itemQuantityEachPerson = new BigDecimal(itemUser.getPurchasedQuantity());
+                    saveAmount = itemPrice.multiply(itemQuantityEachPerson);
                 } else {
-                    saveAmount = (itemPrice * totalItemQuantity) / jointPurchaserCount;
+                    saveAmount = itemPrice.multiply(totalItemQuantity).divide(new BigDecimal(jointPurchaserCount), 2, BigDecimal.ROUND_HALF_UP);
                 }
-                calculatedTotalPriceByEachUser += saveAmount;
+                calculatedTotalPriceByEachUser = calculatedTotalPriceByEachUser.add(saveAmount);
             }
         }
 
-        if (Math.abs(calculatedSimpleTotalPrice - expectedTotalPrice) > 0.001) {
+        if (calculatedSimpleTotalPrice.subtract(expectedTotalPrice).abs().compareTo(new BigDecimal("0.1")) > 0) {
             throw new CustomException(ErrorCode.TOTAL_AMOUNT_ERROR, "Simply calculated total amount does not match expected.");
         }
 
-        if (Math.abs(calculatedTotalPriceByEachUser - expectedTotalPrice) > 0.001) {
+        if (calculatedTotalPriceByEachUser.subtract(expectedTotalPrice).abs().compareTo(new BigDecimal("0.1")) > 0) {
             throw new CustomException(ErrorCode.TOTAL_AMOUNT_ERROR, "Each user calculated total amount does not match expected.");
         }
     }
@@ -175,7 +173,6 @@ public class ReceiptServiceImpl implements ReceiptService {
         groupUserRepo.findByUserIdAndGroupId(existingUser.getId(), existingGroup.getId())
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
 
-        receiptRepo.findByReceiptUUID(receiptUUID);
         ReceiptDto receiptDto = new ReceiptDto();
         receiptDto.setReceiptId(existingReceipt.getReceiptUUID());
         receiptDto.setReceiptName(existingReceipt.getReceiptName());
@@ -191,7 +188,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         receiptDto.setActualPaidPrice(String.format("%.2f", existingReceipt.getActualPaidPrice()));
         receiptDto.setCreatedAt(String.valueOf(existingReceipt.getCreatedAt()));
 
-        List<ReceiptItemEntity> receiptItems = receiptRepo.findItemsByReceiptUUID(receiptUUID);
+        List<ReceiptItemEntity> receiptItems = receiptItemRepo.findByReceiptId(existingReceipt.getId());
 
         List<ReceiptDto.ReceiptItemDto> receiptItemList = receiptItems.stream()
                 .map(item -> {
@@ -200,7 +197,6 @@ public class ReceiptServiceImpl implements ReceiptService {
                     itemDto.setTotalItemQuantity(String.format("%.2f", item.getItemQuantity()));
                     itemDto.setUnitPrice(String.format("%.2f", item.getUnitPrice()));
                     itemDto.setJointPurchaserCount(item.getJointPurchaserCount().toString());
-
 
                     List<ReceiptDto.JointPurchaserDto> jointPurchaserList = receiptItemUserRepo.findByReceiptItemId(item.getId())
                             .stream()
