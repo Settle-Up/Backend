@@ -44,7 +44,7 @@ public class ErrorHttpStatusMapping {
             case TOKEN_EXPIRED:
             case TOKEN_MALFORMED:
             case TOKEN_INVALID:
-            case TOKEN_WRONG_SUBJECT:
+            case TOKEN_WRONG_ISSUER:
                 return HttpStatus.UNAUTHORIZED;
 
             case EXTERNAL_API_ERROR_SOCIAL_TOKEN:

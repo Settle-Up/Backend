@@ -1,4 +1,4 @@
-package settleup.backend.global.common;
+package settleup.backend.global.Helper;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;

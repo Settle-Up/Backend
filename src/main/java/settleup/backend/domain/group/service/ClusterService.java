@@ -11,11 +11,11 @@ import java.util.List;
 import java.util.Map;
 
 public interface ClusterService {
-    CreateGroupResponseDto createGroup(CreateGroupRequestDto requestDto) throws CustomException;
+    CreateGroupResponseDto createGroup(CreateGroupRequestDto requestDto,Boolean isRegularUser) throws CustomException;
 
-    GroupMonthlyReportDto givenMonthlyReport(UserInfoDto userInfoDto, String groupId, GroupMonthlyReportDto groupMonthlyReportDto) throws CustomException;
+    GroupMonthlyReportDto givenMonthlyReport(UserInfoDto userInfoDto, String groupId, GroupMonthlyReportDto groupMonthlyReportDto,Boolean isRegularUser) throws CustomException;
 
-    Map<String, String> deleteGroupUserInfo(UserInfoDto userInfoDto, String groupId) throws CustomException;
+    Map<String, String> deleteGroupUserInfo(UserInfoDto userInfoDto, String groupId,Boolean isRegularUser) throws CustomException;
 
-    CreateGroupResponseDto inviteGroupFundamental(CreateGroupRequestDto requestDto, String groupId) throws CustomException;
+    CreateGroupResponseDto inviteGroupFundamental(CreateGroupRequestDto requestDto, String groupId ,Boolean isRegularUser) throws CustomException;
 }

@@ -4,14 +4,17 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
+import settleup.backend.domain.group.entity.GroupTypeEntity;
 import settleup.backend.domain.transaction.entity.*;
 import settleup.backend.domain.transaction.entity.dto.*;
+import settleup.backend.domain.transaction.model.TransactionalEntity;
 import settleup.backend.domain.transaction.repository.*;
 import settleup.backend.domain.transaction.service.UltimateOptimizedService;
 import settleup.backend.domain.transaction.service.TransactionInheritanceService;
+import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.domain.user.repository.UserRepository;
-import settleup.backend.global.common.Status;
-import settleup.backend.global.common.UUID_Helper;
+import settleup.backend.global.Helper.Status;
+import settleup.backend.global.Helper.UUID_Helper;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
@@ -55,7 +58,7 @@ public class UltimateOptimizedServiceImpl implements UltimateOptimizedService {
 
     private void ultimateTransaction(List<TransactionalEntity> combinedListForUltimateProcessing, TransactionP2PResultDto result) {
         List<List<Long>> nodeList = result.getNodeList();
-        GroupEntity group = result.getGroup();
+        GroupTypeEntity group = result.getGroup();
 
         ultimateRepo.updateOptimizationStatusByGroup(result.getGroup(), Status.PREVIOUS);
 
@@ -100,9 +103,9 @@ public class UltimateOptimizedServiceImpl implements UltimateOptimizedService {
                 if (totalFinalAmount.compareTo(BigDecimal.ZERO) != 0) {
                     UltimateOptimizedTransactionEntity ultimateOptimizedTransaction = new UltimateOptimizedTransactionEntity();
                     ultimateOptimizedTransaction.setTransactionUUID(uuidHelper.UUIDForFinalOptimized());
-                    ultimateOptimizedTransaction.setGroup(intermediateCalcDto.getGroup());
-                    ultimateOptimizedTransaction.setSenderUser(intermediateCalcDto.getSenderUser());
-                    ultimateOptimizedTransaction.setRecipientUser(intermediateCalcDto.getRecipientUser());
+                    ultimateOptimizedTransaction.setGroup((GroupEntity) intermediateCalcDto.getGroup());
+                    ultimateOptimizedTransaction.setSenderUser((UserEntity) intermediateCalcDto.getSenderUser());
+                    ultimateOptimizedTransaction.setRecipientUser((UserEntity) intermediateCalcDto.getRecipientUser());
                     ultimateOptimizedTransaction.setTransactionAmount(intermediateCalcDto.getTransactionAmount());
                     ultimateOptimizedTransaction.setHasBeenSent(false);
                     ultimateOptimizedTransaction.setHasBeenChecked(false);
@@ -148,7 +151,7 @@ public class UltimateOptimizedServiceImpl implements UltimateOptimizedService {
 
     @Override
     @Transactional
-    public TransactionalEntity processTransaction(TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
+    public TransactionalEntity processTransaction(TransactionUpdateRequestDto request, GroupTypeEntity existingGroup) throws CustomException {
         UltimateOptimizedTransactionEntity transactionEntity = ultimateRepo.findByTransactionUUID(request.getTransactionId())
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP));
 

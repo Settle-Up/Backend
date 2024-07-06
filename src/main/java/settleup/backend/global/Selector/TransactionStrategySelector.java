@@ -1,4 +1,4 @@
-package settleup.backend.domain.transaction.service.Impl;
+package settleup.backend.global.Selector;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -10,7 +10,6 @@ import settleup.backend.domain.transaction.repository.UltimateOptimizedTransacti
 import settleup.backend.domain.transaction.repository.GroupOptimizedTransactionRepository;
 import settleup.backend.domain.transaction.repository.OptimizedTransactionRepository;
 import settleup.backend.domain.transaction.service.*;
-import settleup.backend.global.common.Status;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 

@@ -9,7 +9,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
+import settleup.backend.domain.group.entity.GroupTypeEntity;
 import settleup.backend.domain.group.entity.GroupUserEntity;
+import settleup.backend.domain.group.entity.GroupUserTypeEntity;
 import settleup.backend.domain.group.entity.dto.GroupOverviewDto;
 import settleup.backend.domain.group.entity.dto.GroupOverviewExpenseDto;
 import settleup.backend.domain.group.repository.GroupRepository;
@@ -19,14 +21,16 @@ import settleup.backend.domain.receipt.entity.ReceiptEntity;
 import settleup.backend.domain.receipt.repository.ReceiptRepository;
 import settleup.backend.domain.transaction.entity.*;
 import settleup.backend.domain.transaction.entity.dto.NetDto;
+import settleup.backend.domain.transaction.model.TransactionalEntity;
 import settleup.backend.domain.transaction.repository.*;
 import settleup.backend.domain.transaction.service.NetService;
 import settleup.backend.domain.user.entity.UserEntity;
+import settleup.backend.domain.user.entity.UserTypeEntity;
 import settleup.backend.domain.user.entity.dto.UserGroupDto;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.repository.UserRepository;
-import settleup.backend.global.common.Status;
-import settleup.backend.global.event.ReceiptEventListener;
+import settleup.backend.global.Helper.Status;
+import settleup.backend.global.Selector.UserRepoSelector;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
@@ -48,6 +52,7 @@ public class OverviewServiceImpl implements OverviewService {
     private final UltimateOptimizedTransactionRepository ultimateOptimizedRepo;
     private final ReceiptRepository receiptRepo;
     private final RequireTransactionRepository requireTransactionRepo;
+    private final UserRepoSelector selector;
 
     private static final Logger log = LoggerFactory.getLogger(OverviewServiceImpl.class);
 
@@ -61,11 +66,12 @@ public class OverviewServiceImpl implements OverviewService {
 
 
     private UserGroupDto isValidUserGroup(String groupUUID, UserInfoDto userInfoDto) {
-        UserEntity existingUser = userRepo.findByUserUUID(userInfoDto.getUserId())
+        Boolean getSelector = userInfoDto.getIsRegularUserOrDemoUser();
+        UserTypeEntity existingUser = selector.getUserRepository(getSelector).findByUserUUID(userInfoDto.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        GroupEntity existingGroup = groupRepo.findByGroupUUID(groupUUID)
+        GroupTypeEntity existingGroup = selector.getGroupRepository(getSelector).findByGroupUUID(groupUUID)
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
-        GroupUserEntity existingUserInGroup = groupUserRepo.findByUserIdAndGroupId(existingUser.getId(), existingGroup.getId())
+        GroupUserTypeEntity existingUserInGroup = selector.getGroupUserRepository(getSelector).findByUserIdAndGroupId(existingUser.getId(), existingGroup.getId())
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
 
         UserGroupDto validUserGroupDto = new UserGroupDto();
@@ -78,9 +84,9 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     private GroupOverviewDto buildInitiateResponseDto(UserGroupDto userGroupDto) {
-        UserEntity user = userGroupDto.getSingleUser();
-        GroupEntity group = userGroupDto.getGroup();
-        GroupUserEntity userInGroupBridgeInfo = userGroupDto.getGroupUser();
+        UserTypeEntity user = userGroupDto.getSingleUser();
+        GroupTypeEntity group = userGroupDto.getGroup();
+        GroupUserTypeEntity userInGroupBridgeInfo = userGroupDto.getGroupUser();
 
         GroupOverviewDto resultDto = new GroupOverviewDto();
         resultDto.setUserId(user.getUserUUID());
@@ -122,8 +128,8 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     private void buildNeededTransactionResponseDto(GroupOverviewDto overviewDto, UserGroupDto userGroupInfo) {
-        UserEntity user = userGroupInfo.getSingleUser();
-        GroupEntity group = userGroupInfo.getGroup();
+        UserTypeEntity user = userGroupInfo.getSingleUser();
+        GroupTypeEntity group = userGroupInfo.getGroup();
 
         List<TransactionalEntity> neededTransactions = new ArrayList<>();
         neededTransactions.addAll(ultimateOptimizedRepo.findFilteredTransactions(group, user));
@@ -133,7 +139,7 @@ public class OverviewServiceImpl implements OverviewService {
         processConvertNeededTransaction(overviewDto, neededTransactions, user);
     }
 
-    private void processConvertNeededTransaction(GroupOverviewDto buildDto, List<TransactionalEntity> neededTransactions, UserEntity user) {
+    private void processConvertNeededTransaction(GroupOverviewDto buildDto, List<TransactionalEntity> neededTransactions, UserTypeEntity user) {
         if (buildDto.getNeededTransactionList() == null) {
             buildDto.setNeededTransactionList(new ArrayList<>());
         }
@@ -141,7 +147,7 @@ public class OverviewServiceImpl implements OverviewService {
         for (TransactionalEntity transaction : neededTransactions) {
             GroupOverviewDto.OverviewTransactionDto neededTransactionDto = new GroupOverviewDto.OverviewTransactionDto();
 
-            UserEntity counterParty = (transaction.getSenderUser().getId().equals(user.getId())) ? transaction.getRecipientUser() : transaction.getSenderUser();
+            UserTypeEntity counterParty = (transaction.getSenderUser().getId().equals(user.getId())) ? transaction.getRecipientUser() : transaction.getSenderUser();
             Status transactionDirection = (transaction.getSenderUser().getId().equals(user.getId())) ? Status.OWE : Status.OWED;
 
             neededTransactionDto.setTransactionId(transaction.getTransactionUUID());
@@ -155,8 +161,8 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     private GroupOverviewDto buildLastWeekSettledTransactionList(GroupOverviewDto overviewDto, UserGroupDto userGroupInfo) {
-        UserEntity user = userGroupInfo.getSingleUser();
-        GroupEntity group = userGroupInfo.getGroup();
+        UserTypeEntity user = userGroupInfo.getSingleUser();
+        GroupTypeEntity group = userGroupInfo.getGroup();
 
         LocalDateTime startDate = LocalDateTime.now().minusWeeks(1);
         List<TransactionalEntity> lastWeekTransactions = new ArrayList<>();
@@ -168,7 +174,7 @@ public class OverviewServiceImpl implements OverviewService {
         return overviewDto;
     }
 
-    private void processConvertLastTransaction(GroupOverviewDto processDto, List<TransactionalEntity> lastWeekTransaction, UserEntity user) {
+    private void processConvertLastTransaction(GroupOverviewDto processDto, List<TransactionalEntity> lastWeekTransaction, UserTypeEntity user) {
         if (processDto.getLastWeekSettledTransactionList() == null) {
             processDto.setLastWeekSettledTransactionList(new ArrayList<>());
         }
@@ -176,7 +182,7 @@ public class OverviewServiceImpl implements OverviewService {
         for (TransactionalEntity transaction : lastWeekTransaction) {
             GroupOverviewDto.OverviewTransactionDto lastTransactionDto = new GroupOverviewDto.OverviewTransactionDto();
 
-            UserEntity counterParty = (transaction.getSenderUser().getId().equals(user.getId())) ? transaction.getRecipientUser() : transaction.getSenderUser();
+            UserTypeEntity counterParty = (transaction.getSenderUser().getId().equals(user.getId())) ? transaction.getRecipientUser() : transaction.getSenderUser();
             Status transactionDirection = (transaction.getSenderUser().getId().equals(user.getId())) ? Status.OWE : Status.OWED;
 
             lastTransactionDto.setTransactionId(transaction.getTransactionUUID());
@@ -199,19 +205,20 @@ public class OverviewServiceImpl implements OverviewService {
 
     @Override
     public GroupOverviewExpenseDto updateRetrievedExpenseList(GroupOverviewExpenseDto groupOverviewExpenseDto, String groupUUID, UserInfoDto userInfoDto, Pageable pageable) throws CustomException {
-        GroupEntity existingGroup = groupRepo.findByGroupUUID(groupUUID)
+        Boolean getSelector = userInfoDto.getIsRegularUserOrDemoUser();
+        GroupTypeEntity existingGroup = selector.getGroupRepository(getSelector).findByGroupUUID(groupUUID)
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
 
-        UserEntity existingUser = userRepo.findByUserUUID(userInfoDto.getUserId())
+        UserTypeEntity existingUser = selector.getUserRepository(getSelector).findByUserUUID(userInfoDto.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        groupUserRepo.findByUserIdAndGroupId(existingUser.getId(), existingGroup.getId())
+        selector.getGroupUserRepository(getSelector).findByUserIdAndGroupId(existingUser.getId(), existingGroup.getId())
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
 
         return buildExpenseList(existingGroup, existingUser, groupOverviewExpenseDto, pageable);
     }
 
-    private GroupOverviewExpenseDto buildExpenseList(GroupEntity existingGroup, UserEntity existingUser, GroupOverviewExpenseDto groupOverviewExpenseDto, Pageable pageable) {
+    private GroupOverviewExpenseDto buildExpenseList(GroupTypeEntity existingGroup, UserTypeEntity existingUser, GroupOverviewExpenseDto groupOverviewExpenseDto, Pageable pageable) {
         groupOverviewExpenseDto.setExpenses(new ArrayList<>());
 
         Page<ReceiptEntity> pagedReceipts = receiptRepo.findReceiptByGroupId(existingGroup.getId(), pageable);

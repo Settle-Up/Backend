@@ -7,7 +7,10 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import settleup.backend.domain.group.entity.GroupEntity;
+import settleup.backend.domain.group.entity.GroupTypeEntity;
 import settleup.backend.domain.user.entity.UserEntity;
+import settleup.backend.domain.user.entity.UserTypeEntity;
+import settleup.backend.global.Helper.Status;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -30,7 +33,7 @@ public class ReceiptEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name ="group_id",nullable = false)
-    private GroupEntity group;
+    private GroupEntity group;// GroupTypeEntity
 
     @Column(nullable = false)
     private String address;
@@ -40,7 +43,7 @@ public class ReceiptEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payer_user_id", nullable = false)
-    private UserEntity payerUser;
+    private UserEntity payerUser; // UserTypeEnity
 
     @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice;
@@ -56,5 +59,9 @@ public class ReceiptEntity {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_type", nullable = false)
+    private Status userType; // 추가된 필드
 }
 

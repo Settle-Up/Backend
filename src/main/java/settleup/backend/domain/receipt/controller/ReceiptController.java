@@ -5,12 +5,12 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import settleup.backend.domain.receipt.entity.dto.ReceiptDto;
-import settleup.backend.domain.receipt.receiptCommons.ControllerHelper;
+import settleup.backend.global.Helper.InputHelper;
 import settleup.backend.domain.receipt.service.ReceiptService;
 import settleup.backend.domain.transaction.entity.dto.TransactionDto;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.service.LoginService;
-import settleup.backend.global.common.ResponseDto;
+import settleup.backend.global.Helper.ResponseDto;
 import settleup.backend.global.event.ReceiptCreatedEvent;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
@@ -32,13 +32,15 @@ public class ReceiptController {
     public ResponseEntity<ResponseDto> createExpenseByReceipt(
             @RequestHeader(value = "Authorization") String token, @RequestBody ReceiptDto requestDto) {
 
-        loginService.validTokenOrNot(token);
-        String missingFields = ControllerHelper.checkRequiredWithFilter(requestDto);
+        UserInfoDto userInfo = loginService.validTokenOrNot(token);
+        Boolean isRegularUser = userInfo.getIsRegularUserOrDemoUser();
+        String missingFields = InputHelper.checkRequiredWithFilter(requestDto);
         if (!missingFields.isEmpty()) {
             throw new CustomException(ErrorCode.INVALID_INPUT, "Missing fields: " + missingFields);
         }
 
-        TransactionDto transactionDto = receiptService.createReceipt(requestDto);
+        TransactionDto transactionDto = receiptService.createReceipt(requestDto,isRegularUser);
+        transactionDto.setIsUserType(isRegularUser);
 
 
         Map<String, Object> receiptInfo = new HashMap<>();

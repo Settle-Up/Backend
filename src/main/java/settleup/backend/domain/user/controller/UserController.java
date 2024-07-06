@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.service.LoginService;
 import settleup.backend.domain.user.service.UserService;
-import settleup.backend.global.common.ResponseDto;
+import settleup.backend.global.Helper.ResponseDto;
 
 import java.util.Map;
 

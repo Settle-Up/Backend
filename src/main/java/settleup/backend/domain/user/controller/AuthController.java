@@ -8,7 +8,8 @@ import settleup.backend.domain.user.entity.dto.LoginDto;
 import settleup.backend.domain.user.service.KakaoService;
 import settleup.backend.domain.user.service.LoginService;
 import settleup.backend.domain.user.entity.dto.KakaoTokenDto;
-import settleup.backend.global.common.ResponseDto;
+import settleup.backend.global.Helper.InputHelper;
+import settleup.backend.global.Helper.ResponseDto;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +32,16 @@ public class AuthController {
         ResponseDto responseDto = new ResponseDto(true, "successfully login", loginDto);
         return ResponseEntity.ok(responseDto);
     }
+
+
+    @PostMapping("/demo-user")
+    public ResponseEntity<ResponseDto> registerForTemporaryUser(@RequestBody UserInfoDto userInfo) {
+        InputHelper.isValidInputDemoForUser(userInfo);
+        LoginDto loginDto = loginService.createDemoToken(userInfo.getUserName());
+        ResponseDto responseDto = new ResponseDto(true, "successfully login", loginDto);
+        return ResponseEntity.ok(responseDto);
+    }
+
 
     @GetMapping("/checkToken")
     public ResponseEntity<ResponseDto> checkToken(@RequestHeader(value = "Authorization") String token) {

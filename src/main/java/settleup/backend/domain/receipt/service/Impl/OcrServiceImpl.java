@@ -12,7 +12,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.multipart.MultipartFile;
 import settleup.backend.domain.receipt.entity.dto.FormDataDto;
 import settleup.backend.domain.receipt.service.OcrService;
-import settleup.backend.global.common.ApiCallHelper;
+import settleup.backend.global.Helper.ApiCallHelper;
 import settleup.backend.global.config.AzureConfig;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;

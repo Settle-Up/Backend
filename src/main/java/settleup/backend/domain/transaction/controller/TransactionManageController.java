@@ -8,7 +8,7 @@ import settleup.backend.domain.transaction.entity.dto.TransactionUpdateRequestDt
 import settleup.backend.domain.transaction.service.TransactionUpdateService;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.service.LoginService;
-import settleup.backend.global.common.ResponseDto;
+import settleup.backend.global.Helper.ResponseDto;
 import settleup.backend.global.exception.CustomException;
 
 @RestController

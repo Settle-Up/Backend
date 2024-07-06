@@ -4,8 +4,9 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import settleup.backend.domain.group.entity.GroupEntity;
+import settleup.backend.domain.transaction.model.TransactionalEntity;
 import settleup.backend.domain.user.entity.UserEntity;
-import settleup.backend.global.common.Status;
+import settleup.backend.global.Helper.Status;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -62,6 +63,13 @@ public class UltimateOptimizedTransactionEntity implements TransactionalEntity {
     private LocalDateTime clearStatusTimestamp;
 
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_type", nullable = false)
+    private Status userType;
+
+
+
+
     @Override
     public Long getId() {
         return this.id;
@@ -113,6 +121,11 @@ public class UltimateOptimizedTransactionEntity implements TransactionalEntity {
     @Override
     public LocalDateTime getClearStatusTimeStamp() {
         return this.clearStatusTimestamp;
+    }
+
+    @Override
+    public Status getUserType() {
+        return this.userType;
     }
 
 

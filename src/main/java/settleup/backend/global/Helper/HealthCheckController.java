@@ -1,4 +1,4 @@
-package settleup.backend.global.common;
+package settleup.backend.global.Helper;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;

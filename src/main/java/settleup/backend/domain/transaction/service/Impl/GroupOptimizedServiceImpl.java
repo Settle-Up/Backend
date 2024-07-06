@@ -1,7 +1,5 @@
 package settleup.backend.domain.transaction.service.Impl;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import lombok.AllArgsConstructor;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultDirectedWeightedGraph;
@@ -12,10 +10,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
+import settleup.backend.domain.group.entity.GroupTypeEntity;
 import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionDetailsEntity;
 import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionEntity;
 import settleup.backend.domain.transaction.entity.OptimizedTransactionEntity;
-import settleup.backend.domain.transaction.entity.TransactionalEntity;
+import settleup.backend.domain.transaction.model.TransactionalEntity;
 import settleup.backend.domain.transaction.entity.dto.*;
 import settleup.backend.domain.transaction.repository.GroupOptimizedTransactionDetailRepository;
 import settleup.backend.domain.transaction.repository.GroupOptimizedTransactionRepository;
@@ -23,8 +22,8 @@ import settleup.backend.domain.transaction.repository.OptimizedTransactionReposi
 import settleup.backend.domain.transaction.service.GroupOptimizedService;
 import settleup.backend.domain.transaction.service.TransactionInheritanceService;
 import settleup.backend.domain.user.repository.UserRepository;
-import settleup.backend.global.common.Status;
-import settleup.backend.global.common.UUID_Helper;
+import settleup.backend.global.Helper.Status;
+import settleup.backend.global.Helper.UUID_Helper;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
@@ -199,7 +198,7 @@ public class GroupOptimizedServiceImpl implements GroupOptimizedService {
 
     @Override
     @Transactional
-    public TransactionalEntity processTransaction(TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
+    public TransactionalEntity processTransaction(TransactionUpdateRequestDto request, GroupTypeEntity existingGroup) throws CustomException {
         logger.info("Processing transaction with ID: {}", request.getTransactionId());
         GroupOptimizedTransactionEntity transactionEntity = groupOptimizedTransactionRepo.findByTransactionUUID(request.getTransactionId())
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP));

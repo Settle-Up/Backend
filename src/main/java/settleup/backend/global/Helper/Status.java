@@ -1,4 +1,4 @@
-package settleup.backend.global.common;
+package settleup.backend.global.Helper;
 
 /**
  *  상태관리 경우의 수 정리
@@ -44,5 +44,8 @@ package settleup.backend.global.common;
  */
 
 public enum Status {
- PREVIOUS, CURRENT ,OWE, OWED, INHERITED_CLEAR, INHERITED , REQUIRE_REFLECT, REQUIRE_OPTIMIZED;
+ PREVIOUS, CURRENT, OWE, OWED, INHERITED_CLEAR, INHERITED, REQUIRE_REFLECT, REQUIRE_OPTIMIZED, DEMO, REGULAR;
+
 }
+
+

@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import settleup.backend.domain.user.entity.UserEntity;
+import settleup.backend.domain.user.entity.UserTypeEntity;
+import settleup.backend.global.Helper.Status;
 
 import java.math.BigDecimal;
 
@@ -30,5 +32,9 @@ public class ReceiptItemUserEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private UserEntity user;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_type", nullable = false)
+    private Status userType;
 }
 

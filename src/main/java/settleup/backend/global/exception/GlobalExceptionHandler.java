@@ -5,10 +5,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import settleup.backend.global.common.ResponseDto;
+import settleup.backend.global.Helper.ResponseDto;
 
 import javax.net.ssl.SSLException;
-import jakarta.servlet.ServletException; // 추가된 부분
 
 @ControllerAdvice
 public class GlobalExceptionHandler {

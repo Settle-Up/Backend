@@ -1,12 +1,10 @@
-package settleup.backend.domain.transaction.entity;
+package settleup.backend.domain.transaction.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import lombok.Getter;
 import settleup.backend.domain.group.entity.GroupEntity;
+import settleup.backend.domain.group.entity.GroupTypeEntity;
 import settleup.backend.domain.user.entity.UserEntity;
-import settleup.backend.global.common.Status;
+import settleup.backend.domain.user.entity.UserTypeEntity;
+import settleup.backend.global.Helper.Status;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -14,11 +12,11 @@ import java.time.LocalDateTime;
 public interface TransactionalEntity {
     Long getId();
 
-    UserEntity getSenderUser();
+    UserTypeEntity getSenderUser();
 
-    UserEntity getRecipientUser();
+    UserTypeEntity getRecipientUser();
 
-    GroupEntity getGroup();
+    GroupTypeEntity getGroup();
 
     BigDecimal getTransactionAmount();
 
@@ -34,5 +32,8 @@ public interface TransactionalEntity {
 
 
     LocalDateTime getClearStatusTimeStamp();
+
+
+    Status getUserType();
 
 }

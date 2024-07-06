@@ -7,10 +7,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
+import settleup.backend.domain.group.entity.GroupTypeEntity;
 import settleup.backend.domain.transaction.entity.OptimizedTransactionEntity;
-import settleup.backend.domain.transaction.entity.TransactionalEntity;
+import settleup.backend.domain.transaction.model.TransactionalEntity;
 import settleup.backend.domain.user.entity.UserEntity;
-import settleup.backend.global.common.Status;
+import settleup.backend.domain.user.entity.UserTypeEntity;
+import settleup.backend.global.Helper.Status;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,7 +22,7 @@ import java.util.Optional;
 public interface OptimizedTransactionRepository extends JpaRepository<OptimizedTransactionEntity,Long> {
     @Modifying
     @Query("UPDATE OptimizedTransactionEntity o SET o.optimizationStatus = :status WHERE o.group = :group")
-    void updateOptimizationStatusByGroup(@Param("group") GroupEntity group, @Param("status") Status status);
+    void updateOptimizationStatusByGroup(@Param("group") GroupTypeEntity group, @Param("status") Status status);
 
     @Modifying
     @Query("UPDATE OptimizedTransactionEntity o SET o.requiredReflection = :status WHERE o.transactionUUID = :uuid")
@@ -29,7 +31,7 @@ public interface OptimizedTransactionRepository extends JpaRepository<OptimizedT
     GroupEntity findGroupByTransactionId(@Param("transactionId") Long transactionId);
 
     @Query("SELECT o FROM OptimizedTransactionEntity o WHERE o.group = :group AND o.optimizationStatus = :currentStatus AND o.requiredReflection = :requireReflectStatus")
-    List<TransactionalEntity> findTransactionsByGroupAndStatus(@Param("group") GroupEntity group, @Param("currentStatus") Status currentStatus, @Param("requireReflectStatus") Status requireReflectStatus);
+    List<TransactionalEntity> findTransactionsByGroupAndStatus(@Param("group") GroupTypeEntity group, @Param("currentStatus") Status currentStatus, @Param("requireReflectStatus") Status requireReflectStatus);
 
     @Query("SELECT ot FROM OptimizedTransactionEntity ot " +
             "WHERE ot.group = :group " +
@@ -38,12 +40,12 @@ public interface OptimizedTransactionRepository extends JpaRepository<OptimizedT
             "AND ot.hasBeenSent = false " +
             "AND ot.hasBeenChecked = false " +
             "AND ot.requiredReflection = 'REQUIRE_REFLECT'")
-    List<TransactionalEntity> findFilteredTransactions(@Param("group") GroupEntity group,
-                                                       @Param("user") UserEntity user);
+    List<TransactionalEntity> findFilteredTransactions(@Param("group") GroupTypeEntity group,
+                                                       @Param("user") UserTypeEntity user);
 
 
     @Query("SELECT o FROM OptimizedTransactionEntity o WHERE o.group = :group AND (o.senderUser = :user OR o.recipientUser = :user) AND o.hasBeenSent = true  AND o.clearStatusTimestamp >= :sevenDaysAgo")
-    List<TransactionalEntity> findByGroupAndUserWithHAndHasBeenSentAndTransactionsSinceLastWeek(@Param("group") GroupEntity group, @Param("user") UserEntity user, @Param("sevenDaysAgo") LocalDateTime sevenDaysAgo);
+    List<TransactionalEntity> findByGroupAndUserWithHAndHasBeenSentAndTransactionsSinceLastWeek(@Param("group") GroupTypeEntity group, @Param("user") UserTypeEntity user, @Param("sevenDaysAgo") LocalDateTime sevenDaysAgo);
 
 
     Optional<OptimizedTransactionEntity> findByTransactionUUID(String uuid);

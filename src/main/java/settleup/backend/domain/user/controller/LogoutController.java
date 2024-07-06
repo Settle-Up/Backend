@@ -3,18 +3,15 @@ package settleup.backend.domain.user.controller;
 import io.jsonwebtoken.Claims;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
-import settleup.backend.domain.receipt.entity.ReceiptEntity;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.service.LoginService;
 import settleup.backend.global.Util.JwtProvider;
-import settleup.backend.global.Util.JwtVerificationFilter;
 import settleup.backend.global.Util.RedisUtils;
-import settleup.backend.global.common.BlackListInfo;
-import settleup.backend.global.common.ResponseDto;
+import settleup.backend.global.Helper.BlackListInfo;
+import settleup.backend.global.Helper.ResponseDto;
 
 @RestController
 @AllArgsConstructor

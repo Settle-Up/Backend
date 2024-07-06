@@ -12,7 +12,7 @@ import settleup.backend.domain.group.entity.dto.GroupOverviewExpenseDto;
 import settleup.backend.domain.group.service.OverviewService;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.service.LoginService;
-import settleup.backend.global.common.ResponseDto;
+import settleup.backend.global.Helper.ResponseDto;
 
 @RestController
 @AllArgsConstructor

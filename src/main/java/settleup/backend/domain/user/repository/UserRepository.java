@@ -12,23 +12,23 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<UserEntity, Long> {
+public interface UserRepository extends UserBaseRepository<UserEntity>  {
 
-    Optional<UserEntity> findById(Long id);
-    Optional<UserEntity> findByUserEmail(String email);
-    Optional<UserEntity> findByUserUUID(String UUID);
-
-    @Query("SELECT u FROM UserEntity u WHERE u.userEmail LIKE %:partOfEmail% AND u.userEmail <> :notContainUserEmail")
-    Page<UserEntity> findByUserEmailContainingAndUserEmailNot(
-            @Param("partOfEmail") String partOfEmail,
-            @Param("notContainUserEmail") String notContainUserEmail,
-            Pageable pageable
-    );
-
-    @Query("SELECT u FROM UserEntity u WHERE u.userEmail LIKE %:email% AND u.id NOT IN :excludedUserIds")
-    Page<UserEntity> findByEmailExcludingUsers(
-            @Param("email") String email,
-            @Param("excludedUserIds") List<Long> excludedUserIds,
-            Pageable pageable
-    );
+//    Optional<UserEntity> findById(Long id);
+//    Optional<UserEntity> findByUserEmail(String email);
+//    Optional<UserEntity> findByUserUUID(String UUID);
+//
+//    @Query("SELECT u FROM UserEntity u WHERE u.userEmail LIKE %:partOfEmail% AND u.userEmail <> :notContainUserEmail")
+//    Page<UserEntity> findByUserEmailContainingAndUserEmailNot(
+//            @Param("partOfEmail") String partOfEmail,
+//            @Param("notContainUserEmail") String notContainUserEmail,
+//            Pageable pageable
+//    );
+//
+//    @Query("SELECT u FROM UserEntity u WHERE u.userEmail LIKE %:email% AND u.id NOT IN :excludedUserIds")
+//    Page<UserEntity> findByEmailExcludingUsers(
+//            @Param("email") String email,
+//            @Param("excludedUserIds") List<Long> excludedUserIds,
+//            Pageable pageable
+//    );
 }

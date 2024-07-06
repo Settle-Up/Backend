@@ -6,12 +6,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import settleup.backend.global.Helper.Status;
 
 @Entity
 @Getter
 @Setter
 @Table(name = "settle_user")
-public class UserEntity {
+public class UserEntity implements UserTypeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -25,4 +26,9 @@ public class UserEntity {
     private String userEmail;
     @Column(nullable = true)
     private Boolean isDecimalInputOption;
+
+    @Override
+    public Status getUserType() {
+        return Status.REGULAR;
+    }
 }

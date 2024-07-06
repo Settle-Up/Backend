@@ -7,10 +7,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
+import settleup.backend.domain.group.entity.GroupTypeEntity;
 import settleup.backend.domain.transaction.entity.GroupOptimizedTransactionEntity;
-import settleup.backend.domain.transaction.entity.TransactionalEntity;
+import settleup.backend.domain.transaction.model.TransactionalEntity;
 import settleup.backend.domain.user.entity.UserEntity;
-import settleup.backend.global.common.Status;
+import settleup.backend.domain.user.entity.UserTypeEntity;
+import settleup.backend.global.Helper.Status;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,15 +37,15 @@ public interface GroupOptimizedTransactionRepository extends JpaRepository<Group
             "AND got.hasBeenSent = false " +
             "AND got.hasBeenChecked = false " +
             "AND got.requiredReflection = 'REQUIRE_REFLECT'")
-    List<TransactionalEntity> findFilteredTransactions(@Param("group") GroupEntity group,
-                                                       @Param("user") UserEntity user);
+    List<TransactionalEntity> findFilteredTransactions(@Param("group") GroupTypeEntity group,
+                                                       @Param("user") UserTypeEntity user);
 
-    List<TransactionalEntity> findByGroupAndOptimizationStatus(GroupEntity group, Status status);
+    List<TransactionalEntity> findByGroupAndOptimizationStatus(GroupTypeEntity group, Status status);
 
     Optional<GroupOptimizedTransactionEntity> findByTransactionUUID(String uuid);
 
     @Query("SELECT g FROM GroupOptimizedTransactionEntity g WHERE g.group = :group AND (g.senderUser = :user OR g.recipientUser = :user) AND g.hasBeenSent = true  AND g.clearStatusTimestamp >= :sevenDaysAgo")
-    List<TransactionalEntity> findByGroupAndUserWithHAndHasBeenSentAndTransactionsSinceLastWeek(@Param("group") GroupEntity group, @Param("user") UserEntity user, @Param("sevenDaysAgo") LocalDateTime sevenDaysAgo);
+    List<TransactionalEntity> findByGroupAndUserWithHAndHasBeenSentAndTransactionsSinceLastWeek(@Param("group") GroupTypeEntity group, @Param("user") UserTypeEntity user, @Param("sevenDaysAgo") LocalDateTime sevenDaysAgo);
 
 
     @Modifying

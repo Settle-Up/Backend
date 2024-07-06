@@ -1,35 +1,29 @@
 package settleup.backend.domain.transaction.service.Impl;
 
 import lombok.AllArgsConstructor;
-import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.receipt.entity.ReceiptItemEntity;
 import settleup.backend.domain.receipt.entity.ReceiptItemUserEntity;
 import settleup.backend.domain.transaction.entity.dto.TransactionDto;
 import settleup.backend.domain.receipt.repository.ReceiptItemRepository;
 import settleup.backend.domain.receipt.repository.ReceiptItemUserRepository;
 import settleup.backend.domain.transaction.entity.RequiresTransactionEntity;
-import settleup.backend.domain.transaction.repository.OptimizedTransactionDetailsRepository;
-import settleup.backend.domain.transaction.repository.OptimizedTransactionRepository;
 import settleup.backend.domain.transaction.repository.RequireTransactionRepository;
 import settleup.backend.domain.transaction.service.OptimizedDirectionService;
-import settleup.backend.domain.transaction.service.OptimizedService;
 import settleup.backend.domain.transaction.service.RequireTransactionService;
+import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.domain.user.entity.dto.UserGroupDto;
-import settleup.backend.domain.user.repository.UserRepository;
-import settleup.backend.global.common.Status;
-import settleup.backend.global.common.UUID_Helper;
-import settleup.backend.global.exception.CustomException;
-import settleup.backend.global.exception.ErrorCode;
+import settleup.backend.global.Helper.Status;
+import settleup.backend.global.Helper.UUID_Helper;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 @Service
 @AllArgsConstructor
@@ -50,6 +44,7 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
     }
 
     private void processTransactionItems(TransactionDto requestDto) {
+        Boolean isUserType= requestDto.getIsUserType();
         List<ReceiptItemEntity> itemList = itemRepository.findByReceiptId(requestDto.getReceipt().getId());
         boolean allTransactionsSaved = true;
 
@@ -66,6 +61,7 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
         if (allTransactionsSaved) {
             UserGroupDto userGroupDto = new UserGroupDto();
             userGroupDto.setGroup(requestDto.getGroup());
+            userGroupDto.setIsUserType(isUserType);
             optimizedDirectionService.performOptimizationOperations(userGroupDto);
         }
     }
@@ -107,8 +103,8 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
         RequiresTransactionEntity transaction = new RequiresTransactionEntity();
         transaction.setTransactionUUID(uuidHelper.UUIDForTransaction());
         transaction.setReceipt(requestDto.getReceipt());
-        transaction.setGroup(requestDto.getGroup());
-        transaction.setRecipientUser(requestDto.getPayerUser());
+        transaction.setGroup((GroupEntity) requestDto.getGroup());
+        transaction.setRecipientUser((UserEntity) requestDto.getPayerUser());
         transaction.setRequiredReflection(Status.REQUIRE_OPTIMIZED);
         transaction.setSenderUser(itemUser.getUser());
         transaction.setTransactionAmount(saveAmount);

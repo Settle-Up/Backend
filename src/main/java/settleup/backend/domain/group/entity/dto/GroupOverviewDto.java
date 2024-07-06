@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import settleup.backend.global.common.Status;
+import settleup.backend.global.Helper.Status;
 
 import java.util.List;
 

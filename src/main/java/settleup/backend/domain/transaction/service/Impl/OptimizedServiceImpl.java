@@ -7,21 +7,24 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
+import settleup.backend.domain.group.entity.GroupTypeEntity;
 import settleup.backend.domain.group.entity.GroupUserEntity;
 
 import settleup.backend.domain.group.repository.GroupUserRepository;
 import settleup.backend.domain.transaction.entity.*;
 import settleup.backend.domain.transaction.entity.dto.*;
+import settleup.backend.domain.transaction.model.TransactionalEntity;
 import settleup.backend.domain.transaction.repository.OptimizedTransactionDetailsRepository;
 import settleup.backend.domain.transaction.repository.OptimizedTransactionRepository;
 import settleup.backend.domain.transaction.repository.RequireTransactionRepository;
 import settleup.backend.domain.transaction.service.OptimizedService;
 import settleup.backend.domain.transaction.service.TransactionInheritanceService;
 import settleup.backend.domain.user.entity.UserEntity;
+import settleup.backend.domain.user.entity.UserTypeEntity;
 import settleup.backend.domain.user.entity.dto.UserGroupDto;
 import settleup.backend.domain.user.repository.UserRepository;
-import settleup.backend.global.common.Status;
-import settleup.backend.global.common.UUID_Helper;
+import settleup.backend.global.Helper.Status;
+import settleup.backend.global.Helper.UUID_Helper;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
@@ -30,8 +33,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import java.util.Optional;
 
 import java.util.stream.Collectors;
 
@@ -66,13 +67,14 @@ public class OptimizedServiceImpl implements OptimizedService {
      */
     @Override
     public TransactionP2PResultDto optimizationOfp2p(UserGroupDto groupDto) throws CustomException {
+        Boolean isUserType = groupDto.getIsUserType();
         optimizedTransactionRepo.updateOptimizationStatusByGroup(groupDto.getGroup(), Status.PREVIOUS);
         List<List<Long>> nodeList = createCombinationList(groupDto.getGroup());
         System.out.println("heyNode:" + nodeList);
         return optimizationTargetList(groupDto.getGroup(), nodeList);
     }
 
-    private TransactionP2PResultDto optimizationTargetList(GroupEntity group, List<List<Long>> nodeList) {
+    private TransactionP2PResultDto optimizationTargetList(GroupTypeEntity group, List<List<Long>> nodeList) {
         TransactionP2PResultDto resultDto = new TransactionP2PResultDto();
         resultDto.setNodeList(nodeList);
         resultDto.setGroup(group);
@@ -125,9 +127,9 @@ public class OptimizedServiceImpl implements OptimizedService {
                 if (totalAmount.compareTo(BigDecimal.ZERO) != 0) {
                     OptimizedTransactionEntity optimizedTransaction = new OptimizedTransactionEntity();
                     optimizedTransaction.setTransactionUUID(uuidHelper.UUIDForOptimizedTransaction());
-                    optimizedTransaction.setGroup(intermediateCalcDto.getGroup());
-                    optimizedTransaction.setSenderUser(intermediateCalcDto.getSenderUser());
-                    optimizedTransaction.setRecipientUser(intermediateCalcDto.getRecipientUser());
+                    optimizedTransaction.setGroup((GroupEntity) intermediateCalcDto.getGroup());
+                    optimizedTransaction.setSenderUser((UserEntity) intermediateCalcDto.getSenderUser());
+                    optimizedTransaction.setRecipientUser((UserEntity) intermediateCalcDto.getRecipientUser());
                     optimizedTransaction.setTransactionAmount(intermediateCalcDto.getTransactionAmount());
                     optimizedTransaction.setHasBeenSent(false);
                     optimizedTransaction.setHasBeenChecked(false);
@@ -160,7 +162,7 @@ public class OptimizedServiceImpl implements OptimizedService {
     }
 
 
-    private List<List<Long>> createCombinationList(GroupEntity group) throws CustomException {
+    private List<List<Long>> createCombinationList(GroupTypeEntity group) throws CustomException {
         // 그룹 id 로 그룹 사용자 리스트를 조회
         List<GroupUserEntity> groupUserList = groupUserRepo.findByGroup_Id(group.getId());
         if (groupUserList.isEmpty()) {
@@ -168,12 +170,12 @@ public class OptimizedServiceImpl implements OptimizedService {
         }
 
         // GroupUserEntity 목록에서 UserEntity 목록으로 반환
-        List<UserEntity> userList = groupUserList.stream()
+        List<UserTypeEntity> userList = groupUserList.stream()
                 .map(GroupUserEntity::getUser)
                 .collect(Collectors.toList());
 
         // Further processing
-        List<Long> userFKList = userList.stream().map(UserEntity::getId).collect(Collectors.toList());
+        List<Long> userFKList = userList.stream().map(UserTypeEntity::getId).collect(Collectors.toList());
 
         // Make combinationList
         List<List<Long>> combinationList = new ArrayList<>();
@@ -188,7 +190,7 @@ public class OptimizedServiceImpl implements OptimizedService {
 
     @Override
     @Transactional
-    public TransactionalEntity processTransaction(TransactionUpdateRequestDto request, GroupEntity existingGroup) throws CustomException {
+    public TransactionalEntity processTransaction(TransactionUpdateRequestDto request, GroupTypeEntity existingGroup) throws CustomException {
         log.info("Processing transaction with Transaction ID: {}", request.getTransactionId());
         OptimizedTransactionEntity transactionEntity = optimizedTransactionRepo.findByTransactionUUID(request.getTransactionId())
                 .orElseThrow(() -> new CustomException(ErrorCode.TRANSACTION_ID_NOT_FOUND_IN_GROUP));

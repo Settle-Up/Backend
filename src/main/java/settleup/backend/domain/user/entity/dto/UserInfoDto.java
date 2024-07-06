@@ -22,6 +22,8 @@ public class UserInfoDto {
     private String userPhone;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Boolean isDecimalInputOption;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Boolean isRegularUserOrDemoUser; // 일반 유저 true , 데모유저 false // 유의 할점 클라이언트에게 안가도록 해야함 서버내에서만 써야함
 }
 
 

@@ -8,7 +8,7 @@ import java.util.Optional;
 
 
 @Repository
-public interface GroupRepository extends JpaRepository<GroupEntity,Long> {
-
-    Optional<GroupEntity> findByGroupUUID(String UUID);
+public interface GroupRepository extends GroupBaseRepository<GroupEntity> {
 }
+//    Optional<GroupEntity> findByGroupUUID(String UUID);
+

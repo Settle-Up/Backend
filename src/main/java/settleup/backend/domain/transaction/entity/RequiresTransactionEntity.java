@@ -8,7 +8,7 @@ import lombok.Setter;
 import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.receipt.entity.ReceiptEntity;
 import settleup.backend.domain.user.entity.UserEntity;
-import settleup.backend.global.common.Status;
+import settleup.backend.global.Helper.Status;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -41,6 +41,11 @@ public class RequiresTransactionEntity {
     @JoinColumn(name = "recipient_user", nullable = false)
     private UserEntity recipientUser;
 
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_type", nullable = false)
+    private Status userType;
+
     @Column(name = "transaction_amount", nullable = false)
     private BigDecimal transactionAmount;
 
@@ -52,6 +57,7 @@ public class RequiresTransactionEntity {
     @Setter
     @Getter
     private LocalDateTime clearStatusTimestamp;
+
 
 }
 

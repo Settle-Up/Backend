@@ -5,19 +5,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.service.LoginService;
 import settleup.backend.domain.user.service.SearchService;
-import settleup.backend.global.common.ResponseDto;
+import settleup.backend.global.Helper.ResponseDto;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 
 @RestController
@@ -38,6 +34,7 @@ public class SearchController {
             @RequestParam(value = "size", defaultValue = "10") int size) {
 
         UserInfoDto userInfoDto = loginService.validTokenOrNot(token);
+
         Pageable pageable = PageRequest.of(page - 1, size, Sort.by("userEmail").ascending());
 
         Page<UserInfoDto> userInfoPage;

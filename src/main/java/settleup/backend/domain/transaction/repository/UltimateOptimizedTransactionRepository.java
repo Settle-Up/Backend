@@ -8,10 +8,12 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
-import settleup.backend.domain.transaction.entity.TransactionalEntity;
+import settleup.backend.domain.group.entity.GroupTypeEntity;
+import settleup.backend.domain.transaction.model.TransactionalEntity;
 import settleup.backend.domain.transaction.entity.UltimateOptimizedTransactionEntity;
 import settleup.backend.domain.user.entity.UserEntity;
-import settleup.backend.global.common.Status;
+import settleup.backend.domain.user.entity.UserTypeEntity;
+import settleup.backend.global.Helper.Status;
 
 
 import java.time.LocalDateTime;
@@ -22,7 +24,7 @@ import java.util.Optional;
 public interface UltimateOptimizedTransactionRepository extends JpaRepository<UltimateOptimizedTransactionEntity, Long> {
     @Modifying
     @Query("UPDATE UltimateOptimizedTransactionEntity f SET f.optimizationStatus = :status WHERE f.group = :group")
-    void updateOptimizationStatusByGroup(@Param("group") GroupEntity group, @Param("status") Status status);
+    void updateOptimizationStatusByGroup(@Param("group") GroupTypeEntity group, @Param("status") Status status);
 
     @Query("SELECT uot FROM UltimateOptimizedTransactionEntity uot " +
             "WHERE uot.group = :group " +
@@ -31,10 +33,10 @@ public interface UltimateOptimizedTransactionRepository extends JpaRepository<Ul
             "AND uot.hasBeenSent = false " +
             "AND uot.hasBeenChecked = false " +
             "AND uot.requiredReflection = 'REQUIRE_REFLECT'")
-    List<TransactionalEntity> findFilteredTransactions(@Param("group") GroupEntity group,
-                                                       @Param("user") UserEntity user);
+    List<TransactionalEntity> findFilteredTransactions(@Param("group") GroupTypeEntity group,
+                                                       @Param("user") UserTypeEntity user);
     @Query("SELECT f FROM UltimateOptimizedTransactionEntity f WHERE f.group = :group AND (f.senderUser = :user OR f.recipientUser = :user) AND f.hasBeenSent = true  AND f.clearStatusTimestamp >= :sevenDaysAgo")
-    List<TransactionalEntity> findByGroupAndUserWithHAndHasBeenSentAndTransactionsSinceLastWeek(@Param("group") GroupEntity group, @Param("user") UserEntity user, @Param("sevenDaysAgo") LocalDateTime sevenDaysAgo);
+    List<TransactionalEntity> findByGroupAndUserWithHAndHasBeenSentAndTransactionsSinceLastWeek(@Param("group") GroupTypeEntity group, @Param("user") UserTypeEntity user, @Param("sevenDaysAgo") LocalDateTime sevenDaysAgo);
 
 
     @Query("SELECT u FROM UltimateOptimizedTransactionEntity u WHERE u.group = :group AND u.optimizationStatus = :status")

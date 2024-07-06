@@ -7,14 +7,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.transaction.entity.*;
 import settleup.backend.domain.transaction.repository.*;
-import settleup.backend.domain.transaction.service.RequireTransactionService;
 import settleup.backend.domain.transaction.service.TransactionInheritanceService;
-import settleup.backend.global.common.Status;
-import settleup.backend.global.exception.CustomException;
-import settleup.backend.global.exception.ErrorCode;
+import settleup.backend.global.Helper.Status;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 

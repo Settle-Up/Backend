@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import settleup.backend.domain.user.entity.UserEntity;
+import settleup.backend.domain.user.entity.UserTypeEntity;
+import settleup.backend.global.Helper.Status;
 
 import java.io.Serializable;
 
@@ -12,7 +14,7 @@ import java.io.Serializable;
 @Setter
 @Getter
 @Table(name = "settle_group_user")
-public class GroupUserEntity implements Serializable {
+public class GroupUserEntity implements GroupUserTypeEntity,Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,9 +30,34 @@ public class GroupUserEntity implements Serializable {
     @Column(name = "is_monthly_report_update_on", nullable = false)
     private Boolean isMonthlyReportUpdateOn;
 
-    public void setIsMonthlyReportUpdateOn(boolean isMonthlyReportUpdateOn) {
+
+    @Override
+    public void setIsMonthlyReportUpdateOn(Boolean isMonthlyReportUpdateOn) {
         this.isMonthlyReportUpdateOn = isMonthlyReportUpdateOn;
     }
+    @Override
+    public UserTypeEntity getUser() {
+        return user;
+    }
 
+    @Override
+    public GroupTypeEntity getGroup() {
+        return group;
+    }
+
+    @Override
+    public void setUser(UserTypeEntity user) {
+        this.user = (UserEntity) user;
+    }
+
+    @Override
+    public void setGroup(GroupTypeEntity group) {
+        this.group = (GroupEntity) group;
+    }
+
+    @Override
+    public Status getGroupUserType() {
+        return Status.REGULAR;
+    }
 }
 

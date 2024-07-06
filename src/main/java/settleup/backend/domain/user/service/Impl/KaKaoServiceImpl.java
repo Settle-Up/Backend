@@ -1,16 +1,13 @@
 package settleup.backend.domain.user.service.Impl;
 
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-import settleup.backend.global.common.ApiCallHelper;
-import settleup.backend.global.common.UUID_Helper;
+import settleup.backend.global.Helper.ApiCallHelper;
+import settleup.backend.global.Helper.UUID_Helper;
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.domain.user.entity.dto.LoginDto;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
@@ -142,6 +139,7 @@ public class KaKaoServiceImpl implements KakaoService {
                 newUserInfoDto.setUserEmail(existingUser.get().getUserEmail());
                 newUserInfoDto.setUserId(existingUser.get().getUserUUID());
                 newUserInfoDto.setIsDecimalInputOption(existingUser.get().getIsDecimalInputOption());
+                newUserInfoDto.setIsRegularUserOrDemoUser(true);
                 return createSettleUpLoginInfo(newUserInfoDto);
 
             }
@@ -165,8 +163,8 @@ public class KaKaoServiceImpl implements KakaoService {
     private LoginDto createSettleUpLoginInfo(UserInfoDto userInfoDto) {
         try {
             LoginDto loginDto = new LoginDto();
-            loginDto.setAccessToken(tokenProvider.createToken(userInfoDto));
-            loginDto.setSubject("ForSettleUpLogin");
+            loginDto.setAccessToken(tokenProvider.createRegularUserToken(userInfoDto));
+            loginDto.setSubject("FormalLogin");
             loginDto.setExpiresIn("1 day");
             loginDto.setIssuedTime(new Date().toString());
             loginDto.setUserId(userInfoDto.getUserId());

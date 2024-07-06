@@ -1,13 +1,16 @@
-package settleup.backend.domain.receipt.receiptCommons;
+package settleup.backend.global.Helper;
 
 import settleup.backend.domain.receipt.entity.dto.ReceiptDto;
+import settleup.backend.domain.user.entity.dto.UserInfoDto;
+import settleup.backend.global.exception.CustomException;
+import settleup.backend.global.exception.ErrorCode;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class ControllerHelper {
+public class InputHelper {
 
     public static String checkRequiredWithFilter(ReceiptDto dto) {
         List<Supplier<String>> checks = new ArrayList<>();
@@ -69,5 +72,12 @@ public class ControllerHelper {
 
     private static boolean isNullOrEmpty(String str) {
         return str == null || str.trim().isEmpty();
+    }
+
+
+    public static void isValidInputDemoForUser(UserInfoDto req) throws CustomException {
+        if (req.getUserName() == null) {
+            throw new CustomException(ErrorCode.INVALID_INPUT);
+        }
     }
 }

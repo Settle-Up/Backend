@@ -1,5 +1,6 @@
 package settleup.backend.domain.user.entity.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
 @Getter
@@ -16,5 +17,7 @@ public class LoginDto {
     private String expiresIn;
     private String userId;
     private String userName;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String demoUserTemporaryEmail;
 
 }
