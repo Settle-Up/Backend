@@ -24,15 +24,28 @@ public class TransactionInheritanceServiceImpl implements TransactionInheritance
     private final GroupOptimizedTransactionDetailRepository groupOptimizedTransactionDetailRepo;
     private static final Logger log = LoggerFactory.getLogger(TransactionInheritanceServiceImpl.class);
 
+//    @Transactional
+//    public void clearInheritanceStatusFromOptimizedToRequired(Long requireTransactionId) {
+//            requireTransactionRepo.updateRequiredReflectionStatusById(requireTransactionId, Status.INHERITED_CLEAR);
+//            LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
+//            requireTransactionRepo.updateClearStatusTimestampById(requireTransactionId, newClearStatusTimestamp);
+//
+//    }
+
+    @Override
     @Transactional
-    public void clearInheritanceStatusFromOptimizedToRequired(Long requireTransactionId) {
-            requireTransactionRepo.updateRequiredReflectionStatusById(requireTransactionId, Status.INHERITED_CLEAR);
+    public void clearInheritanceStatusFromOptimizedToRequired(Long optimizedTransactionId) {
+        // optimizedTransactionDetails 테이블에서 관련된 requiresTransactionIds 가져오기
+        List<Long> requiresTransactionIds = optimizedTransactionDetailsRepo.findRequiresTransactionIdsByOptimizedTransactionId(optimizedTransactionId);
+
+        // 관련된 모든 requiresTransaction 업데이트
+        for (Long requiresTransactionId : requiresTransactionIds) {
+            requireTransactionRepo.updateRequiredReflectionStatusById(requiresTransactionId, Status.INHERITED_CLEAR);
             LocalDateTime newClearStatusTimestamp = LocalDateTime.now();
-            requireTransactionRepo.updateClearStatusTimestampById(requireTransactionId, newClearStatusTimestamp);
-
+            requireTransactionRepo.updateClearStatusTimestampById(requiresTransactionId, newClearStatusTimestamp);
+            log.debug("requireTransaction ID: {}를 INHERITED_CLEAR로 업데이트", requiresTransactionId);
+        }
     }
-
-
 
     @Transactional
     public void clearInheritanceStatusFromGroupToOptimized(Long optimizedTransactionId) {

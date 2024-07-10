@@ -3,9 +3,7 @@ package settleup.backend.domain.transaction.entity.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import settleup.backend.domain.group.entity.GroupEntity;
-import settleup.backend.domain.group.entity.GroupTypeEntity;
-import settleup.backend.domain.transaction.entity.RequiresTransactionEntity;
+import settleup.backend.domain.group.entity.AbstractGroupEntity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,5 +14,6 @@ import java.util.List;
 public class TransactionP2PResultDto {
     private List<Long> optimiziationByPeerToPeerList = new ArrayList<>();
     private List<List<Long>> nodeList;
-    private GroupTypeEntity group;
+    private AbstractGroupEntity group;
+    private Boolean isUserType;
 }

@@ -3,12 +3,10 @@ package settleup.backend.domain.user.entity.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import settleup.backend.domain.group.entity.GroupEntity;
-import settleup.backend.domain.group.entity.GroupTypeEntity;
-import settleup.backend.domain.group.entity.GroupUserEntity;
-import settleup.backend.domain.group.entity.GroupUserTypeEntity;
-import settleup.backend.domain.user.entity.UserEntity;
-import settleup.backend.domain.user.entity.UserTypeEntity;
+import settleup.backend.domain.group.entity.AbstractGroupEntity;
+import settleup.backend.domain.group.entity.AbstractGroupUserEntity;
+import settleup.backend.domain.user.entity.AbstractUserEntity;
+
 
 import java.util.List;
 
@@ -16,9 +14,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserGroupDto {
-    GroupTypeEntity group;
-    List<UserTypeEntity> userEntityList;
-    GroupUserTypeEntity groupUser;
-    UserTypeEntity singleUser;
+    AbstractGroupEntity group;
+    List<AbstractUserEntity> userEntityList;
+    AbstractGroupUserEntity groupUser;
+    AbstractUserEntity singleUser;
     Boolean isUserType;
 }

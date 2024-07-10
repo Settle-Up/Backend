@@ -1,12 +1,15 @@
 package settleup.backend.domain.user.service.Impl;
 
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import settleup.backend.global.Helper.ApiCallHelper;
+import settleup.backend.global.Helper.Status;
 import settleup.backend.global.Helper.UUID_Helper;
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.domain.user.entity.dto.LoginDto;
@@ -18,6 +21,8 @@ import settleup.backend.domain.user.service.KakaoService;
 import settleup.backend.global.Util.JwtProvider;
 import settleup.backend.domain.user.entity.dto.KakaoTokenDto;
 import settleup.backend.global.config.KakaoConfig;
+
+import java.time.LocalDateTime;
 
 import java.util.Date;
 import java.util.Map;
@@ -35,6 +40,7 @@ public class KaKaoServiceImpl implements KakaoService {
     private final UUID_Helper uuidHelper;
     private final JwtProvider tokenProvider;
 
+    private static final Logger logger = LoggerFactory.getLogger(KaKaoServiceImpl.class);
 
     /**
      * getKakaoAccessToken 인증번호로 카카오에 토큰요청
@@ -53,7 +59,7 @@ public class KaKaoServiceImpl implements KakaoService {
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
             params.add("grant_type", "authorization_code");
             params.add("client_id", kakaoConfig.getClientId());
-            params.add("redirect_uri",kakaoConfig.getRedirectUriDev());
+            params.add("redirect_uri", kakaoConfig.getRedirectUriDev());
 //            if (!isHttps()) {
 //                params.add("redirect_uri", kakaoConfig.getRedirectUriDev());
 //            } else {
@@ -132,19 +138,26 @@ public class KaKaoServiceImpl implements KakaoService {
     @Override
     public LoginDto registerUser(UserInfoDto userInfoDto) throws CustomException {
         try {
+            logger.info("Starting registerUser method for userEmail: {}", userInfoDto.getUserEmail());
+
             Optional<UserEntity> existingUser = userRepo.findByUserEmail(userInfoDto.getUserEmail());
             if (existingUser.isPresent()) {
+                logger.info("User already exists with email: {}", userInfoDto.getUserEmail());
                 UserInfoDto newUserInfoDto = new UserInfoDto();
                 newUserInfoDto.setUserName(existingUser.get().getUserName());
                 newUserInfoDto.setUserEmail(existingUser.get().getUserEmail());
                 newUserInfoDto.setUserId(existingUser.get().getUserUUID());
                 newUserInfoDto.setIsDecimalInputOption(existingUser.get().getIsDecimalInputOption());
                 newUserInfoDto.setIsRegularUserOrDemoUser(true);
-                return createSettleUpLoginInfo(newUserInfoDto);
 
+                logger.info("Returning existing user information for userEmail: {}", userInfoDto.getUserEmail());
+                return createSettleUpLoginInfo(newUserInfoDto);
             }
+
             String userUUID = uuidHelper.UUIDFromEmail(userInfoDto.getUserEmail());
             userInfoDto.setUserId(userUUID);
+            userInfoDto.setIsRegularUserOrDemoUser(true);
+
 
             UserEntity newUser = new UserEntity();
             newUser.setUserEmail(userInfoDto.getUserEmail());
@@ -152,13 +165,23 @@ public class KaKaoServiceImpl implements KakaoService {
             newUser.setUserPhone(userInfoDto.getUserPhone());
             newUser.setUserUUID(userUUID);
             newUser.setIsDecimalInputOption(false);
+            newUser.setUserType(Status.REGULAR);
+
+
+            logger.debug("Creating new user with details: {}", newUser);
+
             userRepo.save(newUser);
+            logger.info("New user created and saved successfully with email: {}", userInfoDto.getUserEmail());
+
             return createSettleUpLoginInfo(userInfoDto);
         } catch (Exception e) {
+            logger.error("Error registering user with email: {}", userInfoDto.getUserEmail(), e);
             throw new CustomException(ErrorCode.REGISTRATION_FAILED);
+        } finally {
+            logger.info("Finished registerUser method for userEmail: {}", userInfoDto.getUserEmail());
         }
-
     }
+
 
     private LoginDto createSettleUpLoginInfo(UserInfoDto userInfoDto) {
         try {

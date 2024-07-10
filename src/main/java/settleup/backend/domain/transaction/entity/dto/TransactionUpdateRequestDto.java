@@ -13,3 +13,14 @@ public class TransactionUpdateRequestDto {
 
 
 }
+
+//테스트용
+//@Data
+//@AllArgsConstructor
+//@NoArgsConstructor
+//public class TransactionUpdateRequestDto {
+//    private String transactionId;
+//    private String approvalUser;
+//    private String userId;  // 추가
+//    private Boolean isRegularUserOrDemoUser;  // 추가
+//}

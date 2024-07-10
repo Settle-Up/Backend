@@ -18,9 +18,10 @@ import settleup.backend.domain.user.entity.DemoUserEntity;
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.domain.user.entity.dto.UserGroupDto;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
-import settleup.backend.domain.user.entity.UserTypeEntity;
+import settleup.backend.domain.user.entity.AbstractUserEntity;
 import settleup.backend.domain.user.repository.UserRepository;
 
+import settleup.backend.global.Helper.Status;
 import settleup.backend.global.Selector.UserRepoSelector;
 import settleup.backend.global.Util.UrlProvider;
 import settleup.backend.global.Helper.UUID_Helper;
@@ -51,19 +52,20 @@ public class ClusterServiceImpl implements ClusterService {
     private EntityManager entityManager;
 
     public CreateGroupResponseDto createGroup(CreateGroupRequestDto requestDto, Boolean isRegularUser) throws CustomException {
-        GroupTypeEntity groupInfo = createAndSaveGroup(requestDto, isRegularUser);
+        AbstractGroupEntity groupInfo = createAndSaveGroup(requestDto, isRegularUser);
         addUsersToGroup(requestDto.getGroupUserList(), groupInfo, isRegularUser);
         return buildCreateGroupResponseDto(groupInfo, requestDto.getGroupUserList().size(), isRegularUser);
     }
 
-    private GroupTypeEntity createAndSaveGroup(CreateGroupRequestDto requestDto, Boolean isRegularUser) throws CustomException {
+    private AbstractGroupEntity createAndSaveGroup(CreateGroupRequestDto requestDto, Boolean isRegularUser) throws CustomException {
         try {
             LocalDateTime now = LocalDateTime.now();
-            GroupTypeEntity groupInfo = selector.getGroupEntity(isRegularUser);
+            AbstractGroupEntity groupInfo = isRegularUser ? new GroupEntity() : new DemoGroupEntity();
             groupInfo.setGroupName(requestDto.getGroupName());
             groupInfo.setGroupUUID(uuidHelper.UUIDForGroup());
             groupInfo.setGroupUrl(urlProvider.generateUniqueUrl());
-            groupInfo.setCreationTime(now);
+            groupInfo.setCreatedAt(now);
+            groupInfo.setGroupType(isRegularUser ? Status.REGULAR : Status.DEMO);
 
             if (isRegularUser) {
                 groupRepo.save((GroupEntity) groupInfo);
@@ -71,26 +73,24 @@ public class ClusterServiceImpl implements ClusterService {
                 demoGroupRepo.save((DemoGroupEntity) groupInfo);
             }
 
-
             return groupInfo;
         } catch (Exception e) {
             throw new CustomException(ErrorCode.GROUP_CREATION_FAILED);
         }
     }
 
-    private void addUsersToGroup(List<String> userIds, GroupTypeEntity groupInfo, Boolean isRegularUser) throws CustomException {
+    private void addUsersToGroup(List<String> userIds, AbstractGroupEntity groupInfo, Boolean isRegularUser) throws CustomException {
         for (String userUUID : userIds) {
             try {
-                UserTypeEntity user = selector.getUserRepository(isRegularUser).findByUserUUID(userUUID)
+                AbstractUserEntity user = selector.getUserRepository(isRegularUser).findByUserUUID(userUUID)
                         .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-                // Create the appropriate GroupUserTypeEntity based on the user type
-                GroupUserTypeEntity groupUser = selector.getGroupUserEntity(isRegularUser);
+
+                AbstractGroupUserEntity groupUser = isRegularUser ? new GroupUserEntity() : new DemoGroupUserEntity();
                 groupUser.setUser(user);
                 groupUser.setGroup(groupInfo);
                 groupUser.setIsMonthlyReportUpdateOn(false);
 
-                // Save the GroupUserTypeEntity using the appropriate repository
                 if (isRegularUser) {
                     groupUserRepo.save((GroupUserEntity) groupUser);
                 } else {
@@ -104,11 +104,10 @@ public class ClusterServiceImpl implements ClusterService {
         }
     }
 
-
-    private CreateGroupResponseDto buildCreateGroupResponseDto(GroupTypeEntity groupInfo, int memberCount, Boolean isRegularUser) {
-        List<? extends GroupUserTypeEntity> groupUsers = selector.getGroupUserRepository(isRegularUser).findByGroup_Id(groupInfo.getId());
+    private CreateGroupResponseDto buildCreateGroupResponseDto(AbstractGroupEntity groupInfo, int memberCount, Boolean isRegularUser) {
+        List<? extends AbstractGroupUserEntity> groupUsers = selector.getGroupUserRepository(isRegularUser).findByGroup_Id(groupInfo.getId());
         List<UserInfoDto> userDtos = new ArrayList<>();
-        for (GroupUserTypeEntity groupUser : groupUsers) {
+        for (AbstractGroupUserEntity groupUser : groupUsers) {
             UserInfoDto userInfoDto = new UserInfoDto(
                     groupUser.getUser().getUserUUID(),
                     groupUser.getUser().getUserName(),
@@ -132,21 +131,21 @@ public class ClusterServiceImpl implements ClusterService {
     @Override
     public GroupMonthlyReportDto givenMonthlyReport(UserInfoDto userInfoDto, String groupId, GroupMonthlyReportDto groupMonthlyReportDto, Boolean isRegularUser) throws CustomException {
         // Retrieve the user by UUID
-        UserTypeEntity existingUser = selector.getUserRepository(isRegularUser).findByUserUUID(userInfoDto.getUserId())
+        AbstractUserEntity existingUser = selector.getUserRepository(isRegularUser).findByUserUUID(userInfoDto.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         // Retrieve the group by UUID
-        GroupTypeEntity existingGroup = selector.getGroupRepository(isRegularUser).findByGroupUUID(groupId)
+        AbstractGroupEntity existingGroup = selector.getGroupRepository(isRegularUser).findByGroupUUID(groupId)
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
 
         // Retrieve the group-user relationship by user and group ID
-        Optional<? extends GroupUserTypeEntity> userIdAndGroupId = selector.getGroupUserRepository(isRegularUser).findByUserIdAndGroupId(existingUser.getId(), existingGroup.getId());
+        Optional<? extends AbstractGroupUserEntity> userIdAndGroupId = selector.getGroupUserRepository(isRegularUser).findByUserIdAndGroupId(existingUser.getId(), existingGroup.getId());
 
         if (!userIdAndGroupId.isPresent()) {
             throw new CustomException(ErrorCode.GROUP_USER_NOT_FOUND);
         }
 
-        GroupUserTypeEntity groupUser = userIdAndGroupId.get();
+        AbstractGroupUserEntity groupUser = userIdAndGroupId.get();
         groupUser.setIsMonthlyReportUpdateOn(groupMonthlyReportDto.getIsMonthlyReportUpdateOn());
 
         // Save the updated GroupUserTypeEntity using the appropriate repository
@@ -170,11 +169,11 @@ public class ClusterServiceImpl implements ClusterService {
 
     @Override
     public Map<String, String> deleteGroupUserInfo(UserInfoDto userInfoDto, String groupId, Boolean isRegularUser) throws CustomException {
-        UserTypeEntity existingUser = selector.getUserRepository(isRegularUser)
+        AbstractUserEntity existingUser = selector.getUserRepository(isRegularUser)
                 .findByUserUUID(userInfoDto.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        GroupTypeEntity existingGroup = selector.getGroupRepository(isRegularUser)
+        AbstractGroupEntity existingGroup = selector.getGroupRepository(isRegularUser)
                 .findByGroupUUID(groupId)
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
 
@@ -183,11 +182,11 @@ public class ClusterServiceImpl implements ClusterService {
             throw new CustomException(ErrorCode.SETTLED_REQUIRED);
         }
 
-        GroupUserBaseRepository<? extends GroupUserTypeEntity> groupUserRepository = selector.getGroupUserRepository(isRegularUser);
-        Optional<? extends GroupUserTypeEntity> userIdAndGroupId = groupUserRepository.findByUserIdAndGroupId(existingUser.getId(), existingGroup.getId());
+        GroupUserBaseRepository<? extends AbstractGroupUserEntity> groupUserRepository = selector.getGroupUserRepository(isRegularUser);
+        Optional<? extends AbstractGroupUserEntity> userIdAndGroupId = groupUserRepository.findByUserIdAndGroupId(existingUser.getId(), existingGroup.getId());
 
         if (userIdAndGroupId.isPresent()) {
-            GroupUserTypeEntity groupUser = userIdAndGroupId.get();
+            AbstractGroupUserEntity groupUser = userIdAndGroupId.get();
             groupUserRepository.delete(groupUser);
         } else {
             throw new CustomException(ErrorCode.GROUP_USER_NOT_FOUND);
@@ -209,13 +208,13 @@ public class ClusterServiceImpl implements ClusterService {
 
     private UserGroupDto isValidIdentity(CreateGroupRequestDto requestDto, String groupUUID, Boolean isRegularUser) {
         UserGroupDto userGroupDto = new UserGroupDto();
-        GroupTypeEntity existingGroup = selector.getGroupRepository(isRegularUser)
+        AbstractGroupEntity existingGroup = selector.getGroupRepository(isRegularUser)
                 .findByGroupUUID(groupUUID)
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
 
-        List<UserTypeEntity> userEntityList = new ArrayList<>();
+        List<AbstractUserEntity> userEntityList = new ArrayList<>();
         for (String validUser : requestDto.getGroupUserList()) {
-            UserTypeEntity existingUser = selector.getUserRepository(isRegularUser)
+            AbstractUserEntity existingUser = selector.getUserRepository(isRegularUser)
                     .findByUserUUID(validUser)
                     .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
             userEntityList.add(existingUser);
@@ -228,11 +227,11 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     private CreateGroupResponseDto inviteGroup(UserGroupDto existingTarget, Boolean isRegularUser) {
-        List<UserTypeEntity> userEntities = existingTarget.getUserEntityList();
+        List<AbstractUserEntity> userEntities = existingTarget.getUserEntityList();
         List<UserInfoDto> userInfoDtos = new ArrayList<>();
 
-        for (UserTypeEntity user : userEntities) {
-            GroupUserTypeEntity groupUser;
+        for (AbstractUserEntity user : userEntities) {
+            AbstractGroupUserEntity groupUser;
             if (isRegularUser) {
                 GroupUserEntity regularGroupUser = new GroupUserEntity();
                 regularGroupUser.setGroup((GroupEntity) existingTarget.getGroup());

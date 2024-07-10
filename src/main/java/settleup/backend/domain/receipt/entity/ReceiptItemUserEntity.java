@@ -6,8 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import settleup.backend.domain.user.entity.UserEntity;
-import settleup.backend.domain.user.entity.UserTypeEntity;
+import settleup.backend.domain.user.entity.AbstractUserEntity;
 import settleup.backend.global.Helper.Status;
 
 import java.math.BigDecimal;
@@ -29,9 +28,12 @@ public class ReceiptItemUserEntity {
     @Column(name = "purchased_quantity",nullable = true)
     private BigDecimal purchasedQuantity;
 
+    @Column(name = "purchased_total_amonut",nullable = true)
+    private BigDecimal purchasedTotalAmount;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private UserEntity user;
+    private AbstractUserEntity user;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "user_type", nullable = false)

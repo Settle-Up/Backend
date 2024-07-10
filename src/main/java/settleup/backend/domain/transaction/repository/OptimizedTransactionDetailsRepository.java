@@ -11,8 +11,10 @@ import java.util.List;
 
 @Repository
 public interface OptimizedTransactionDetailsRepository extends JpaRepository<OptimizedTransactionDetailsEntity,Long> {
-    @Query("SELECT d.requiresTransaction FROM OptimizedTransactionDetailsEntity d WHERE d.optimizedTransaction.id = :id")
-    List<RequiresTransactionEntity> findRequiresTransactionsByOptimizedTransactionId(@Param("id") Long id);
+
+    @Query("SELECT d.requiresTransaction.id FROM OptimizedTransactionDetailsEntity d WHERE d.optimizedTransaction.id = :id")
+    List<Long> findRequiresTransactionIdsByOptimizedTransactionId(@Param("id") Long id);
+
 
     @Query("SELECT d FROM OptimizedTransactionDetailsEntity d WHERE d.optimizedTransaction.id = :id")
     List<OptimizedTransactionDetailsEntity> findByOptimizedTransactionId(@Param("id") Long id);

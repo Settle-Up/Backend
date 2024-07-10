@@ -2,8 +2,10 @@ package settleup.backend.domain.transaction.entity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import settleup.backend.domain.group.entity.AbstractGroupEntity;
 import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.transaction.model.TransactionalEntity;
+import settleup.backend.domain.user.entity.AbstractUserEntity;
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.global.Helper.Status;
 
@@ -25,15 +27,15 @@ public class OptimizedTransactionEntity implements TransactionalEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_Id",nullable = false)
-    private GroupEntity group;
+    private AbstractGroupEntity group;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_user",nullable = false)
-    private UserEntity senderUser;
+    private AbstractUserEntity senderUser;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recipient_user",nullable = false)
-    private UserEntity recipientUser;
+    private AbstractUserEntity recipientUser;
 
     @Column(name = "transaction_amount", nullable = false)
     private BigDecimal transactionAmount;
@@ -74,15 +76,15 @@ public class OptimizedTransactionEntity implements TransactionalEntity {
     }
 
     @Override
-    public UserEntity getSenderUser(){return this.senderUser;}
+    public AbstractUserEntity getSenderUser(){return this.senderUser;}
 
     @Override
-    public GroupEntity getGroup() {
+    public AbstractGroupEntity getGroup() {
         return this.group;
     }
 
     @Override
-    public UserEntity getRecipientUser(){return  this.recipientUser;}
+    public AbstractUserEntity getRecipientUser(){return  this.recipientUser;}
 
 
     @Override

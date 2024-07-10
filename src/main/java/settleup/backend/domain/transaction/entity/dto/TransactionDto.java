@@ -3,12 +3,9 @@ package settleup.backend.domain.transaction.entity.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.boot.autoconfigure.security.SecurityProperties;
-import settleup.backend.domain.group.entity.GroupEntity;
-import settleup.backend.domain.group.entity.GroupTypeEntity;
+import settleup.backend.domain.group.entity.AbstractGroupEntity;
 import settleup.backend.domain.receipt.entity.ReceiptEntity;
-import settleup.backend.domain.user.entity.UserEntity;
-import settleup.backend.domain.user.entity.UserTypeEntity;
+import settleup.backend.domain.user.entity.AbstractUserEntity;
 
 import java.util.List;
 
@@ -18,8 +15,8 @@ import java.util.List;
 public class TransactionDto {
     private ReceiptEntity receipt;
     private Boolean isUserType;
-    private GroupTypeEntity group;
+    private AbstractGroupEntity group;
     private String allocationType;
-    private UserTypeEntity payerUser;
-    private List<UserTypeEntity> owedUser;
+    private AbstractUserEntity payerUser;
+    private List<AbstractUserEntity> owedUser;
 }

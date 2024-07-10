@@ -1,19 +1,12 @@
 package settleup.backend.domain.receipt.entity;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import settleup.backend.domain.group.entity.GroupEntity;
-import settleup.backend.domain.group.entity.GroupTypeEntity;
-import settleup.backend.domain.user.entity.UserEntity;
-import settleup.backend.domain.user.entity.UserTypeEntity;
+import settleup.backend.domain.group.entity.AbstractGroupEntity;
+import settleup.backend.domain.user.entity.AbstractUserEntity;
 import settleup.backend.global.Helper.Status;
-
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -32,8 +25,8 @@ public class ReceiptEntity {
     private String receiptName;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name ="group_id",nullable = false)
-    private GroupEntity group;// GroupTypeEntity
+    @JoinColumn(name = "group_id", nullable = false)
+    private AbstractGroupEntity group; // 추상 클래스 사용
 
     @Column(nullable = false)
     private String address;
@@ -43,7 +36,7 @@ public class ReceiptEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payer_user_id", nullable = false)
-    private UserEntity payerUser; // UserTypeEnity
+    private AbstractUserEntity payerUser; // 추상 클래스 사용
 
     @Column(name = "total_price", nullable = false)
     private BigDecimal totalPrice;
@@ -62,6 +55,5 @@ public class ReceiptEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "user_type", nullable = false)
-    private Status userType; // 추가된 필드
+    private Status userType;
 }
-

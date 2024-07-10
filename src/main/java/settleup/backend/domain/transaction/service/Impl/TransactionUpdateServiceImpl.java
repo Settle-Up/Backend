@@ -2,10 +2,8 @@ package settleup.backend.domain.transaction.service.Impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import settleup.backend.domain.group.entity.GroupEntity;
-import settleup.backend.domain.group.entity.GroupTypeEntity;
-import settleup.backend.domain.group.entity.GroupUserEntity;
-import settleup.backend.domain.group.entity.GroupUserTypeEntity;
+import settleup.backend.domain.group.entity.AbstractGroupEntity;
+import settleup.backend.domain.group.entity.AbstractGroupUserEntity;
 import settleup.backend.domain.transaction.model.TransactionalEntity;
 import settleup.backend.domain.transaction.repository.UltimateOptimizedTransactionRepository;
 import settleup.backend.domain.transaction.repository.GroupOptimizedTransactionRepository;
@@ -19,8 +17,8 @@ import settleup.backend.domain.group.repository.GroupUserRepository;
 import settleup.backend.domain.transaction.entity.dto.TransactionUpdateDto;
 import settleup.backend.domain.transaction.entity.dto.TransactionUpdateRequestDto;
 import settleup.backend.domain.transaction.service.TransactionUpdateService;
-import settleup.backend.domain.user.entity.UserEntity;
-import settleup.backend.domain.user.entity.UserTypeEntity;
+import settleup.backend.domain.user.entity.AbstractUserEntity;
+
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.global.Helper.Status;
 import settleup.backend.global.Selector.TransactionStrategySelector;
@@ -50,9 +48,9 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
     @Transactional
     public TransactionUpdateDto transactionManage(UserInfoDto userInfoDto, String groupId, TransactionUpdateRequestDto request) throws CustomException {
         Boolean isUserType = userInfoDto.getIsRegularUserOrDemoUser();
-        UserTypeEntity existingUser = selector.getUserRepository(isUserType).findByUserUUID(userInfoDto.getUserId())
+        AbstractUserEntity existingUser = selector.getUserRepository(isUserType).findByUserUUID(userInfoDto.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        GroupTypeEntity existingGroup = selector.getGroupRepository(isUserType).findByGroupUUID(groupId)
+        AbstractGroupEntity existingGroup = selector.getGroupRepository(isUserType).findByGroupUUID(groupId)
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
         selector.getGroupUserRepository(isUserType).findByUserIdAndGroupId(existingUser.getId(), existingGroup.getId())
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
@@ -67,7 +65,7 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
             transactionUpdateDto.setUserId(existingUser.getUserUUID());
             transactionUpdateDto.setUserName(existingUser.getUserName());
 
-            UserTypeEntity counterParty;
+            AbstractUserEntity counterParty;
             Status transactionDirection;
 
             if ("sender".equals(request.getApprovalUser())) {
@@ -103,9 +101,9 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
     @Override
     public TransactionUpdateDto retrievedReceivedListInGroup(UserInfoDto userInfoDto) throws CustomException {
         Boolean isUserType = userInfoDto.getIsRegularUserOrDemoUser();
-        UserTypeEntity existingUser = selector.getUserRepository(isUserType).findByUserUUID(userInfoDto.getUserId())
+        AbstractUserEntity existingUser = selector.getUserRepository(isUserType).findByUserUUID(userInfoDto.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        List<GroupUserTypeEntity> userInGroupList = (List<GroupUserTypeEntity>) selector.getGroupUserRepository(isUserType).findByUser_Id(existingUser.getId());
+        List<AbstractGroupUserEntity> userInGroupList = (List<AbstractGroupUserEntity>) selector.getGroupUserRepository(isUserType).findByUser_Id(existingUser.getId());
 
         List<TransactionalEntity> combinateList = new ArrayList<>();
         TransactionUpdateDto transactionUpdateDto = new TransactionUpdateDto();
@@ -113,8 +111,8 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
         transactionUpdateDto.setUserName(existingUser.getUserName());
         transactionUpdateDto.setTransactionUpdateList(new ArrayList<>());
 
-        for (GroupUserTypeEntity groupUser : userInGroupList) {
-            GroupTypeEntity existingGroup = selector.getGroupRepository(isUserType).findById(groupUser.getGroup().getId())
+        for (AbstractGroupUserEntity groupUser : userInGroupList) {
+            AbstractGroupEntity existingGroup = selector.getGroupRepository(isUserType).findById(groupUser.getGroup().getId())
                     .orElseThrow(() -> new CustomException(ErrorCode.GROUP_USER_NOT_FOUND));
             log.info("Processing group: {}", existingGroup.getGroupName());
 
@@ -132,8 +130,8 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
     }
 
 
-    private TransactionUpdateDto.TransactionListDto createTransactionListDto(TransactionalEntity transaction, UserTypeEntity user) {
-        UserTypeEntity counterParty = transaction.getSenderUser().equals(user) ? transaction.getRecipientUser() : transaction.getSenderUser();
+    private TransactionUpdateDto.TransactionListDto createTransactionListDto(TransactionalEntity transaction, AbstractUserEntity user) {
+        AbstractUserEntity counterParty = transaction.getSenderUser().equals(user) ? transaction.getRecipientUser() : transaction.getSenderUser();
         Status transactionDirection = transaction.getSenderUser().equals(user) ? Status.OWE : Status.OWED;
 
         TransactionUpdateDto.TransactionListDto transactionListDto = new TransactionUpdateDto.TransactionListDto();
@@ -150,15 +148,15 @@ public class TransactionUpdateServiceImpl implements TransactionUpdateService {
         return transactionListDto;
     }
 
-    private List<TransactionalEntity> filterOneSideClearInUltimateOptimizedTransaction(GroupTypeEntity existingGroup, UserTypeEntity existingUser) {
+    private List<TransactionalEntity> filterOneSideClearInUltimateOptimizedTransaction(AbstractGroupEntity existingGroup, AbstractUserEntity existingUser) {
         return ultimateOptimizedTransactionRepo.findTransactionsForRecipientUserWithSentNotChecked(existingUser.getId(), existingGroup.getId());
     }
 
-    private List<TransactionalEntity> filterOneSideClearInGroupOptimizedTransaction(GroupTypeEntity existingGroup, UserTypeEntity existingUser) {
+    private List<TransactionalEntity> filterOneSideClearInGroupOptimizedTransaction(AbstractGroupEntity existingGroup, AbstractUserEntity existingUser) {
         return groupOptimizedTransactionRepo.findTransactionsForRecipientUserWithSentNotChecked(existingUser.getId(), existingGroup.getId());
     }
 
-    private List<TransactionalEntity> filterOneSideClearInOptimizedTransaction(GroupTypeEntity existingGroup, UserTypeEntity existingUser) {
+    private List<TransactionalEntity> filterOneSideClearInOptimizedTransaction(AbstractGroupEntity existingGroup, AbstractUserEntity existingUser) {
         return optimizedTransactionRepo.findTransactionsForRecipientUserWithSentNotChecked(existingUser.getId(), existingGroup.getId());
     }
 }

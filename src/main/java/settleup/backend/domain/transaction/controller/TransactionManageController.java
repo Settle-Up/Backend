@@ -28,6 +28,26 @@ public class TransactionManageController {
         ResponseDto responseDto = new ResponseDto<>(true, "update retrieved successfully", data);
         return ResponseEntity.ok(responseDto);
     }
+//    @PatchMapping("/{groupId}/manage")
+//    public ResponseEntity<ResponseDto> updateTransaction(
+//            @PathVariable("groupId") String groupId,
+//            @RequestBody TransactionUpdateRequestDto requestDto) throws CustomException {
+//
+//        String userId = requestDto.getUserId();
+//        Boolean isRegularUserOrDemoUser = requestDto.getIsRegularUserOrDemoUser();
+//
+//
+//        UserInfoDto userInfoDto = new UserInfoDto();
+//        userInfoDto.setUserId(userId);
+//        userInfoDto.setIsRegularUserOrDemoUser(isRegularUserOrDemoUser);
+//
+//
+//        TransactionUpdateDto data = transactionUpdateService.transactionManage(userInfoDto, groupId, requestDto);
+//
+//
+//        ResponseDto responseDto = new ResponseDto<>(true, "update retrieved successfully", data);
+//        return ResponseEntity.ok(responseDto);
+//    }
 
 
     @GetMapping("/received")

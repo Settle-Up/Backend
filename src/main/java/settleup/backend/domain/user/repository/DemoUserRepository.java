@@ -14,23 +14,3 @@ import java.util.Optional;
 @Repository
 public interface DemoUserRepository extends UserBaseRepository<DemoUserEntity> {
 }
-//    Optional<DemoUserEntity> findById(Long id);
-//
-//    Optional<DemoUserEntity> findByUserEmail(String email);
-//
-//    Optional<DemoUserEntity> findByUserUUID(String demoUserUUID);
-//
-//    @Query("SELECT u FROM DemoUserEntity u WHERE u.userEmail LIKE %:partOfEmail% AND u.userEmail <> :notContainUserEmail")
-//    Page<DemoUserEntity> findByUserEmailContainingAndUserEmailNot(
-//            @Param("partOfEmail") String partOfEmail,
-//            @Param("notContainUserEmail") String notContainUserEmail,
-//            Pageable pageable
-//    );
-//
-//    @Query("SELECT u FROM DemoUserEntity u WHERE u.userEmail LIKE %:email% AND u.id NOT IN :excludedUserIds")
-//    Page<DemoUserEntity> findByEmailExcludingUsers(
-//            @Param("email") String email,
-//            @Param("excludedUserIds") List<Long> excludedUserIds,
-//            Pageable pageable
-//    );
-//}

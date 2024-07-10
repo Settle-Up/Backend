@@ -20,14 +20,8 @@ public interface ReceiptRepository extends JpaRepository<ReceiptEntity,Long> {
     @Query("SELECT ri FROM ReceiptItemEntity ri WHERE ri.receipt.receiptUUID = :receiptUUID")
     List<ReceiptItemEntity> findItemsByReceiptUUID(@Param("receiptUUID") String receiptUUID);
 
-//    @Query("SELECT r FROM ReceiptEntity r WHERE r.receiptUUID = :receiptUUID")
-//    Optional<ReceiptEntity> findByReceiptUUID(String receiptUUID);
-//
-//    @Query("SELECT ri FROM ReceiptItemEntity ri WHERE ri.receipt.receiptUUID = :receiptUUID")
-//    List<ReceiptItemEntity> findItemsByReceiptUUID(String receiptUUID);
 
-
-        @Query("SELECT r FROM ReceiptEntity r WHERE r.group.id = :groupId ORDER BY r.createdAt DESC")
+    @Query("SELECT r FROM ReceiptEntity r WHERE r.group.id = :groupId ORDER BY r.createdAt DESC")
     List<ReceiptEntity> findReceiptByGroupId(@Param("groupId") Long groupId);
 
 

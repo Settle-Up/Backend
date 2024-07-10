@@ -1,9 +1,8 @@
 package settleup.backend.domain.transaction.model;
 
-import settleup.backend.domain.group.entity.GroupEntity;
-import settleup.backend.domain.group.entity.GroupTypeEntity;
-import settleup.backend.domain.user.entity.UserEntity;
-import settleup.backend.domain.user.entity.UserTypeEntity;
+import settleup.backend.domain.group.entity.AbstractGroupEntity;
+import settleup.backend.domain.user.entity.AbstractUserEntity;
+
 import settleup.backend.global.Helper.Status;
 
 import java.math.BigDecimal;
@@ -12,11 +11,11 @@ import java.time.LocalDateTime;
 public interface TransactionalEntity {
     Long getId();
 
-    UserTypeEntity getSenderUser();
+    AbstractUserEntity getSenderUser();
 
-    UserTypeEntity getRecipientUser();
+    AbstractUserEntity getRecipientUser();
 
-    GroupTypeEntity getGroup();
+    AbstractGroupEntity getGroup();
 
     BigDecimal getTransactionAmount();
 

@@ -5,8 +5,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import settleup.backend.domain.group.entity.AbstractGroupEntity;
 import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.receipt.entity.ReceiptEntity;
+import settleup.backend.domain.user.entity.AbstractUserEntity;
 import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.global.Helper.Status;
 
@@ -31,15 +33,15 @@ public class RequiresTransactionEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", nullable = false)
-    private GroupEntity group;
+    private AbstractGroupEntity group;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_user", nullable = false)
-    private UserEntity senderUser;
+    private AbstractUserEntity senderUser;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recipient_user", nullable = false)
-    private UserEntity recipientUser;
+    private AbstractUserEntity recipientUser;
 
 
     @Enumerated(EnumType.STRING)

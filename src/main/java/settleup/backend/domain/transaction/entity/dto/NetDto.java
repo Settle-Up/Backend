@@ -3,10 +3,9 @@ package settleup.backend.domain.transaction.entity.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import settleup.backend.domain.group.entity.GroupEntity;
-import settleup.backend.domain.group.entity.GroupTypeEntity;
-import settleup.backend.domain.user.entity.UserEntity;
-import settleup.backend.domain.user.entity.UserTypeEntity;
+import settleup.backend.domain.group.entity.AbstractGroupEntity;
+import settleup.backend.domain.user.entity.AbstractUserEntity;
+
 
 import java.math.BigDecimal;
 
@@ -14,7 +13,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 public class NetDto {
-    private UserTypeEntity user;
-    private GroupTypeEntity group;
+    private AbstractUserEntity user;
+    private AbstractGroupEntity group;
     private BigDecimal netAmount;
 }

@@ -7,34 +7,34 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import settleup.backend.domain.group.entity.*;
+import settleup.backend.domain.group.entity.AbstractGroupEntity;
+import settleup.backend.domain.group.entity.AbstractGroupUserEntity;
 import settleup.backend.domain.group.entity.dto.GroupInfoListDto;
-import settleup.backend.domain.group.repository.*;
+import settleup.backend.domain.group.repository.CustomGroupUserRepository;
+import settleup.backend.domain.group.repository.GroupUserBaseRepository;
 import settleup.backend.domain.group.service.RetrievedService;
 import settleup.backend.domain.receipt.entity.ReceiptEntity;
 import settleup.backend.domain.receipt.repository.ReceiptRepository;
 import settleup.backend.domain.transaction.entity.dto.NetDto;
 import settleup.backend.domain.transaction.service.NetService;
-import settleup.backend.domain.user.entity.UserTypeEntity;
+import settleup.backend.domain.user.entity.AbstractUserEntity;
 import settleup.backend.domain.user.entity.dto.UserGroupDto;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
-import settleup.backend.domain.user.repository.UserRepository;
 import settleup.backend.global.Helper.Status;
 import settleup.backend.global.Selector.UserRepoSelector;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @AllArgsConstructor
 @Transactional
 public class RetrievedServiceImpl implements RetrievedService {
-    private final UserRepository userRepo;
-    private final GroupUserRepository groupUserRepo;
+
     private final CustomGroupUserRepository customGroupUserRepo;
-    private final DemoGroupUserRepository demoGroupUserRepo;
     private final NetService netService;
     private final ReceiptRepository receiptRepo;
     private final UserRepoSelector selector;
@@ -50,24 +50,23 @@ public class RetrievedServiceImpl implements RetrievedService {
         logger.debug("Starting getGroupInfoByUser: isRegularUserOrDemoUser = {}", isUserType);
 
         // Retrieve the existing user
-        UserTypeEntity existingUser = selector.getUserRepository(isUserType).findByUserUUID(userInfoDto.getUserId())
+        AbstractUserEntity existingUser = selector.getUserRepository(isUserType).findByUserUUID(userInfoDto.getUserId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         logger.debug("Existing user found: UserType = {}, UserID = {}", existingUser.getUserType(), existingUser.getId());
 
         System.out.println("existingUser: " + existingUser.getUserType() + " " + existingUser.getId());
         // Use ternary operator to select the appropriate group user repository
-        GroupUserBaseRepository<? extends GroupUserTypeEntity> groupUserRepository = isUserType ? groupUserRepo : demoGroupUserRepo;
+        GroupUserBaseRepository<? extends AbstractGroupUserEntity> groupUserRepository = selector.getGroupUserRepository(isUserType);
 
         // Log which repository is being selected
         logger.debug("Selected repository: {}", isUserType ? "Regular User Repository" : "Demo User Repository");
 
-
-        System.out.println("여기봐봐 :"+isUserType);
-        Page<GroupUserTypeEntity> userGroupPage = customGroupUserRepo.findByUserIdWithLatestReceiptOrCreatedAt(existingUser.getId(), pageable, isUserType);
+        System.out.println("여기봐봐 :" + isUserType);
+        Page<AbstractGroupUserEntity> userGroupPage = customGroupUserRepo.findByUserIdWithLatestReceiptOrCreatedAt(existingUser.getId(), pageable,isUserType);
 
         List<GroupInfoListDto.UserGroupListDto> groupList = new ArrayList<>();
-        for (GroupUserTypeEntity groupUser : userGroupPage.getContent()) {
-            GroupTypeEntity group = groupUser.getGroup();
+        for (AbstractGroupUserEntity groupUser : userGroupPage.getContent()) {
+            AbstractGroupEntity group = groupUser.getGroup();
             if (group == null) {
                 logger.error("Group entity is null for userID = {}", existingUser.getId());
                 continue;
@@ -104,17 +103,16 @@ public class RetrievedServiceImpl implements RetrievedService {
         return new GroupInfoListDto(existingUser.getUserUUID(), existingUser.getUserName(), hasNextPage, groupList);
     }
 
-
-    private String calculateNetAmount(UserTypeEntity existingUser, GroupTypeEntity group, boolean isReceiptRegistered) throws CustomException {
+    private String calculateNetAmount(AbstractUserEntity existingUser, AbstractGroupEntity group, boolean isReceiptRegistered) throws CustomException {
         if (!isReceiptRegistered) {
             return null;
         }
 
         Boolean userType = null;
-        if(existingUser.getUserType()== Status.DEMO){
-            userType=false;
-        }else if (existingUser.getUserType()==Status.REGULAR){
-            userType =true;
+        if (existingUser.getUserType() == Status.DEMO) {
+            userType = false;
+        } else if (existingUser.getUserType() == Status.REGULAR) {
+            userType = true;
         }
         UserGroupDto groupDto = new UserGroupDto();
         groupDto.setGroup(group);
@@ -135,12 +133,12 @@ public class RetrievedServiceImpl implements RetrievedService {
 
     @Override
     public List<UserInfoDto> getGroupUserInfo(String groupUUID, Boolean isRegularUser) throws CustomException {
-        GroupTypeEntity existingGroup = selector.getGroupRepository(isRegularUser).findByGroupUUID(groupUUID)
+        AbstractGroupEntity existingGroup = selector.getGroupRepository(isRegularUser).findByGroupUUID(groupUUID)
                 .orElseThrow(() -> new CustomException(ErrorCode.GROUP_NOT_FOUND));
         Long groupPrimaryId = existingGroup.getId();
-        List<GroupUserTypeEntity> userList = (List<GroupUserTypeEntity>) selector.getGroupUserRepository(isRegularUser).findByGroup_Id(groupPrimaryId);
+        List<AbstractGroupUserEntity> userList = (List<AbstractGroupUserEntity>) selector.getGroupUserRepository(isRegularUser).findByGroup_Id(groupPrimaryId);
         List<UserInfoDto> userInfoDtoList = new ArrayList<>();
-        for (GroupUserTypeEntity userEntity : userList) {
+        for (AbstractGroupUserEntity userEntity : userList) {
             UserInfoDto userInfoDto = new UserInfoDto();
             userInfoDto.setUserId(userEntity.getUser().getUserUUID());
             userInfoDto.setUserEmail(userEntity.getUser().getUserEmail());

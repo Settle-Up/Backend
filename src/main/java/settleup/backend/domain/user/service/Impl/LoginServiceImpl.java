@@ -11,6 +11,7 @@ import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.domain.user.entity.dto.LoginDto;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.repository.DemoUserRepository;
+import settleup.backend.global.Helper.Status;
 import settleup.backend.global.Helper.UUID_Helper;
 import settleup.backend.global.Util.ServerCryptUtil;
 import settleup.backend.global.config.CryptographyConfig;
@@ -20,6 +21,7 @@ import settleup.backend.domain.user.repository.UserRepository;
 import settleup.backend.domain.user.service.LoginService;
 import settleup.backend.global.Util.JwtProvider;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Optional;
 
@@ -122,11 +124,10 @@ public class LoginServiceImpl implements LoginService {
             throw new CustomException(ErrorCode.TOKEN_CREATION_FAILED);
         }
     }
-
     private UserInfoDto temporaryUserSave(String userName) throws CustomException {
         logger.info("Starting temporaryUserSave method for userName: {}", userName);
         try {
-            Date now = new Date();
+            LocalDateTime now = LocalDateTime.now();
             UserInfoDto demoUserDto = new UserInfoDto();
             demoUserDto.setUserPhone(null);
             String email = uuidHelper.demoUserRandomEmail(userName);
@@ -145,6 +146,7 @@ public class LoginServiceImpl implements LoginService {
             demoUserEntity.setUserPhone(null);
             demoUserEntity.setIsDecimalInputOption(false);
             demoUserEntity.setCreatedAt(now);
+            demoUserEntity.setUserType(Status.DEMO);
 
             logger.debug("Created DemoUserEntity: {}", demoUserEntity);
 
@@ -158,6 +160,5 @@ public class LoginServiceImpl implements LoginService {
         } finally {
             logger.info("Finished temporaryUserSave method for userName: {}", userName);
         }
-
     }
 }
