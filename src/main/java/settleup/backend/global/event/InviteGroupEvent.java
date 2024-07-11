@@ -4,7 +4,7 @@ import org.springframework.context.ApplicationEvent;
 import settleup.backend.domain.group.entity.dto.CreateGroupResponseDto;
 
 public class InviteGroupEvent extends ApplicationEvent {
-    private CreateGroupResponseDto groupInfo;
+    private final CreateGroupResponseDto groupInfo;
 
     public InviteGroupEvent(Object source, CreateGroupResponseDto groupInfo) {
         super(source);

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SettleUp Invitation</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(45deg, #d76d77, #ffaf7b);
+            padding: 20px;
+            text-align: center;
+            color: white;
+        }
+        .header h1 {
+            margin: 0;
+        }
+        .content {
+            padding: 20px;
+        }
+        .content p {
+            margin: 10px 0;
+        }
+        .divider {
+            height: 1px;
+            background-color: #dddddd;
+            margin: 20px 0;
+        }
+        .button {
+            display: block;
+            width: fit-content;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #d76d77;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <img src="https://github.com/donghee9/Resource/assets/129722492/72c54983-050e-4f4b-b711-617edd133a4b" alt="SettleUp Invitation" style="width: 200%; max-width: 400px; margin: 0 auto;">
+    </div>
+    <div class="content">
+        <h1>SettleUp Invitation</h1>
+        <p>안녕하세요 {{recipientName}} 님,</p>
+        <p>새 그룹 <strong>{{groupName}}</strong>에 초대되었습니다.</p>
+        <p>그룹 경비를 간편하게 관리하세요.</p>
+        <p>영수증을 찍어서 올려주시면 최소 횟수로 정산해드립니다.</p>
+        <p>웹 애플리케이션 SettleUp으로 일상의 지겨움을 해결하세요!</p>
+        <div class="divider"></div>
+        <p>Hello {{recipientName}},</p>
+        <p>You have been invited to the new group <strong>{{groupName}}</strong>.</p>
+        <p>Easily manage group expenses.</p>
+        <p>Upload receipts and we'll suggest the minimum number of transfers.</p>
+        <p>Break the monotony of daily life with SettleUp!</p>
+    </div>
+    <a href="https://d142csekpetioz.cloudfront.net/login" class="button">GO TO SETTLEUP !</a>
+</div>
+</body>
+</html>
