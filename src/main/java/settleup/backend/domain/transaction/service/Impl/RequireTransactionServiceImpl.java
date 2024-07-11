@@ -20,6 +20,7 @@ import settleup.backend.global.Helper.Status;
 import settleup.backend.global.Helper.UUID_Helper;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -90,7 +91,7 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
 //        return saveAmount;
 //    }
 
-    private boolean processEachTransaction( ReceiptItemUserEntity itemUser, TransactionDto requestDto) {
+    private boolean processEachTransaction(ReceiptItemUserEntity itemUser, TransactionDto requestDto) {
         BigDecimal saveAmount = calculateSaveAmount(itemUser); // 변경된 부분: calculateSaveAmount 호출 방식
         logger.debug("Processed transaction item with amount: {}, for user: {}", saveAmount, itemUser.getUser().getId());
         return saveTransaction(itemUser, requestDto, saveAmount);
@@ -117,6 +118,7 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
 
     private RequiresTransactionEntity createTransactionEntity(ReceiptItemUserEntity itemUser, TransactionDto requestDto, BigDecimal saveAmount) {
         RequiresTransactionEntity transaction = new RequiresTransactionEntity();
+        LocalDateTime now = LocalDateTime.now();
         transaction.setTransactionUUID(uuidHelper.UUIDForTransaction());
         transaction.setReceipt(requestDto.getReceipt());
         transaction.setGroup(requestDto.getGroup());
@@ -124,7 +126,7 @@ public class RequireTransactionServiceImpl implements RequireTransactionService 
         transaction.setRequiredReflection(Status.REQUIRE_OPTIMIZED);
         transaction.setSenderUser(itemUser.getUser());
         transaction.setTransactionAmount(saveAmount);
-
+        transaction.setCreatedAt(now);
         Status userType = requestDto.getIsUserType() ? Status.REGULAR : Status.DEMO;
         transaction.setUserType(userType);
 

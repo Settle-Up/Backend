@@ -28,7 +28,7 @@ public class ReceiptItemUserEntity {
     @Column(name = "purchased_quantity",nullable = true)
     private BigDecimal purchasedQuantity;
 
-    @Column(name = "purchased_total_amonut",nullable = true)
+    @Column(name = "purchased_total_amount",nullable = true)
     private BigDecimal purchasedTotalAmount;
 
     @ManyToOne(fetch = FetchType.LAZY)

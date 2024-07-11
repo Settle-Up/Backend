@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import settleup.backend.domain.group.entity.AbstractGroupEntity;
 import settleup.backend.domain.transaction.entity.RequiresTransactionEntity;
-import settleup.backend.domain.transaction.model.TransactionalEntity;
+import settleup.backend.domain.transaction.entity.TransactionalEntity;
 import settleup.backend.domain.user.entity.AbstractUserEntity;
 
 

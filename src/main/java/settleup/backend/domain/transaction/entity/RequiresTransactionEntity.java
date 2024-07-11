@@ -43,6 +43,9 @@ public class RequiresTransactionEntity {
     @JoinColumn(name = "recipient_user", nullable = false)
     private AbstractUserEntity recipientUser;
 
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
 
     @Enumerated(EnumType.STRING)
     @Column(name = "user_type", nullable = false)
@@ -59,7 +62,5 @@ public class RequiresTransactionEntity {
     @Setter
     @Getter
     private LocalDateTime clearStatusTimestamp;
-
-
 }
 

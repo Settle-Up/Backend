@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.domain.user.entity.dto.LoginDto;
+import settleup.backend.domain.user.service.KaKaoProdService;
 import settleup.backend.domain.user.service.KakaoService;
 import settleup.backend.domain.user.service.LoginService;
 import settleup.backend.domain.user.entity.dto.KakaoTokenDto;
@@ -22,12 +23,23 @@ public class AuthController {
 
     private final KakaoService kakaoService;
     private final LoginService loginService;
+    private final KaKaoProdService kaKaoProdService;
+
+//
+//    @GetMapping("/login/social/kakao")
+//    public ResponseEntity<ResponseDto> getTokenFromSocial(@RequestParam("code") String validCode) {
+//        KakaoTokenDto tokenInfo = kakaoService.getKakaoAccessToken(validCode);
+//        UserInfoDto userInfo = kakaoService.getUserInfo(tokenInfo.getAccess_token());
+//        LoginDto loginDto = kakaoService.registerUser(userInfo);
+//        ResponseDto responseDto = new ResponseDto(true, "successfully login", loginDto);
+//        return ResponseEntity.ok(responseDto);
+//    }
 
 
     @GetMapping("/login/social/kakao")
     public ResponseEntity<ResponseDto> getTokenFromSocial(@RequestParam("code") String validCode) {
-        KakaoTokenDto tokenInfo = kakaoService.getKakaoAccessToken(validCode);
-        UserInfoDto userInfo = kakaoService.getUserInfo(tokenInfo.getAccess_token());
+        KakaoTokenDto tokenInfo = kaKaoProdService.getKakaoAccessToken(validCode);
+        UserInfoDto userInfo = kaKaoProdService.getUserInfo(tokenInfo.getAccess_token());
         LoginDto loginDto = kakaoService.registerUser(userInfo);
         ResponseDto responseDto = new ResponseDto(true, "successfully login", loginDto);
         return ResponseEntity.ok(responseDto);

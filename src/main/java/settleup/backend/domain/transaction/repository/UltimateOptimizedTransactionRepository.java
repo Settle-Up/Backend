@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.group.entity.AbstractGroupEntity;
-import settleup.backend.domain.transaction.model.TransactionalEntity;
+import settleup.backend.domain.transaction.entity.TransactionalEntity;
 import settleup.backend.domain.transaction.entity.UltimateOptimizedTransactionEntity;
 import settleup.backend.domain.user.entity.AbstractUserEntity;
 

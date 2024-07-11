@@ -3,10 +3,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import settleup.backend.domain.group.entity.AbstractGroupEntity;
-import settleup.backend.domain.group.entity.GroupEntity;
-import settleup.backend.domain.transaction.model.TransactionalEntity;
 import settleup.backend.domain.user.entity.AbstractUserEntity;
-import settleup.backend.domain.user.entity.UserEntity;
 import settleup.backend.global.Helper.Status;
 
 import java.math.BigDecimal;
@@ -50,8 +47,13 @@ public class OptimizedTransactionEntity implements TransactionalEntity {
     @Column(name = "has_been_check_status", nullable = false)
     private Boolean hasBeenChecked;
 
+
+
     @Enumerated(EnumType.STRING)
     @Column(name = "require_reflection", nullable = false)
+
+
+
     private Status requiredReflection;
 
 

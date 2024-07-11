@@ -11,6 +11,6 @@ import java.util.Optional;
 @Repository
 public interface DemoGroupRepository extends GroupBaseRepository<DemoGroupEntity> {
 }
-//    Optional<DemoGroupEntity> findByGroupUUID(String groupUUID);
+
 
 

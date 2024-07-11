@@ -1,4 +1,4 @@
-package settleup.backend.domain.transaction.model;
+package settleup.backend.domain.transaction.entity;
 
 import settleup.backend.domain.group.entity.AbstractGroupEntity;
 import settleup.backend.domain.user.entity.AbstractUserEntity;

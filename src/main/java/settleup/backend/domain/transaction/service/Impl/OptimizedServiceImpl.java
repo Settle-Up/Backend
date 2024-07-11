@@ -7,25 +7,21 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import settleup.backend.domain.group.entity.AbstractGroupUserEntity;
-import settleup.backend.domain.group.entity.GroupEntity;
 import settleup.backend.domain.group.entity.AbstractGroupEntity;
-import settleup.backend.domain.group.entity.GroupUserEntity;
 
 import settleup.backend.domain.group.repository.GroupUserRepository;
 import settleup.backend.domain.transaction.entity.*;
 import settleup.backend.domain.transaction.entity.dto.*;
-import settleup.backend.domain.transaction.model.TransactionalEntity;
+import settleup.backend.domain.transaction.entity.TransactionalEntity;
 import settleup.backend.domain.transaction.repository.OptimizedTransactionDetailsRepository;
 import settleup.backend.domain.transaction.repository.OptimizedTransactionRepository;
 import settleup.backend.domain.transaction.repository.RequireTransactionRepository;
 import settleup.backend.domain.transaction.service.OptimizedService;
 import settleup.backend.domain.transaction.service.TransactionInheritanceService;
 import settleup.backend.domain.user.entity.AbstractUserEntity;
-import settleup.backend.domain.user.entity.UserEntity;
 
 import settleup.backend.domain.user.entity.dto.UserGroupDto;
 import settleup.backend.domain.user.repository.UserBaseRepository;
-import settleup.backend.domain.user.repository.UserRepository;
 import settleup.backend.global.Helper.Status;
 import settleup.backend.global.Helper.UUID_Helper;
 import settleup.backend.global.Selector.UserRepoSelector;

@@ -1,38 +1,39 @@
 package settleup.backend.domain.user.service.Impl;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import settleup.backend.domain.user.entity.UserEntity;
+import settleup.backend.domain.user.entity.dto.KakaoTokenDto;
+import settleup.backend.domain.user.entity.dto.LoginDto;
+import settleup.backend.domain.user.entity.dto.UserInfoDto;
+import settleup.backend.domain.user.repository.UserRepository;
+import settleup.backend.domain.user.service.KaKaoProdService;
 import settleup.backend.global.Helper.ApiCallHelper;
 import settleup.backend.global.Helper.Status;
 import settleup.backend.global.Helper.UUID_Helper;
-import settleup.backend.domain.user.entity.UserEntity;
-import settleup.backend.domain.user.entity.dto.LoginDto;
-import settleup.backend.domain.user.entity.dto.UserInfoDto;
+import settleup.backend.global.Util.JwtProvider;
+import settleup.backend.global.config.KakaoConfig;
 import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
-import settleup.backend.domain.user.repository.UserRepository;
-import settleup.backend.domain.user.service.KakaoService;
-import settleup.backend.global.Util.JwtProvider;
-import settleup.backend.domain.user.entity.dto.KakaoTokenDto;
-import settleup.backend.global.config.KakaoConfig;
-
-import java.time.LocalDateTime;
 
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 
-
 @Service
-@Transactional
 @AllArgsConstructor
-public class KaKaoServiceImpl implements KakaoService {
+@Transactional
+public class KaKaoProdServiceImpl implements KaKaoProdService {
 
     private final KakaoConfig kakaoConfig;
     private final ApiCallHelper apiCallHelper;
@@ -42,16 +43,9 @@ public class KaKaoServiceImpl implements KakaoService {
 
     private static final Logger logger = LoggerFactory.getLogger(KaKaoServiceImpl.class);
 
-    /**
-     * getKakaoAccessToken 인증번호로 카카오에 토큰요청
-     *
-     * @param code (validCode)
-     * @throws CustomException EXTERNAL_API_ERROR_SOCIAL_TOKEN(113, "Failed to get social external api access token")
-     * @process request to Kakao Post /response receive as KakaoTokenDto
-     */
 
     @Override
-    public KakaoTokenDto getKakaoAccessToken(String code) throws CustomException {
+    public KakaoTokenDto getKakaoAccessToken(String code) {
         try {
             HttpHeaders headers = apiCallHelper.createHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -60,11 +54,6 @@ public class KaKaoServiceImpl implements KakaoService {
             params.add("grant_type", "authorization_code");
             params.add("client_id", kakaoConfig.getClientId());
             params.add("redirect_uri", kakaoConfig.getRedirectUriDev());
-//            if (!isHttps()) {
-//                params.add("redirect_uri", kakaoConfig.getRedirectUriDev());
-//            } else {
-//                params.add("redirect_uri", kakaoConfig.getRedirectUriProd());
-//            }
             params.add("code", code);
             params.add("client_secret", kakaoConfig.getSecret());
 
@@ -76,23 +65,7 @@ public class KaKaoServiceImpl implements KakaoService {
         }
     }
 
-//    private boolean isHttps() {
-//        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-//        return "https".equals(request.getHeader("X-Forwarded-Proto"));
-//    }
 
-
-    /**
-     * getUserInfo 카카오 토큰으로 카카오에서 유저 정보가져오기
-     *
-     * @param accessToken from Kakao
-     * @return userInfoDto
-     * @throws CustomException 1.EXTERNAL_API_EMPTY_RESPONSE (115, user info response is empty)
-     *                         2.EXTERNAL_API_ERROR (114, Failed to retrieve user info from Kakao)
-     * @process kakaoAccount = response (included flied kakao_account: {name, phone_number,email})
-     * @privateMethod findUserInfoByKakao
-     * @process kakaoAccount -> Transition (to) userInfoDto
-     */
     @Override
     public UserInfoDto getUserInfo(String accessToken) throws CustomException {
         try {
@@ -107,34 +80,24 @@ public class KaKaoServiceImpl implements KakaoService {
                 throw new CustomException(ErrorCode.EXTERNAL_API_EMPTY_RESPONSE);
             }
             Map<String, Object> kakaoAccount = (Map<String, Object>) jsonResponse.get("kakao_account");
-            return findUserInfoByKakao(kakaoAccount);
+            Map<String, Object> properties = (Map<String, Object>) jsonResponse.get("properties");
+            return findUserInfoByKakao(kakaoAccount, properties);
         } catch (CustomException e) {
             throw new CustomException(ErrorCode.EXTERNAL_API_ERROR);
         }
     }
 
-
-    private UserInfoDto findUserInfoByKakao(Map<String, Object> kakaoAccount) {
+    private UserInfoDto findUserInfoByKakao(Map<String, Object> kakaoAccount, Map<String, Object> properties) {
         UserInfoDto userInfoDto = new UserInfoDto();
-        userInfoDto.setUserName((String) kakaoAccount.get("name"));
-        userInfoDto.setUserPhone((String) kakaoAccount.get("phone_number"));
-        userInfoDto.setUserEmail((String) kakaoAccount.get("email"));
-        return userInfoDto;
+        String nickname = (String) properties.get("nickname");
+        String email = (String) kakaoAccount.get("email");
 
+        userInfoDto.setUserName(nickname);
+        userInfoDto.setUserEmail(email);
+        return userInfoDto;
     }
 
-    /**
-     * registerUser 우리사이트 토큰 발행
-     *
-     * @param userInfoDto {userName ,userName,userPhone }
-     * @throws CustomException 1.REGISTRATION_FAILED (116,"Errors occurred during uuid generation or save db")
-     *                         2.TOKEN_CREATION_FAILED (117,"Failed to create login token" )
-     * @process <does user isPresent userEntity?>
-     * -> true  then.set userInfoDto from userEntity
-     * -> false then.1.create uuid from email 2. set userEntity form userInfoDto
-     * @privateMethod createSettleUpLoginTokenInfo(userInfo)
-     * @process set settleUpToKenDto using tokenProvider , userInfo
-     */
+
 
     @Override
     public LoginDto registerUser(UserInfoDto userInfoDto) throws CustomException {
@@ -163,7 +126,6 @@ public class KaKaoServiceImpl implements KakaoService {
             UserEntity newUser = new UserEntity();
             newUser.setUserEmail(userInfoDto.getUserEmail());
             newUser.setUserName(userInfoDto.getUserName());
-            newUser.setUserPhone(userInfoDto.getUserPhone());
             newUser.setUserUUID(userUUID);
             newUser.setIsDecimalInputOption(false);
             newUser.setUserType(Status.REGULAR);
@@ -200,3 +162,23 @@ public class KaKaoServiceImpl implements KakaoService {
     }
 
 }
+
+
+//{
+//        "id": 3617037595,
+//        "connected_at": "2024-07-10T22:57:38Z",
+//        "properties": {
+//            "nickname": "서동희"
+//        },
+//        "kakao_account": {
+//            "profile_nickname_needs_agreement": false,
+//            "profile": {
+//                "nickname": "서동희",
+//                "is_default_nickname": false
+//            },
+//            "has_email": true,
+//            "email_needs_agreement": false,
+//            "is_email_valid": true,
+//            "is_email_verified": true,
+//            "email": "seodonghee456@gmail.com"
+//        }

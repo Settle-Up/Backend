@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import settleup.backend.domain.group.entity.AbstractGroupEntity;
 import settleup.backend.domain.group.entity.AbstractGroupUserEntity;
-import settleup.backend.domain.transaction.model.TransactionalEntity;
+import settleup.backend.domain.transaction.entity.TransactionalEntity;
 import settleup.backend.domain.transaction.repository.UltimateOptimizedTransactionRepository;
 import settleup.backend.domain.transaction.repository.GroupOptimizedTransactionRepository;
 import settleup.backend.domain.transaction.repository.OptimizedTransactionRepository;

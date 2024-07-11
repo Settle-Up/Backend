@@ -1,7 +1,7 @@
 package settleup.backend.domain.transaction.service;
 
 import settleup.backend.domain.group.entity.AbstractGroupEntity;
-import settleup.backend.domain.transaction.model.TransactionalEntity;
+import settleup.backend.domain.transaction.entity.TransactionalEntity;
 import settleup.backend.domain.transaction.entity.dto.TransactionUpdateRequestDto;
 import settleup.backend.global.exception.CustomException;
 
