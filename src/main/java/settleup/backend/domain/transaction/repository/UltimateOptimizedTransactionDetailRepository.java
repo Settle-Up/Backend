@@ -16,5 +16,7 @@ public interface UltimateOptimizedTransactionDetailRepository extends JpaReposit
     List<String> findUsedOptimizedTransactionUuidsByUltimateTransactionId(@Param("ultimateOptimizedTransactionId") Long ultimateOptimizedTransactionId);
 
     List<UltimateOptimizedTransactionDetailEntity> findByUltimateOptimizedTransactionId(Long id);
+    void deleteByUltimateOptimizedTransaction_SenderUser_Id(Long userId);
+    void deleteByUltimateOptimizedTransaction_RecipientUser_Id(Long userId);
 }
 

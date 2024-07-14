@@ -19,5 +19,8 @@ public interface OptimizedTransactionDetailsRepository extends JpaRepository<Opt
     @Query("SELECT d FROM OptimizedTransactionDetailsEntity d WHERE d.optimizedTransaction.id = :id")
     List<OptimizedTransactionDetailsEntity> findByOptimizedTransactionId(@Param("id") Long id);
 
+    void deleteByOptimizedTransaction_SenderUser_Id(Long userId);
+    void deleteByOptimizedTransaction_RecipientUser_Id(Long userId);
+
 }
 

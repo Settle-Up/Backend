@@ -6,6 +6,5 @@ import settleup.backend.global.exception.CustomException;
 
 public interface LoginService {
     UserInfoDto validTokenOrNot(String token) throws CustomException;
-    LoginDto createDemoToken(String user) throws CustomException;
 
 }

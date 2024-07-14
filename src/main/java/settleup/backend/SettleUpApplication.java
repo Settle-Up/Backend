@@ -6,11 +6,13 @@ import io.sentry.spring.jakarta.SentryExceptionResolver;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import settleup.backend.global.Util.CustomTransactionNameProvider;
 
+@EnableScheduling
 @SpringBootApplication
 public class SettleUpApplication {
 

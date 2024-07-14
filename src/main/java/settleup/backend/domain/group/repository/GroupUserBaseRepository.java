@@ -9,23 +9,7 @@ import settleup.backend.domain.group.entity.AbstractGroupUserEntity;
 import java.util.List;
 import java.util.Optional;
 
-//@NoRepositoryBean
-//public interface GroupUserBaseRepository<T extends GroupUserTypeEntity> extends JpaRepository<T, Long> {
-//    List<T> findByGroup_Id(Long id);
-//
-//    List<T> findByUser_Id(Long userId);
-//
-//    @Query("SELECT gue FROM #{#entityName} gue WHERE gue.user.id = :userId AND gue.group.id = :groupId")
-//    Optional<T> findByUserIdAndGroupId(@Param("userId") Long userId, @Param("groupId") Long groupId);
-//
-//    @Query("SELECT COUNT(gue) > 0 FROM #{#entityName} gue WHERE gue.user.id = :userId AND gue.group.id = :groupId")
-//    boolean existsByUserIdAndGroupId(@Param("userId") Long userId, @Param("groupId") Long groupId);
-//
-//    @Query("SELECT CASE WHEN COUNT(gue) > 0 THEN true ELSE false END FROM #{#entityName} gue WHERE gue.user.id = :userId")
-//    boolean existsByUserId(@Param("userId") Long userId);
-//
-//    void delete(GroupUserTypeEntity groupUser);
-//}
+
 
 @NoRepositoryBean
 public interface GroupUserBaseRepository<T extends AbstractGroupUserEntity> extends JpaRepository<T, Long> {

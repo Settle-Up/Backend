@@ -57,6 +57,10 @@ public class ErrorHttpStatusMapping {
             case SETTLED_REQUIRED:
                 return HttpStatus.CONFLICT;
 
+            case RATE_LIMIT_EXCEEDED:
+            case ACCOUNT_CREATION_LIMIT:
+                return HttpStatus.TOO_MANY_REQUESTS;
+
             default:
                 return HttpStatus.INTERNAL_SERVER_ERROR;
         }

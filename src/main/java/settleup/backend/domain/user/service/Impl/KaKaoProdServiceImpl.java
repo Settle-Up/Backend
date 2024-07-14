@@ -41,7 +41,7 @@ public class KaKaoProdServiceImpl implements KaKaoProdService {
     private final UUID_Helper uuidHelper;
     private final JwtProvider tokenProvider;
 
-    private static final Logger logger = LoggerFactory.getLogger(KaKaoServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(KaKaoProdServiceImpl.class);
 
 
     @Override

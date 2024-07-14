@@ -37,5 +37,8 @@ public interface RequireTransactionRepository extends JpaRepository<RequiresTran
     @Query("UPDATE RequiresTransactionEntity rte SET rte.clearStatusTimestamp = :timestamp WHERE rte.id = :id")
     void updateClearStatusTimestampById(@Param("id") Long id, @Param("timestamp") LocalDateTime timestamp);
 
+    void deleteBySenderUserId(Long userId);
+    void deleteByRecipientUserId(Long userId);
+
 
 }

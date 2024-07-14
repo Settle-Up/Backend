@@ -71,5 +71,8 @@ public interface GroupOptimizedTransactionRepository extends JpaRepository<Group
     @Transactional
     @Query("UPDATE GroupOptimizedTransactionEntity  g SET g.clearStatusTimestamp = :clearStatusTimestamp WHERE g.id = :id")
     void updateClearStatusTimestampById(@Param("id") Long id, @Param("clearStatusTimestamp") LocalDateTime clearStatusTimestamp);
+
+    void deleteBySenderUserId(Long userId);
+    void deleteByRecipientUserId(Long userId);
 }
 

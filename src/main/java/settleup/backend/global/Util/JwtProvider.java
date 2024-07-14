@@ -2,6 +2,8 @@ package settleup.backend.global.Util;
 
 import io.jsonwebtoken.*;
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
 import settleup.backend.global.config.CryptographyConfig;
@@ -19,6 +21,7 @@ import java.util.Map;
 public class JwtProvider {
 
     private final CryptographyConfig cryptographyConfig;
+    private static final Logger logger = LoggerFactory.getLogger(JwtProvider.class);
 
     public String createRegularUserToken(UserInfoDto userInfoDto) {
         Date now = new Date();
@@ -37,7 +40,7 @@ public class JwtProvider {
 
     public String createDemoUserToken(UserInfoDto userInfoDto) {
         Date now = new Date();
-        Date expiration = new Date(now.getTime() + Duration.ofMinutes(3600).toMillis());
+        Date expiration = new Date(now.getTime() + Duration.ofMinutes(5).toMillis());
 
         return Jwts.builder()
                 .setHeaderParam(Header.TYPE, Header.JWT_TYPE)
@@ -75,9 +78,12 @@ public class JwtProvider {
 
     public Claims parseJwtTokenGenerationInfo(String token) throws CustomException {
         try {
+            logger.info("Parsing token: {}", token);
+            String cleanToken = removeBearerTokenPrefix(token);
+            logger.info("Clean token: {}", cleanToken);
             return Jwts.parser()
                     .setSigningKey(encodeSecretKey())
-                    .parseClaimsJws(removeBearerTokenPrefix(token))
+                    .parseClaimsJws(cleanToken)
                     .getBody();
         } catch (ExpiredJwtException e) {
             throw new CustomException(ErrorCode.TOKEN_EXPIRED);
@@ -88,7 +94,7 @@ public class JwtProvider {
         }
     }
 
-    private String removeBearerTokenPrefix(String token) {
+    public  String removeBearerTokenPrefix(String token) {
         if (token.startsWith("Bearer ")) {
             return token.substring(7);
         }

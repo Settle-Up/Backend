@@ -17,5 +17,7 @@ public interface GroupOptimizedTransactionDetailRepository extends JpaRepository
     List<OptimizedTransactionEntity> findOptimizedTransactionsByGroupOptimizedTransactions(@Param("groupOptimizedTransactions") List<GroupOptimizedTransactionEntity> groupOptimizedTransactions);
 
     List<GroupOptimizedTransactionDetailsEntity> findByGroupOptimizedTransactionId(Long id);
+    void deleteByGroupOptimizedTransaction_SenderUser_Id(Long userId);
+    void deleteByGroupOptimizedTransaction_RecipientUser_Id(Long userId);
 }
 

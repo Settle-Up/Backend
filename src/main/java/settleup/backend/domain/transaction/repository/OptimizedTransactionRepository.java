@@ -75,7 +75,8 @@ public interface OptimizedTransactionRepository extends JpaRepository<OptimizedT
     @Query("UPDATE OptimizedTransactionEntity o SET o.clearStatusTimestamp = :clearStatusTimestamp WHERE o.id = :id")
     void updateClearStatusTimestampById(@Param("id") Long id, @Param("clearStatusTimestamp") LocalDateTime clearStatusTimestamp);
 
-
+    void deleteBySenderUserId(Long userId);
+    void deleteByRecipientUserId(Long userId);
 }
 
 
