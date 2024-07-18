@@ -1,6 +1,5 @@
 package settleup.backend.global.exception;
 
-
 public class CustomException extends RuntimeException {
     private final ErrorCode errorCode;
     private final String detailMessage;
@@ -28,5 +27,4 @@ public class CustomException extends RuntimeException {
     public String getSimpleErrorCode() {
         return String.valueOf(errorCode.getCode());
     }
-
 }

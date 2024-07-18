@@ -11,11 +11,24 @@ import javax.net.ssl.SSLException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    //    @ExceptionHandler(CustomException.class)
+//    public ResponseEntity<ResponseDto> handleCustomException(CustomException e) {
+//        ResponseDto<Void> response = new ResponseDto<>(
+//                false,
+//                e.getMessage() + (e.getDetailMessage() != null ? ": " + e.getDetailMessage() : ""),
+//                null,
+//                e.getSimpleErrorCode()
+//        );
+//
+//        HttpStatus status = ErrorHttpStatusMapping.mapErrorCodeToHttpStatus(e.getErrorCode());
+//        return new ResponseEntity<>(response, status);
+//    }
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ResponseDto> handleCustomException(CustomException e) {
         ResponseDto<Void> response = new ResponseDto<>(
                 false,
-                e.getMessage() + (e.getDetailMessage() != null ? ": " + e.getDetailMessage() : ""),
+                e.getErrorCode().getDescription(),
                 null,
                 e.getSimpleErrorCode()
         );

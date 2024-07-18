@@ -52,6 +52,7 @@ public class ErrorHttpStatusMapping {
             case EXTERNAL_API_EMPTY_RESPONSE:
             case EXTERNAL_OCR_API_ERROR:
             case OPERATION_OCR_RESPONSE_STATUS_ERROR:
+            case SERVICE_UNDER_MAINTENANCE:
                 return HttpStatus.SERVICE_UNAVAILABLE;
 
             case SETTLED_REQUIRED:
@@ -66,4 +67,3 @@ public class ErrorHttpStatusMapping {
         }
     }
 }
-

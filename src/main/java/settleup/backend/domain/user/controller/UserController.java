@@ -3,7 +3,9 @@ package settleup.backend.domain.user.controller;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import settleup.backend.domain.user.entity.dto.FeedBackDto;
 import settleup.backend.domain.user.entity.dto.UserInfoDto;
+import settleup.backend.domain.user.service.EmailSenderService;
 import settleup.backend.domain.user.service.LoginService;
 import settleup.backend.domain.user.service.UserService;
 import settleup.backend.global.Helper.ResponseDto;
@@ -17,6 +19,7 @@ public class UserController {
 
     private LoginService loginService;
     private UserService userService;
+    private EmailSenderService emailSenderService;
 
     @PostMapping("/profile")
     public ResponseEntity<ResponseDto> setDecimalOption(
@@ -35,5 +38,11 @@ public class UserController {
        Map<String,Object> data =  userService.retrievedUserDecimal(userInfo);
         ResponseDto responseDto =new ResponseDto<>(true,"User decimal input option retrieved successfully",data);
         return ResponseEntity.ok(responseDto);
+    }
+
+    @PostMapping("/feedback/email")
+    public ResponseEntity<?> sendFeedbackEmail(@RequestBody FeedBackDto feedBackDto) {
+        emailSenderService.sendFeedBackEmailToManager(feedBackDto);
+        return ResponseEntity.ok("Feedback email sent successfully");
     }
 }

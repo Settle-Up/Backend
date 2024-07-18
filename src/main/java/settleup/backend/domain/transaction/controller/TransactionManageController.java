@@ -28,6 +28,8 @@ public class TransactionManageController {
         ResponseDto responseDto = new ResponseDto<>(true, "update retrieved successfully", data);
         return ResponseEntity.ok(responseDto);
     }
+
+//for test
 //    @PatchMapping("/{groupId}/manage")
 //    public ResponseEntity<ResponseDto> updateTransaction(
 //            @PathVariable("groupId") String groupId,

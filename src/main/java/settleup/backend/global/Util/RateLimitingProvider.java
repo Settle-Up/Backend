@@ -9,7 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import settleup.backend.domain.group.repository.AbstractGroupUserRepository;
+
 import settleup.backend.domain.user.entity.DemoUserEntity;
 import settleup.backend.domain.user.repository.DemoUserRepository;
 import settleup.backend.domain.user.repository.RelatedEntityDeletionService;
@@ -19,6 +19,8 @@ import settleup.backend.global.exception.CustomException;
 import settleup.backend.global.exception.ErrorCode;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,6 +33,7 @@ public class RateLimitingProvider {
     private final RateLimitingConfig config;
 
     private final UserDeletionService userDeletionService;
+
     private static final Logger logger = LoggerFactory.getLogger(RateLimitingProvider.class);
 
 
@@ -46,32 +49,40 @@ public class RateLimitingProvider {
             }
         }
     }
-
-    @Scheduled(cron = "0 38 * * * *") // 매 시간 57분에 실행
+    @Scheduled(cron = "0 0 3 * * *") // 매일 3시에 실행
     public void deleteExpiredDemoUsers() {
-        logger.info("Deleting expired demo users...");
+        LocalTime now = LocalTime.now();
+        LocalTime maintenanceStartTime = LocalTime.of(3, 0);
+        LocalTime maintenanceEndTime = LocalTime.of(3, 15);
 
-        LocalDateTime expirationTime = LocalDateTime.now().minusMinutes(config.getTimeLimitMinutes());
-        List<Long> expiredUserIds = demoUserRepository.findExpiredNonDummyUserIds(expirationTime);
+        if (now.isAfter(maintenanceStartTime) && now.isBefore(maintenanceEndTime)) {
+            logger.info("Starting maintenance deletion of expired demo users...");
 
-        if (expiredUserIds.isEmpty()) {
-            logger.info("No expired demo users found.");
-            return;
-        }
+            LocalDateTime expirationTime = LocalDateTime.now().minusMinutes(config.getTimeLimitMinutes());
+            List<Long> expiredUserIds = demoUserRepository.findExpiredNonDummyUserIds(expirationTime);
 
-        logger.info("Found {} expired demo users. Deleting...", expiredUserIds.size());
-
-        for (Long userId : expiredUserIds) {
-            try {
-                userDeletionService.deleteUserWithRelatedEntities(userId);
-                demoUserRepository.deleteById(userId);
-                logger.info("Successfully deleted user with ID: {}", userId);
-            } catch (Exception e) {
-                logger.error("Failed to delete user with ID: {}", userId, e);
+            if (expiredUserIds.isEmpty()) {
+                logger.info("No expired demo users found.");
+                return;
             }
-        }
 
-        // Call to delete expired groups
-        userDeletionService.deleteExpiredGroups(expirationTime);
+            logger.info("Found {} expired demo users. Deleting...", expiredUserIds.size());
+
+            for (Long userId : expiredUserIds) {
+                try {
+                    userDeletionService.deleteUserWithRelatedEntities(userId);
+                    demoUserRepository.deleteById(userId);
+                    logger.info("Successfully deleted user with ID: {}", userId);
+                } catch (Exception e) {
+                    logger.error("Failed to delete user with ID: {}", userId, e);
+                }
+            }
+
+            // Call to delete expired groups
+            userDeletionService.deleteExpiredGroups(expirationTime);
+
+        } else {
+            logger.info("Current time is not within the maintenance window. Skipping deletion.");
+        }
     }
 }

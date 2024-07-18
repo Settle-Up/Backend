@@ -32,7 +32,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 
 
-
 @Service
 @Transactional
 @AllArgsConstructor
@@ -46,6 +45,7 @@ public class ReceiptServiceImpl implements ReceiptService {
     private final UserRepoSelector selector;
 
     private static final Logger logger = LoggerFactory.getLogger(ReceiptServiceImpl.class);
+
     @Override
     @Transactional
     public TransactionDto createReceipt(ReceiptDto requestDto, Boolean isUserType) {
@@ -105,9 +105,6 @@ public class ReceiptServiceImpl implements ReceiptService {
                     ReceiptItemUserEntity itemUserEntity = new ReceiptItemUserEntity();
                     itemUserEntity.setReceiptItem(savedItemEntity);
 
-//                    BigDecimal itemQuantity = defaultPricePerUser.add(remainderPerUser);
-//                    itemUserEntity.setPurchasedQuantity(totalItemQuantity.divide(new BigDecimal(jointPurchaserCount), 2, BigDecimal.ROUND_HALF_UP));
-////                    itemUserEntity.setPurchasedTotalAmount(itemQuantity);
                     BigDecimal itemQuantity = totalItemQuantity.divide(new BigDecimal(jointPurchaserCount), 2, RoundingMode.HALF_UP);
                     BigDecimal purchasedAmount = defaultPricePerUser.add(remainderPerUser);
                     itemUserEntity.setPurchasedQuantity(itemQuantity);
@@ -127,22 +124,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                     receiptItemUserRepo.save(itemUserEntity);
                 });
             } else {
-//                itemDto.getJointPurchaserList().forEach(jointPurchaserDto -> {
-//                    ReceiptItemUserEntity itemUserEntity = new ReceiptItemUserEntity();
-//                    itemUserEntity.setReceiptItem(savedItemEntity);
-//
-//                    BigDecimal itemQuantity = null;
-//                    if (jointPurchaserDto.getPurchasedQuantity() != null) {
-//                        try {
-//                            itemQuantity = new BigDecimal(jointPurchaserDto.getPurchasedQuantity().trim());
-//                        } catch (NumberFormatException e) {
-//                            throw new CustomException(ErrorCode.INVALID_INPUT, "Invalid purchased quantity format");
-//                        }
-//                    }
-//                    itemUserEntity.setPurchasedQuantity(itemQuantity);
-//                    itemUserEntity.setPurchasedTotalAmount(unitPrice.multiply(itemQuantity));
-//
-//
+
                 itemDto.getJointPurchaserList().forEach(jointPurchaserDto -> {
                     ReceiptItemUserEntity itemUserEntity = new ReceiptItemUserEntity();
                     itemUserEntity.setReceiptItem(savedItemEntity);

@@ -10,6 +10,12 @@ public class EmailSendConfig {
     @Value("${mail.username}")
     private String userName;
 
+    @Value("${mail.feedBackReceiverBE}")
+    private String feedBackReceiverBE;
+
+    @Value("${mail.feedBackReceiverFE}")
+    private String feedBackReceiverFE;
+
     @Value("${mail.password}")
     private String password;
 
@@ -42,4 +48,5 @@ public class EmailSendConfig {
 
     @Value("${mail.auth-code-expiration-millis}")
     private long authCodeExpirationMillis;
+
 }

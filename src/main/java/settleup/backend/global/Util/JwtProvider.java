@@ -40,7 +40,7 @@ public class JwtProvider {
 
     public String createDemoUserToken(UserInfoDto userInfoDto) {
         Date now = new Date();
-        Date expiration = new Date(now.getTime() + Duration.ofMinutes(5).toMillis());
+        Date expiration = new Date(now.getTime() + Duration.ofMinutes(60).toMillis());
 
         return Jwts.builder()
                 .setHeaderParam(Header.TYPE, Header.JWT_TYPE)
