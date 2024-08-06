@@ -1,8 +1,6 @@
 # SettleUp Project - **service-server (backend)**
 
-배포된 웹사이트 : https://d142csekpetioz.cloudfront.net/ </br>
-데모 영상 : https://blog.naver.com/seodonghee45/223496662381
-
+## 배포된 웹사이트 : https://d142csekpetioz.cloudfront.net/ 
 ## 목차 
 
 1.  [🕒 개발 기간 및 팀원](#개발-기간-및-팀원)
