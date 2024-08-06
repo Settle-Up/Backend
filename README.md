@@ -85,8 +85,6 @@ SettleUp 서비스를 통해 사용자는 영수증 사진을 간편하게 등�
 | **Receipt**   | 영수증 등록, 최적화, 영수증 사진 텍스트로 파싱 등                                     |
 | **Transaction** | 타인이 나에게 송금한 내역 불러오기, 타인이 나에게 송금한 내역 반영 등               |
 
-**도메인 예시** </br>
-<img src="https://github.com/Settle-Up/settle-up-server/assets/129722492/76dfa44e-6801-4657-9c35-e5103c05dd66" alt="설계 구조" width="40%">
 
 #### Global
 전역적으로 사용되는 공통 모듈 및 설정은 다음과 같이 관리됩니다.
